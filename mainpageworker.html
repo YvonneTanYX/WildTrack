@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WildTrack Worker Dashboard</title>
+<script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --header:    #4e7a51;
+  --teal:      #76d7c4;
+  --teal-dark: #5ab8a5;
+  --bg:        #f1f8e9;
+  --text:      #3a3a3a;
+  --link:      #afd5b1;
+  --white:     #ffffff;
+  --card-bg:   #ffffff;
+  --border:    #d6e8d6;
+  --sub:       #6b8f71;
+  --orange:    #e07b39;
+  --red:       #d94f3d;
+  --shadow:    0 4px 20px rgba(78,122,81,0.10);
+  --shadow-lg: 0 8px 32px rgba(78,122,81,0.15);
+}
+body{
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  background:var(--bg);min-height:100vh;font-size:15px;color:var(--text);
+}
+.page{display:none;} .page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.page.active{animation:fadeUp 0.28s ease both;}
+
+/* ══ NAV ══ */
+nav{
+  background:var(--header);
+  padding:0 50px;height:100px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:stic10y;top:0;z-index:200;
+  box-shadow:0 2px 12px rgba(0,0,0,0.15);
+}
+.nav-brand{
+  display:flex;align-items:center;gap:10px;
+  font-size:20px;font-weight:700;color:#fff;letter-spacing:0.3px;
+}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-icon-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.3);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;transition:all 0.2s;color:#fff;
+}
+.nav-icon-btn:hover{background:rgba(255,255,255,0.28);}
+.notif-dot{
+  position:absolute;top:6px;right:6px;
+  width:9px;height:9px;background:var(--orange);
+  border-radius:50%;border:2px solid var(--header);
+}
+.nav-profile{
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.28);
+  border-radius:40px;padding:5px 14px 5px 5px;
+  transition:all 0.2s;position:relative;
+}
+.nav-profile:hover{background:rgba(255,255,255,0.24);}
+.nav-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.5);}
+.nav-name{font-size:14px;font-weight:600;color:#fff;}
+.nav-role{font-size:11px;color:rgba(255,255,255,0.75);}
+
+/* PROFILE DROPDOWN */
+.profile-dropdown{
+  display:none;position:absolute;right:0;top:54px;
+  background:var(--white);border-radius:16px;
+  box-shadow:var(--shadow-lg);width:236px;padding:18px;z-index:300;
+  border:1.5px solid var(--border);
+}
+.profile-dropdown.open{display:block;animation:fadeUp 0.18s ease both;}
+.pd-av-wrap{text-align:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.pd-av{width:58px;height:58px;border-radius:50%;margin:0 auto 8px;border:3px solid var(--link);}
+.pd-av-name{font-size:15px;font-weight:700;color:var(--text);}
+.pd-av-role{font-size:12px;color:var(--sub);margin-top:2px;}
+.pd-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);}
+.pd-row:last-of-type{border-bottom:none;}
+.pd-lbl{color:var(--sub);} .pd-val{font-weight:600;color:var(--text);}
+.pd-logout{
+  margin-top:12px;width:100%;background:var(--header);color:#fff;
+  border:none;padding:10px;border-radius:10px;cursor:pointer;
+  font-weight:600;font-size:14px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  transition:0.2s;
+}
+.pd-logout:hover{background:#3d6140;}
+
+/* ══ LAYOUT ══ */
+.page-wrap{
+  max-width:1200px;
+  margin:0 auto;
+  padding:36px 40px 100px;
+}
+
+/* BACK BTN */
+.back-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--white);border:1.5px solid var(--border);
+  padding:10px 18px;border-radius:10px;cursor:pointer;
+  font-weight:600;font-size:14px;color:var(--header);
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  transition:all 0.2s;margin-bottom:26px;
+}
+.back-btn:hover{background:var(--bg);border-color:var(--header);}
+
+/* ══ HERO ══ */
+.hero-card{
+  background:var(--header);
+  border-radius:20px;padding:32px 40px;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:var(--shadow-lg);margin-bottom:28px;
+  position:relative;overflow:hidden;
+}
+.hero-card::after{
+  content:'';position:absolute;right:-20px;top:-30px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,0.06);
+}
+.hero-card h1{font-size:28px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:5px;}
+.hero-card p{font-size:13px;color:rgba(255,255,255,0.72);}
+.hero-icon{font-size:72px;opacity:0.2;position:relative;z-index:1;}
+
+/* ══ STATS ROW ══ */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:28px;}
+.stat-card{
+  background:var(--white);border-radius:16px;padding:22px 26px;
+  box-shadow:var(--shadow);border:1.5px solid var(--border);
+}
+.stat-icon{
+  width:46px;height:46px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;
+}
+.si-green{background:rgba(78,122,81,0.1);color:var(--header);}
+.si-teal{background:rgba(118,215,196,0.2);color:var(--teal-dark);}
+.si-orange{background:rgba(224,123,57,0.12);color:var(--orange);}
+.stat-lbl{font-size:13px;color:var(--sub);font-weight:500;margin-bottom:4px;}
+.stat-val{font-size:32px;font-weight:700;color:var(--text);line-height:1;}
+.stat-sub{font-size:12px;color:var(--sub);margin-top:5px;}
+
+/* ══ DASHBOARD CARDS ══ */
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.dash-card{
+  background:var(--white);border-radius:18px;padding:28px;
+  box-shadow:var(--shadow);border:2px solid transparent;
+  cursor:pointer;transition:all 0.22s;
+}
+.dash-card:hover{
+  border-color:var(--teal);
+  transform:translateY(-5px);
+  box-shadow:0 12px 32px rgba(78,122,81,0.15);
+}
+.dc-icon{
+  width:52px;height:52px;border-radius:14px;
+  background:rgba(78,122,81,0.09);
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;color:var(--header);margin-bottom:16px;
+}
+.dc-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.dc-desc{font-size:13px;color:var(--sub);line-height:1.6;}
+.dc-badge{
+  margin-top:14px;font-size:12px;font-weight:700;
+  color:var(--header);background:rgba(175,213,177,0.3);
+  display:inline-block;padding:4px 12px;border-radius:8px;
+}
+
+/* ══ SECTION HEADER ══ */
+.section-header{margin-bottom:24px;}
+.section-header h2{font-size:24px;font-weight:700;color:var(--text);}
+.section-header p{font-size:13px;color:var(--sub);margin-top:4px;}
+
+/* ══ BLOCK ══ */
+.block{
+  background:var(--white);border-radius:18px;padding:26px 30px;
+  box-shadow:var(--shadow);margin-bottom:20px;
+  border:1px solid var(--border);
+}
+.block-title{
+  font-size:11px;font-weight:700;color:var(--sub);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:18px;
+}
+
+/* ══ FORMS ══ */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-group{display:flex;flex-direction:column;gap:7px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:13px;font-weight:600;color:var(--sub);}
+.form-input,.form-select,.form-textarea{
+  border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;
+  font-size:14px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  color:var(--text);background:var(--white);outline:none;
+  transition:border-color 0.2s;width:100%;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:var(--header);
+  box-shadow:0 0 0 3px rgba(78,122,81,0.1);
+}
+.form-textarea{resize:vertical;min-height:80px;}
+
+/* BUTTONS */
+.btn-primary{
+  background:var(--header);color:#fff;border:none;
+  padding:12px 26px;border-radius:12px;font-weight:600;font-size:15px;
+  cursor:pointer;transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+.btn-primary:hover{background:#3d6140;transform:translateY(-1px);box-shadow:0 5px 16px rgba(78,122,81,0.3);}
+.btn-teal{
+  background:var(--teal);color:var(--text);border:none;
+  padding:12px 26px;border-radius:12px;font-weight:600;font-size:15px;
+  cursor:pointer;transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+.btn-teal:hover{background:var(--teal-dark);color:#fff;transform:translateY(-1px);}
+.btn-outline{
+  background:var(--white);color:var(--text);border:1.5px solid var(--border);
+  padding:12px 26px;border-radius:12px;font-weight:600;font-size:15px;
+  cursor:pointer;transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+.btn-outline:hover{border-color:var(--header);color:var(--header);}
+.btn-danger{
+  background:var(--white);color:var(--red);border:1.5px solid rgba(217,79,61,0.3);
+  padding:12px 26px;border-radius:12px;font-weight:600;font-size:15px;
+  cursor:pointer;transition:all 0.2s;
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+.btn-danger:hover{background:rgba(217,79,61,0.06);border-color:var(--red);}
+
+/* SEARCH BAR */
+.search-bar{
+  display:flex;align-items:center;gap:12px;
+  background:var(--white);border:1.5px solid var(--border);
+  border-radius:12px;padding:11px 18px;
+  transition:border-color 0.2s;
+}
+.search-bar:focus-within{border-color:var(--header);}
+.search-bar input{
+  border:none;outline:none;flex:1;font-size:15px;
+  background:transparent;color:var(--text);
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+.search-bar input::placeholder{color:#bbb;}
+.top-bar{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+
+/* ══ ANIMAL CARDS ══ */
+.animal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.animal-card{
+  background:var(--white);border-radius:16px;padding:22px;
+  box-shadow:0 2px 10px rgba(78,122,81,0.08);
+  border:1.5px solid var(--border);transition:all 0.2s;
+}
+.animal-card:hover{border-color:var(--teal);box-shadow:var(--shadow);}
+.animal-header{display:flex;align-items:center;gap:13px;margin-bottom:14px;}
+.animal-emoji-wrap{
+  width:52px;height:52px;border-radius:14px;
+  background:rgba(78,122,81,0.08);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;flex-shrink:0;
+}
+.animal-name{font-size:16px;font-weight:700;color:var(--text);}
+.animal-species{font-size:12px;color:var(--sub);margin-top:2px;}
+.animal-info{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px;}
+.ai-item{font-size:13px;color:var(--sub);}
+.ai-item span{font-weight:600;color:var(--text);}
+.animal-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  border-top:1px solid var(--border);padding-top:12px;
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;
+}
+.sp-healthy{background:rgba(118,215,196,0.2);color:#2e8b77;}
+.sp-watch{background:rgba(224,123,57,0.12);color:var(--orange);}
+.sp-treatment{background:rgba(217,79,61,0.1);color:var(--red);}
+.status-dot{width:7px;height:7px;border-radius:50%;}
+.dot-green{background:#2e8b77;} .dot-orange{background:var(--orange);} .dot-red{background:var(--red);}
+.card-actions{display:flex;gap:8px;}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--white);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--sub);transition:all 0.18s;
+}
+.icon-btn:hover{border-color:var(--header);color:var(--header);}
+.icon-btn.del:hover{border-color:var(--red);color:var(--red);}
+.empty-state{text-align:center;padding:56px 20px;color:var(--sub);grid-column:1/-1;}
+.empty-icon{font-size:52px;margin-bottom:12px;opacity:0.35;}
+.empty-state p{font-size:15px;}
+
+/* ══ MODAL ══ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.45);z-index:500;
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+@keyframes mUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal{
+  background:var(--white);border-radius:22px;padding:32px;
+  width:100%;max-width:580px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.18);
+  animation:mUp 0.26s cubic-bezier(.22,.68,0,1.2) both;
+  max-height:90vh;overflow-y:auto;
+}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.modal-title{font-size:20px;font-weight:700;color:var(--text);}
+.modal-close{
+  width:36px;height:36px;border-radius:9px;
+  border:1.5px solid var(--border);background:var(--white);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--sub);transition:all 0.18s;font-size:18px;
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+.emoji-picker{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.emoji-opt{
+  width:42px;height:42px;border-radius:10px;
+  border:1.5px solid var(--border);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;transition:all 0.15s;background:var(--white);
+}
+.emoji-opt:hover,.emoji-opt.sel{border-color:var(--header);background:rgba(78,122,81,0.08);}
+
+/* ══ TABLE ══ */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1.5px solid var(--border);}
+.data-table{width:100%;border-collapse:collapse;font-size:14px;}
+.data-table th{
+  font-size:12px;font-weight:700;color:var(--sub);text-align:left;
+  padding:12px 16px;border-bottom:1.5px solid var(--border);
+  text-transform:uppercase;letter-spacing:0.5px;
+  background:rgba(78,122,81,0.03);
+}
+.data-table td{padding:13px 16px;color:var(--text);border-bottom:1px solid var(--border);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tbody tr:hover td{background:rgba(78,122,81,0.025);}
+
+/* BADGES */
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 11px;border-radius:7px;}
+.b-green{background:rgba(118,215,196,0.2);color:#2e8b77;}
+.b-orange{background:rgba(224,123,57,0.12);color:var(--orange);}
+.b-red{background:rgba(217,79,61,0.1);color:var(--red);}
+
+/* ══ HEALTH ══ */
+.health-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:22px;}
+.hs-card{border-radius:14px;padding:20px 22px;text-align:center;border:1.5px solid var(--border);}
+.hs-val{font-size:34px;font-weight:700;line-height:1;}
+.hs-lbl{font-size:13px;color:var(--sub);margin-top:6px;}
+
+.record-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+.record-row:last-child{border-bottom:none;}
+.record-left{display:flex;align-items:center;gap:13px;}
+.rec-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ri-g{background:rgba(118,215,196,0.18);color:#2e8b77;}
+.ri-o{background:rgba(224,123,57,0.12);color:var(--orange);}
+.ri-r{background:rgba(217,79,61,0.1);color:var(--red);}
+.rec-name{font-size:14px;font-weight:600;color:var(--text);}
+.rec-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+.rec-date{font-size:12px;color:var(--sub);white-space:nowrap;}
+
+/* ══ VAX ══ */
+.vax-item{display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid var(--border);}
+.vax-item:last-child{border-bottom:none;}
+.vax-left{display:flex;align-items:center;gap:13px;}
+.vax-icon{width:42px;height:42px;border-radius:11px;background:rgba(78,122,81,0.09);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--header);}
+.vax-name{font-size:14px;font-weight:600;color:var(--text);}
+.vax-detail{font-size:12px;color:var(--sub);margin-top:2px;}
+.vax-status{font-size:12px;font-weight:700;padding:4px 12px;border-radius:9px;}
+.vs-done{background:rgba(118,215,196,0.2);color:#2e8b77;}
+.vs-due{background:rgba(224,123,57,0.12);color:var(--orange);}
+.vs-overdue{background:rgba(217,79,61,0.1);color:var(--red);}
+
+/* ══ TASKS ══ */
+.progress-label{display:flex;justify-content:space-between;font-size:14px;color:var(--sub);margin-bottom:9px;font-weight:500;}
+.progress-bar{height:10px;background:var(--bg);border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--header),var(--teal));border-radius:10px;transition:width 0.5s ease;}
+.filter-row{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-btn{
+  padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  border:1.5px solid var(--border);cursor:pointer;transition:all 0.2s;
+  background:var(--white);color:var(--sub);
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+.filter-btn.active,.filter-btn:hover{border-color:var(--header);color:var(--header);background:rgba(78,122,81,0.06);}
+.task-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+.task-item:last-child{border-bottom:none;}
+.task-check{
+  width:24px;height:24px;border-radius:7px;
+  border:2px solid var(--border);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+}
+.task-check.done{background:var(--header);border-color:var(--header);}
+.task-check.done::after{content:'✓';color:#fff;font-size:13px;font-weight:700;}
+.task-text{flex:1;}
+.task-name{font-size:14px;font-weight:600;color:var(--text);}
+.task-name.done{text-decoration:line-through;color:var(--sub);}
+.task-meta{font-size:12px;color:var(--sub);margin-top:2px;}
+.task-pri{font-size:12px;font-weight:700;padding:3px 10px;border-radius:7px;}
+.tp-h{background:rgba(217,79,61,0.1);color:var(--red);}
+.tp-m{background:rgba(224,123,57,0.12);color:var(--orange);}
+.tp-l{background:rgba(118,215,196,0.2);color:#2e8b77;}
+
+/* ══ INCIDENTS ══ */
+.sev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.sev-opt{
+  border:2px solid var(--border);border-radius:13px;padding:15px 10px;
+  text-align:center;cursor:pointer;transition:all 0.2s;background:var(--white);
+}
+.sev-opt:hover{transform:translateY(-2px);}
+.sev-opt.sel{border-color:var(--header);background:rgba(78,122,81,0.06);box-shadow:0 4px 12px rgba(78,122,81,0.14);}
+.sev-emoji{font-size:24px;margin-bottom:6px;}
+.sev-lbl{font-size:13px;font-weight:700;color:var(--text);}
+.inc-timeline{display:flex;flex-direction:column;}
+.inc-row{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--border);}
+.inc-row:last-child{border-bottom:none;}
+.inc-dot-col{display:flex;flex-direction:column;align-items:center;padding-top:3px;}
+.inc-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.inc-line{width:2px;flex:1;background:var(--border);margin-top:5px;min-height:18px;}
+.inc-title{font-size:14px;font-weight:700;color:var(--text);}
+.inc-desc{font-size:13px;color:var(--sub);margin-top:4px;line-height:1.55;}
+.inc-meta{font-size:12px;color:var(--sub);margin-top:5px;}
+
+/* ══ TOAST ══ */
+.toast{
+  position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(18px);
+  background:var(--text);color:#fff;padding:12px 24px;border-radius:12px;
+  font-size:14px;font-weight:600;opacity:0;transition:all 0.3s;z-index:999;
+  white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,0.18);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.success{background:var(--header);}
+.toast.error{background:var(--red);}
+.toast.info{background:var(--teal-dark);}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:1024px){.cards-grid{grid-template-columns:repeat(2,1fr);} .animal-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:700px){
+  .stats-row,.cards-grid,.animal-grid,.health-stats{grid-template-columns:1fr 1fr;}
+  .form-grid{grid-template-columns:1fr;}
+  nav,.page-wrap{padding-left:16px;padding-right:16px;}
+  .hero-card h1{font-size:22px;} .hero-icon{display:none;}
+  .page-wrap{padding-top:24px;padding-bottom:80px;}
+}
+@media(max-width:480px){
+  .stats-row,.cards-grid{grid-template-columns:1fr;}
+  .animal-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══════════ NAV ══════════ -->
+<nav>
+  <div class="nav-brand">
+    <span class="iconify" data-icon="lucide:shield-check" style="font-size:50px;"></span>
+    WildTrack Worker
+  </div>
+  <div class="nav-right">
+    <div class="nav-icon-btn">
+      <span class="iconify" data-icon="lucide:bell" style="font-size:19px;"></span>
+      <div class="notif-dot"></div>
+    </div>
+    <div class="nav-profile" onclick="toggleProfile()">
+      <img class="nav-avatar" src="https://i.pravatar.cc/64?img=3" alt="">
+      <div>
+        <div class="nav-name">John Doe</div>
+        <div class="nav-role">Animal Caretaker</div>
+      </div>
+      <span class="iconify" data-icon="lucide:chevron-down" style="font-size:13px;color:rgba(255,255,255,0.7);"></span>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="pd-av-wrap">
+          <img class="pd-av" src="https://i.pravatar.cc/64?img=3" alt="">
+          <div class="pd-av-name">John Doe</div>
+          <div class="pd-av-role">Animal Caretaker · Morning Shift</div>
+        </div>
+        <div class="pd-row"><span class="pd-lbl">Worker ID</span><span class="pd-val">WT023</span></div>
+        <div class="pd-row"><span class="pd-lbl">Department</span><span class="pd-val">Animal Care</span></div>
+        <div class="pd-row"><span class="pd-lbl">Zone</span><span class="pd-val">Zone A &amp; B</span></div>
+        <button class="pd-logout" onclick="logout()">
+          <span class="iconify" data-icon="lucide:log-out" data-width="14" style="margin-right:5px;vertical-align:middle;"></span>Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════
+     DASHBOARD
+══════════════════════════════════ -->
+<div class="page active" id="pg-dashboard">
+<div class="page-wrap">
+
+  <div class="hero-card">
+    <div>
+      <h1 id="greetingText">Good Morning, John 👋</h1>
+      <p id="liveDate">Loading...</p>
+    </div>
+    <div class="hero-icon">
+      <span class="iconify" data-icon="lucide:leaf" style="font-size:80px;color:rgba(255,255,255,0.22);"></span>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon si-green"><span class="iconify" data-icon="lucide:paw-print" data-width="22"></span></div>
+      <div class="stat-lbl">Animals Assigned</div>
+      <div class="stat-val" id="dashAnimalCount">8</div>
+      <div class="stat-sub">Across 4 enclosures</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-teal"><span class="iconify" data-icon="lucide:list-checks" data-width="22"></span></div>
+      <div class="stat-lbl">Tasks Today</div>
+      <div class="stat-val" id="dashTaskCount">8</div>
+      <div class="stat-sub" id="dashTaskSub">3 completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-orange"><span class="iconify" data-icon="lucide:syringe" data-width="22"></span></div>
+      <div class="stat-lbl">Vaccinations Due</div>
+      <div class="stat-val">2</div>
+      <div class="stat-sub">Action needed this week</div>
+    </div>
+  </div>
+
+  <div class="cards-grid">
+    <div class="dash-card" onclick="openPage('pg-animals')">
+      <div class="dc-icon"><span class="iconify" data-icon="lucide:paw-print"></span></div>
+      <div class="dc-title">Animal Profiles</div>
+      <div class="dc-desc">Add, edit and manage all animal records including diet, health status and enclosure details.</div>
+      <div class="dc-badge" id="dashAnimalBadge">8 Animals</div>
+    </div>
+    <div class="dash-card" onclick="openPage('pg-feeding')">
+      <div class="dc-icon"><span class="iconify" data-icon="lucide:cookie"></span></div>
+      <div class="dc-title">Feeding Management</div>
+      <div class="dc-desc">Log feeding schedules, food types and track daily consumption per animal.</div>
+      <div class="dc-badge">3 Due Today</div>
+    </div>
+    <div class="dash-card" onclick="openPage('pg-health')">
+      <div class="dc-icon"><span class="iconify" data-icon="lucide:heart-pulse"></span></div>
+      <div class="dc-title">Animal Health</div>
+      <div class="dc-desc">Monitor illness signs, vet visits, medications and full medical treatment records.</div>
+      <div class="dc-badge">1 Under Care</div>
+    </div>
+    <div class="dash-card" onclick="openPage('pg-vaccination')">
+      <div class="dc-icon"><span class="iconify" data-icon="lucide:syringe"></span></div>
+      <div class="dc-title">Vaccination Tracker</div>
+      <div class="dc-desc">Manage vaccination history and get reminders for upcoming due schedules.</div>
+      <div class="dc-badge">2 Due Soon</div>
+    </div>
+    <div class="dash-card" onclick="openPage('pg-tasks')">
+      <div class="dc-icon"><span class="iconify" data-icon="lucide:list-checks"></span></div>
+      <div class="dc-title">Daily Tasks</div>
+      <div class="dc-desc">View, complete and add feeding, cleaning and health check assignments for your shift.</div>
+      <div class="dc-badge" id="dashTaskBadge">5 Remaining</div>
+    </div>
+    <div class="dash-card" onclick="openPage('pg-incidents')">
+      <div class="dc-icon"><span class="iconify" data-icon="lucide:alert-triangle"></span></div>
+      <div class="dc-title">Incident Reports</div>
+      <div class="dc-desc">Submit reports for injuries, escape attempts or any unusual animal behaviour events.</div>
+      <div class="dc-badge">2 This Week</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     ANIMAL PROFILES
+══════════════════════════════════ -->
+<div class="page" id="pg-animals">
+<div class="page-wrap">
+  <button class="back-btn" onclick="openPage('pg-dashboard')">
+    <span class="iconify" data-icon="lucide:arrow-left" data-width="15"></span> Back to Dashboard
+  </button>
+  <div class="section-header">
+    <h2>Animal Profiles</h2>
+    <p>View, add, edit and delete animal records. Use the search or filter to find specific animals.</p>
+  </div>
+  <div class="top-bar">
+    <div class="search-bar" style="flex:1;max-width:420px;">
+      <span class="iconify" data-icon="lucide:search" style="color:#bbb;font-size:17px;flex-shrink:0;"></span>
+      <input type="text" placeholder="Search by name or species..." id="animalSearch" oninput="renderAnimals()">
+    </div>
+    <select class="form-select" id="statusFilter" onchange="renderAnimals()" style="width:190px;">
+      <option value="all">All Statuses</option>
+      <option value="healthy">Healthy</option>
+      <option value="watch">Under Observation</option>
+      <option value="treatment">Under Treatment</option>
+    </select>
+    <button class="btn-primary" onclick="openAnimalModal()">
+      <span class="iconify" data-icon="lucide:plus" data-width="16"></span> Add Animal
+    </button>
+  </div>
+  <div class="animal-grid" id="animalGrid"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     FEEDING MANAGEMENT
+══════════════════════════════════ -->
+<div class="page" id="pg-feeding">
+<div class="page-wrap">
+  <button class="back-btn" onclick="openPage('pg-dashboard')">
+    <span class="iconify" data-icon="lucide:arrow-left" data-width="15"></span> Back to Dashboard
+  </button>
+  <div class="section-header"><h2>Feeding Management</h2><p>Log and track all animal feeding sessions for your shift.</p></div>
+
+  <div class="block">
+    <div class="block-title">Log New Feeding</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Animal</label>
+        <select class="form-select" id="feedAnimal"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Food Type</label>
+        <select class="form-select" id="feedType">
+          <option>Raw Meat</option><option>Fruits &amp; Vegetables</option>
+          <option>Pellets</option><option>Fish</option>
+          <option>Grass / Hay</option><option>Mixed Diet</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantity (kg)</label>
+        <input class="form-input" type="number" id="feedQty" placeholder="e.g. 5.0" min="0" step="0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount Consumed</label>
+        <select class="form-select" id="feedConsumed">
+          <option>All Eaten</option><option>75% Eaten</option>
+          <option>50% Eaten</option><option>25% Eaten</option><option>Refused Food</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes (optional)</label>
+        <textarea class="form-textarea" id="feedNotes" placeholder="Appetite, behaviour observations..."></textarea>
+      </div>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:10px;">
+      <button class="btn-primary" onclick="logFeeding()">
+        <span class="iconify" data-icon="lucide:plus-circle" data-width="16"></span> Log Feeding
+      </button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Today's Feeding Log</div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Time</th><th>Animal</th><th>Food Type</th><th>Qty (kg)</th><th>Consumed</th><th>Logged By</th></tr></thead>
+        <tbody id="feedingTableBody">
+          <tr><td>08:15 AM</td><td>Simba</td><td>Raw Meat</td><td>6.0</td><td><span class="badge b-green">All Eaten</span></td><td>John Doe</td></tr>
+          <tr><td>08:45 AM</td><td>Nila</td><td>Fruits &amp; Veg</td><td>12.0</td><td><span class="badge b-green">All Eaten</span></td><td>John Doe</td></tr>
+          <tr><td>09:30 AM</td><td>Koko</td><td>Mixed Diet</td><td>4.5</td><td><span class="badge b-orange">75% Eaten</span></td><td>John Doe</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     ANIMAL HEALTH
+══════════════════════════════════ -->
+<div class="page" id="pg-health">
+<div class="page-wrap">
+  <button class="back-btn" onclick="openPage('pg-dashboard')">
+    <span class="iconify" data-icon="lucide:arrow-left" data-width="15"></span> Back to Dashboard
+  </button>
+  <div class="section-header"><h2>Animal Health</h2><p>Monitor health records, vet visits and medical treatments.</p></div>
+
+  <div class="health-stats">
+    <div class="hs-card" style="background:rgba(118,215,196,0.1);border-color:rgba(118,215,196,0.35);">
+      <div class="hs-val" style="color:#2e8b77;" id="hcHealthy">–</div>
+      <div class="hs-lbl">Healthy</div>
+    </div>
+    <div class="hs-card" style="background:rgba(224,123,57,0.08);border-color:rgba(224,123,57,0.25);">
+      <div class="hs-val" style="color:var(--orange);" id="hcWatch">–</div>
+      <div class="hs-lbl">Under Observation</div>
+    </div>
+    <div class="hs-card" style="background:rgba(217,79,61,0.07);border-color:rgba(217,79,61,0.2);">
+      <div class="hs-val" style="color:var(--red);" id="hcTreatment">–</div>
+      <div class="hs-lbl">Under Treatment</div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Log Health Event</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Animal</label>
+        <select class="form-select" id="healthAnimal"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Event Type</label>
+        <select class="form-select" id="healthType">
+          <option>Routine Check</option><option>Illness Observation</option>
+          <option>Vet Visit</option><option>Medication Given</option>
+          <option>Post-Surgery Observation</option><option>Injury Report</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Observations / Notes</label>
+        <textarea class="form-textarea" id="healthNotes" placeholder="Symptoms, behaviour, treatment details..."></textarea>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn-primary" onclick="logHealth()">
+        <span class="iconify" data-icon="lucide:stethoscope" data-width="16"></span> Save Record
+      </button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Recent Health Records</div>
+    <div id="healthRecords">
+      <div class="record-row"><div class="record-left"><div class="rec-icon ri-g"><span class="iconify" data-icon="lucide:check-circle" data-width="19"></span></div><div><div class="rec-name">Routine Check — Simba</div><div class="rec-sub">Normal vitals, good appetite, active behaviour</div></div></div><div class="rec-date">Today, 09:00</div></div>
+      <div class="record-row"><div class="record-left"><div class="rec-icon ri-o"><span class="iconify" data-icon="lucide:eye" data-width="19"></span></div><div><div class="rec-name">Observation — Koko</div><div class="rec-sub">Reduced appetite, slightly lethargic — under monitoring</div></div></div><div class="rec-date">Today, 07:30</div></div>
+      <div class="record-row"><div class="record-left"><div class="rec-icon ri-r"><span class="iconify" data-icon="lucide:pill" data-width="19"></span></div><div><div class="rec-name">Medication — Rex</div><div class="rec-sub">Anti-inflammatory administered after vet visit</div></div></div><div class="rec-date">Yesterday</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     VACCINATION TRACKER
+══════════════════════════════════ -->
+<div class="page" id="pg-vaccination">
+<div class="page-wrap">
+  <button class="back-btn" onclick="openPage('pg-dashboard')">
+    <span class="iconify" data-icon="lucide:arrow-left" data-width="15"></span> Back to Dashboard
+  </button>
+  <div class="section-header"><h2>Vaccination Tracker</h2><p>Track vaccination history and manage upcoming schedules.</p></div>
+
+  <div class="block">
+    <div class="block-title">Record Vaccination</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Animal</label>
+        <select class="form-select" id="vaxAnimal"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vaccine Name</label>
+        <select class="form-select" id="vaxName">
+          <option>Rabies Vaccine</option><option>Distemper Vaccine</option>
+          <option>Hepatitis Vaccine</option><option>Tetanus Booster</option>
+          <option>FMD Vaccine</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date Given</label>
+        <input class="form-input" type="date" id="vaxDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Next Due Date</label>
+        <input class="form-input" type="date" id="vaxNext">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Administered By (Vet Name)</label>
+        <input class="form-input" type="text" id="vaxVet" placeholder="e.g. Dr. Lim">
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn-primary" onclick="logVaccination()">
+        <span class="iconify" data-icon="lucide:syringe" data-width="16"></span> Save Record
+      </button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Vaccination Schedule</div>
+    <div id="vaxList">
+      <div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="19"></span></div><div><div class="vax-name">Simba — Rabies Vaccine</div><div class="vax-detail">Last: 12 Mar 2024 · Next: 12 Mar 2025 · Dr. Lim</div></div></div><span class="vax-status vs-done">✓ Done</span></div>
+      <div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="19"></span></div><div><div class="vax-name">Rex — Tetanus Booster</div><div class="vax-detail">Last: 1 Jan 2024 · Next: 15 Mar 2025 · Dr. Ahmad</div></div></div><span class="vax-status vs-due">⏰ Due Soon</span></div>
+      <div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="19"></span></div><div><div class="vax-name">Luna — Distemper</div><div class="vax-detail">Last: 10 Feb 2024 · Next: 28 Feb 2025 · Dr. Lim</div></div></div><span class="vax-status vs-overdue">⚠ Overdue</span></div>
+      <div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="19"></span></div><div><div class="vax-name">Nila — Hepatitis B</div><div class="vax-detail">Last: 20 Jan 2024 · Next: 20 Jul 2025 · Dr. Priya</div></div></div><span class="vax-status vs-done">✓ Done</span></div>
+      <div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="19"></span></div><div><div class="vax-name">Koko — FMD Vaccine</div><div class="vax-detail">Last: 5 Sep 2023 · Next: 10 Mar 2025 · Dr. Ahmad</div></div></div><span class="vax-status vs-due">⏰ Due Soon</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     DAILY TASKS
+══════════════════════════════════ -->
+<div class="page" id="pg-tasks">
+<div class="page-wrap">
+  <button class="back-btn" onclick="openPage('pg-dashboard')">
+    <span class="iconify" data-icon="lucide:arrow-left" data-width="15"></span> Back to Dashboard
+  </button>
+  <div class="section-header"><h2>Daily Tasks</h2><p>Tap checkboxes to mark tasks complete. Your progress syncs live to the dashboard.</p></div>
+
+  <div class="block">
+    <div class="progress-label">
+      <span id="taskDoneLabel">3 of 8 completed</span>
+      <span id="taskPctLabel" style="font-weight:700;color:var(--header);">37%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="taskBar" style="width:37%;"></div></div>
+  </div>
+
+  <div class="block">
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterTasks('all',this)">All Tasks</button>
+      <button class="filter-btn" onclick="filterTasks('pending',this)">Pending</button>
+      <button class="filter-btn" onclick="filterTasks('done',this)">Completed</button>
+    </div>
+    <div id="taskList"></div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Add New Task</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Task Description</label>
+        <input class="form-input" type="text" id="newTaskInput" placeholder="e.g. Clean enclosure 3, refill water tanks...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-select" id="newTaskPriority">
+          <option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assigned Zone</label>
+        <select class="form-select" id="newTaskZone">
+          <option>Zone A</option><option>Zone B</option><option>Zone C</option><option>All Zones</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn-primary" onclick="addTask()">
+        <span class="iconify" data-icon="lucide:plus" data-width="16"></span> Add Task
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     INCIDENT REPORTS
+══════════════════════════════════ -->
+<div class="page" id="pg-incidents">
+<div class="page-wrap">
+  <button class="back-btn" onclick="openPage('pg-dashboard')">
+    <span class="iconify" data-icon="lucide:arrow-left" data-width="15"></span> Back to Dashboard
+  </button>
+  <div class="section-header"><h2>Incident Reports</h2><p>Submit and review reports for injuries, escapes or unusual animal behaviour.</p></div>
+
+  <div class="block">
+    <div class="block-title">Submit New Report</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Animal Involved</label>
+        <select class="form-select" id="incAnimal"><option value="">Select animal (if any)...</option><option>N/A — Worker Only</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Incident Type</label>
+        <select class="form-select" id="incType">
+          <option>Aggressive Behavior</option><option>Injury to Animal</option>
+          <option>Injury to Worker</option><option>Escape Attempt</option>
+          <option>Abnormal Behavior</option><option>Equipment Failure</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Severity Level</label>
+        <div class="sev-grid">
+          <div class="sev-opt sel" onclick="pickSev(this,'low')"><div class="sev-emoji">🟢</div><div class="sev-lbl">Low</div></div>
+          <div class="sev-opt" onclick="pickSev(this,'medium')"><div class="sev-emoji">🟡</div><div class="sev-lbl">Medium</div></div>
+          <div class="sev-opt" onclick="pickSev(this,'high')"><div class="sev-emoji">🔴</div><div class="sev-lbl">High</div></div>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" style="min-height:100px;" id="incDesc" placeholder="What happened — when, where, and any actions taken..."></textarea>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn-primary" onclick="submitIncident()">
+        <span class="iconify" data-icon="lucide:send" data-width="16"></span> Submit Report
+      </button>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Incident History</div>
+    <div class="inc-timeline" id="incidentHistory">
+      <div class="inc-row"><div class="inc-dot-col"><div class="inc-dot" style="background:var(--orange);"></div><div class="inc-line"></div></div><div><div class="inc-title">Aggressive Behavior — Simba (Medium)</div><div class="inc-desc">Territorial aggression during afternoon feeding. Handlers stepped back. Resolved after 10 min.</div><div class="inc-meta">📅 Today 14:30 · Reported by John Doe</div></div></div>
+      <div class="inc-row"><div class="inc-dot-col"><div class="inc-dot" style="background:var(--red);"></div><div class="inc-line"></div></div><div><div class="inc-title">Escape Attempt — Rex (High)</div><div class="inc-desc">Rex attempted to scale fence at enclosure 2 north corner. Fence reinforced same day.</div><div class="inc-meta">📅 Yesterday 10:05 · Reported by Sarah Lim</div></div></div>
+      <div class="inc-row"><div class="inc-dot-col"><div class="inc-dot" style="background:#2e8b77;"></div></div><div><div class="inc-title">Equipment Failure — Gate C2 (Low)</div><div class="inc-desc">Auto-lock malfunctioned. Manually secured. Maintenance team notified.</div><div class="inc-meta">📅 3 days ago · Reported by John Doe</div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════
+     ADD / EDIT ANIMAL MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="animalModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Add New Animal</div>
+      <button class="modal-close" onclick="closeAnimalModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Name *</label><input class="form-input" type="text" id="mName" placeholder="e.g. Simba"></div>
+      <div class="form-group"><label class="form-label">Species *</label><input class="form-input" type="text" id="mSpecies" placeholder="e.g. African Lion"></div>
+      <div class="form-group"><label class="form-label">Age</label><input class="form-input" type="text" id="mAge" placeholder="e.g. 6 yrs"></div>
+      <div class="form-group"><label class="form-label">Weight</label><input class="form-input" type="text" id="mWeight" placeholder="e.g. 190 kg"></div>
+      <div class="form-group"><label class="form-label">Diet</label>
+        <select class="form-select" id="mDiet"><option>Raw Meat</option><option>Fruits &amp; Vegetables</option><option>Fish</option><option>Grass / Hay</option><option>Mixed Diet</option><option>Omnivore</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Health Status</label>
+        <select class="form-select" id="mStatus"><option value="healthy">Healthy</option><option value="watch">Under Observation</option><option value="treatment">Under Treatment</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Enclosure</label>
+        <select class="form-select" id="mEnclosure"><option>Enclosure 1</option><option>Enclosure 2</option><option>Enclosure 3</option><option>Enclosure 4</option><option>Enclosure 5</option><option>Enclosure 6</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Gender</label>
+        <select class="form-select" id="mGender"><option>Male</option><option>Female</option></select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Choose Emoji Icon</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+      </div>
+      <div class="form-group full"><label class="form-label">Notes</label><textarea class="form-textarea" id="mNotes" placeholder="Behavioural notes, special diet needs, medical background..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeAnimalModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveAnimal()">
+        <span class="iconify" data-icon="lucide:save" data-width="15"></span>
+        <span id="modalSaveLbl">Add Animal</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--red);">Delete Animal Profile?</div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <p style="font-size:15px;color:var(--sub);line-height:1.65;">
+      You are about to permanently delete <strong id="deleteAnimalName" style="color:var(--text);"></strong>. This action cannot be undone.
+    </p>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">
+        <span class="iconify" data-icon="lucide:trash-2" data-width="15"></span> Delete
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PAGE NAV ───
+function openPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  syncDashboard();
+}
+// ─── PROFILE ───
+function toggleProfile(){document.getElementById('profileDropdown').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.nav-profile'))document.getElementById('profileDropdown').classList.remove('open');});
+async function logout(){
+  if(!confirm('Are you sure you want to logout?'))return;
+  try{
+    await fetch('http://localhost/WildTrack/api/auth.php?action=logout',{method:'POST',credentials:'include'});
+  }catch(e){}
+  window.location.href='login.html';
+}
+
+// ─── SESSION CHECK & PROFILE LOAD ───
+let currentWorker = null;
+async function initSession(){
+  try{
+    const res = await fetch('http://localhost/WildTrack/api/auth.php?action=me',{credentials:'include'});
+    const data = await res.json();
+    if(!data.success || (data.user.role !== 'worker' && data.user.role !== 'admin')){
+      window.location.href='login.html'; return;
+    }
+    currentWorker = data.user;
+    // Update nav profile
+    document.querySelector('.nav-name').textContent = data.user.username;
+    document.querySelector('.nav-role').textContent = data.user.role === 'admin' ? 'Administrator' : 'Animal Caretaker';
+    document.querySelector('.pd-av-name').textContent = data.user.username;
+    document.querySelector('.pd-av-role').textContent = (data.user.role === 'admin' ? 'Administrator' : 'Animal Caretaker') + ' · Morning Shift';
+    // Update greeting
+    updateGreeting();
+    // Load animals from DB
+    loadAnimals();
+  }catch(e){
+    window.location.href='login.html';
+  }
+}
+
+// ─── GREETING ───
+function updateGreeting(){
+  const now=new Date(),h=now.getHours();
+  const g=h<12?'Good Morning':h<18?'Good Afternoon':'Good Evening';
+  const name = currentWorker ? currentWorker.username : 'Worker';
+  document.getElementById('greetingText').textContent=g+', '+name+' 👋';
+  document.getElementById('liveDate').textContent=now.toLocaleString('en-MY',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+setInterval(()=>{
+  const now=new Date();
+  document.getElementById('liveDate').textContent=now.toLocaleString('en-MY',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+},1000);
+
+// ─── TOAST ───
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  setTimeout(()=>{t.className='toast';},3000);
+}
+
+// ─── ANIMALS ───
+const EMOJIS=['🦁','🐯','🐘','🦍','🐺','🦊','🐆','🐬','🦓','🦏','🐊','🦅','🦜','🦒','🐻','🦌','🐍','🦈','🐧','🦩'];
+const API = 'http://localhost/WildTrack/api/animals.php';
+let animals=[];
+let editingId=null,deletingId=null,selEmoji='🦁';
+
+// ── Fetch all animals from DB ──
+async function loadAnimals(){
+  try{
+    const res = await fetch(API, {credentials:'include'});
+    const data = await res.json();
+    if(data.success){ animals = data.animals; renderAnimals(); syncDashboard(); populateDropdowns(); }
+    else showToast('Failed to load animals: '+data.message,'error');
+  }catch(e){ showToast('Cannot reach server. Is XAMPP running?','error'); }
+}
+
+function buildEmojiPicker(){
+  document.getElementById('emojiPicker').innerHTML=EMOJIS.map(e=>
+    `<div class="emoji-opt${e===selEmoji?' sel':''}" onclick="pickEmoji(this,'${e}')">${e}</div>`
+  ).join('');
+}
+function pickEmoji(el,e){
+  document.querySelectorAll('.emoji-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');selEmoji=e;
+}
+
+function renderAnimals(){
+  const q=(document.getElementById('animalSearch')||{value:''}).value.toLowerCase();
+  const sf=(document.getElementById('statusFilter')||{value:'all'}).value;
+  const list=animals.filter(a=>{
+    return (a.name.toLowerCase().includes(q)||a.species.toLowerCase().includes(q))&&(sf==='all'||a.status===sf);
+  });
+  const g=document.getElementById('animalGrid');
+  if(!list.length){
+    g.innerHTML=`<div class="empty-state"><div class="empty-icon">🐾</div><p>No animals found. Adjust your search or add a new profile.</p></div>`;return;
+  }
+  const sp={healthy:'sp-healthy',watch:'sp-watch',treatment:'sp-treatment'};
+  const dt={healthy:'dot-green',watch:'dot-orange',treatment:'dot-red'};
+  const st={healthy:'Healthy',watch:'Under Observation',treatment:'Under Treatment'};
+  g.innerHTML=list.map(a=>`
+    <div class="animal-card">
+      <div class="animal-header">
+        <div class="animal-emoji-wrap">${a.emoji}</div>
+        <div><div class="animal-name">${a.name}</div><div class="animal-species">${a.species}</div></div>
+      </div>
+      <div class="animal-info">
+        <div class="ai-item">Age: <span>${a.age}</span></div>
+        <div class="ai-item">Weight: <span>${a.weight}</span></div>
+        <div class="ai-item">Diet: <span>${a.diet}</span></div>
+        <div class="ai-item">Enclosure: <span>${a.enclosure}</span></div>
+        <div class="ai-item">Gender: <span>${a.gender}</span></div>
+        ${a.notes?`<div class="ai-item" style="grid-column:1/-1">Notes: <span>${a.notes}</span></div>`:''}
+      </div>
+      <div class="animal-footer">
+        <span class="status-pill ${sp[a.status]}"><span class="status-dot ${dt[a.status]}"></span>${st[a.status]}</span>
+        <div class="card-actions">
+          <button class="icon-btn" title="Edit" onclick="openAnimalModal(${a.id})"><span class="iconify" data-icon="lucide:pencil" data-width="14"></span></button>
+          <button class="icon-btn del" title="Delete" onclick="openDeleteModal(${a.id})"><span class="iconify" data-icon="lucide:trash-2" data-width="14"></span></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function openAnimalModal(id=null){
+  editingId=id;
+  if(id){
+    const a=animals.find(a=>a.id===id);
+    document.getElementById('modalTitle').textContent='Edit Animal';
+    document.getElementById('modalSaveLbl').textContent='Save Changes';
+    document.getElementById('mName').value=a.name;
+    document.getElementById('mSpecies').value=a.species;
+    document.getElementById('mAge').value=a.age;
+    document.getElementById('mWeight').value=a.weight;
+    document.getElementById('mDiet').value=a.diet;
+    document.getElementById('mStatus').value=a.status;
+    document.getElementById('mEnclosure').value=a.enclosure;
+    document.getElementById('mGender').value=a.gender;
+    document.getElementById('mNotes').value=a.notes;
+    selEmoji=a.emoji;
+  } else {
+    document.getElementById('modalTitle').textContent='Add New Animal';
+    document.getElementById('modalSaveLbl').textContent='Add Animal';
+    ['mName','mSpecies','mAge','mWeight','mNotes'].forEach(id=>document.getElementById(id).value='');
+    ['mDiet','mStatus','mEnclosure','mGender'].forEach(id=>document.getElementById(id).selectedIndex=0);
+    selEmoji='🦁';
+  }
+  buildEmojiPicker();
+  document.getElementById('animalModal').classList.add('open');
+}
+function closeAnimalModal(){document.getElementById('animalModal').classList.remove('open');}
+async function saveAnimal(){
+  const name=document.getElementById('mName').value.trim();
+  const species=document.getElementById('mSpecies').value.trim();
+  if(!name||!species){showToast('Name and Species are required.','error');return;}
+  const d={name,species,
+    age:document.getElementById('mAge').value.trim()||'Unknown',
+    weight:document.getElementById('mWeight').value.trim()||'Unknown',
+    diet:document.getElementById('mDiet').value,
+    status:document.getElementById('mStatus').value,
+    enclosure:document.getElementById('mEnclosure').value,
+    gender:document.getElementById('mGender').value,
+    notes:document.getElementById('mNotes').value.trim(),
+    emoji:selEmoji
+  };
+  const method = editingId ? 'PUT' : 'POST';
+  if(editingId) d.id = editingId;
+  try{
+    const res = await fetch(API,{method,credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+    const data = await res.json();
+    if(data.success){
+      showToast(editingId ? `✏️ ${name} updated!` : `🐾 ${name} added!`);
+      closeAnimalModal(); await loadAnimals();
+    } else { showToast(data.message,'error'); }
+  }catch(e){ showToast('Server error. Check XAMPP.','error'); }
+}
+function openDeleteModal(id){
+  deletingId=id;
+  const a=animals.find(a=>a.id===id);
+  document.getElementById('deleteAnimalName').textContent=`${a.name} (${a.species})`;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDeleteModal(){document.getElementById('deleteModal').classList.remove('open');}
+async function confirmDelete(){
+  const a=animals.find(a=>a.id===deletingId);
+  try{
+    const res = await fetch(API,{method:'DELETE',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:deletingId})});
+    const data = await res.json();
+    if(data.success){
+      closeDeleteModal(); await loadAnimals();
+      showToast(`🗑️ ${a.name} removed from profiles.`);
+    } else { showToast(data.message,'error'); }
+  }catch(e){ showToast('Server error. Check XAMPP.','error'); }
+}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ─── DROPDOWNS ───
+function populateDropdowns(){
+  const opts=animals.map(a=>`<option>${a.name} (${a.species})</option>`).join('');
+  const base=`<option value="">Select animal...</option>`+opts;
+  ['feedAnimal','healthAnimal','vaxAnimal'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=base;});
+  const inc=document.getElementById('incAnimal');
+  if(inc)inc.innerHTML=`<option value="">Select animal (if any)...</option>`+opts+`<option>N/A — Worker Only</option>`;
+}
+populateDropdowns();
+
+// ─── HEALTH COUNTS ───
+function updateHealthCounts(){
+  document.getElementById('hcHealthy').textContent=animals.filter(a=>a.status==='healthy').length;
+  document.getElementById('hcWatch').textContent=animals.filter(a=>a.status==='watch').length;
+  document.getElementById('hcTreatment').textContent=animals.filter(a=>a.status==='treatment').length;
+}
+updateHealthCounts();
+
+// ─── DASHBOARD SYNC ───
+function syncDashboard(){
+  document.getElementById('dashAnimalCount').textContent=animals.length;
+  document.getElementById('dashAnimalBadge').textContent=animals.length+' Animals';
+  updateHealthCounts();updateTaskProgress();
+}
+
+// ─── FEEDING ───
+function logFeeding(){
+  const animal=document.getElementById('feedAnimal').value;
+  const qty=document.getElementById('feedQty').value;
+  const type=document.getElementById('feedType').value;
+  const consumed=document.getElementById('feedConsumed').value;
+  if(!animal||!qty){showToast('Please select an animal and enter quantity.','error');return;}
+  const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const bc=consumed==='All Eaten'?'b-green':consumed==='Refused Food'?'b-red':'b-orange';
+  document.getElementById('feedingTableBody').insertAdjacentHTML('afterbegin',
+    `<tr><td>${time}</td><td>${animal.split(' ')[0]}</td><td>${type}</td><td>${parseFloat(qty).toFixed(1)}</td><td><span class="badge ${bc}">${consumed}</span></td><td>John Doe</td></tr>`
+  );
+  document.getElementById('feedQty').value='';document.getElementById('feedNotes').value='';
+  showToast('🍖 Feeding logged successfully!');
+}
+
+// ─── HEALTH ───
+function logHealth(){
+  const animal=document.getElementById('healthAnimal').value;
+  const type=document.getElementById('healthType').value;
+  const notes=document.getElementById('healthNotes').value;
+  if(!animal){showToast('Please select an animal.','error');return;}
+  const iMap={'Routine Check':'ri-g lucide:check-circle','Illness Observation':'ri-o lucide:eye','Vet Visit':'ri-g lucide:stethoscope','Medication Given':'ri-r lucide:pill','Post-Surgery Observation':'ri-o lucide:eye','Injury Report':'ri-r lucide:alert-triangle'};
+  const ic=(iMap[type]||'ri-g lucide:check-circle').split(' ');
+  document.getElementById('healthRecords').insertAdjacentHTML('afterbegin',
+    `<div class="record-row"><div class="record-left"><div class="rec-icon ${ic[0]}"><span class="iconify" data-icon="${ic[1]}" data-width="19"></span></div><div><div class="rec-name">${type} — ${animal.split(' ')[0]}</div><div class="rec-sub">${notes||'No additional notes'}</div></div></div><div class="rec-date">Just now</div></div>`
+  );
+  document.getElementById('healthAnimal').value='';document.getElementById('healthNotes').value='';
+  showToast('🩺 Health record saved!');
+}
+
+// ─── VACCINATION ───
+function logVaccination(){
+  const animal=document.getElementById('vaxAnimal').value;
+  const name=document.getElementById('vaxName').value;
+  const date=document.getElementById('vaxDate').value;
+  const next=document.getElementById('vaxNext').value;
+  const vet=document.getElementById('vaxVet').value;
+  if(!animal||!date){showToast('Animal and date given are required.','error');return;}
+  document.getElementById('vaxList').insertAdjacentHTML('afterbegin',
+    `<div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="19"></span></div><div><div class="vax-name">${animal.split(' ')[0]} — ${name}</div><div class="vax-detail">Given: ${date}${next?' · Next: '+next:''}${vet?' · '+vet:''}</div></div></div><span class="vax-status vs-done">✓ Done</span></div>`
+  );
+  document.getElementById('vaxAnimal').value='';document.getElementById('vaxDate').value='';
+  document.getElementById('vaxNext').value='';document.getElementById('vaxVet').value='';
+  showToast('💉 Vaccination recorded!');
+}
+
+// ─── TASKS ───
+let tasks=[
+  {id:1,name:'Morning feeding — Simba & Rex',meta:'Enclosure 1 & 2 · 07:00 AM',zone:'Zone A',priority:'high',done:true},
+  {id:2,name:'Clean Gorilla enclosure',meta:'Enclosure 3 · Est. 45 min',zone:'Zone B',priority:'med',done:true},
+  {id:3,name:'Health check — Koko',meta:'Follow-up from yesterday',zone:'Zone B',priority:'high',done:true},
+  {id:4,name:'Afternoon feeding — Nila',meta:'Enclosure 5 · 12:00 PM',zone:'Zone C',priority:'med',done:false},
+  {id:5,name:'Refill water tanks — Zone A',meta:'All Zone A enclosures',zone:'Zone A',priority:'low',done:false},
+  {id:6,name:'Fence integrity check — Zone B',meta:'Weekly routine',zone:'Zone B',priority:'med',done:false},
+  {id:7,name:'End-of-day feeding log submission',meta:'Submit before shift ends',zone:'All Zones',priority:'low',done:false},
+  {id:8,name:'Luna medication dose',meta:'Anti-parasite · 2nd dose',zone:'Zone A',priority:'high',done:false},
+];
+let taskNextId=9,taskFilter='all';
+
+function renderTasks(){
+  const filtered=tasks.filter(t=>taskFilter==='all'?true:taskFilter==='done'?t.done:!t.done);
+  const pc={high:'tp-h',med:'tp-m',low:'tp-l'},pl={high:'High',med:'Medium',low:'Low'};
+  document.getElementById('taskList').innerHTML=filtered.length
+    ?filtered.map(t=>`
+      <div class="task-item">
+        <div class="task-check ${t.done?'done':''}" onclick="toggleTask(${t.id})"></div>
+        <div class="task-text">
+          <div class="task-name ${t.done?'done':''}">${t.name}</div>
+          <div class="task-meta">${t.meta} · ${t.zone}</div>
+        </div>
+        <span class="task-pri ${pc[t.priority]}">${pl[t.priority]}</span>
+      </div>`).join('')
+    :`<div class="empty-state"><div class="empty-icon">✅</div><p>${taskFilter==='done'?'No completed tasks yet.':'All tasks are done!'}</p></div>`;
+  updateTaskProgress();
+}
+function toggleTask(id){const t=tasks.find(t=>t.id===id);if(t){t.done=!t.done;renderTasks();syncDashboard();}}
+function filterTasks(f,btn){
+  taskFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderTasks();
+}
+function addTask(){
+  const input=document.getElementById('newTaskInput'),name=input.value.trim();
+  if(!name){showToast('Please enter a task description.','error');return;}
+  tasks.push({id:taskNextId++,name,meta:'Added manually · Just now',zone:document.getElementById('newTaskZone').value,priority:document.getElementById('newTaskPriority').value,done:false});
+  input.value='';renderTasks();syncDashboard();showToast('📋 Task added!');
+}
+function updateTaskProgress(){
+  const done=tasks.filter(t=>t.done).length,total=tasks.length,pct=total?Math.round(done/total*100):0;
+  document.getElementById('taskDoneLabel').textContent=`${done} of ${total} completed`;
+  document.getElementById('taskPctLabel').textContent=`${pct}%`;
+  document.getElementById('taskBar').style.width=pct+'%';
+  document.getElementById('dashTaskCount').textContent=total;
+  document.getElementById('dashTaskSub').textContent=(total-done)+' remaining';
+  document.getElementById('dashTaskBadge').textContent=(total-done)+' Remaining';
+}
+renderTasks();
+
+// ─── INCIDENTS ───
+let selSev='low';
+function pickSev(el,s){document.querySelectorAll('.sev-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selSev=s;}
+function submitIncident(){
+  const type=document.getElementById('incType').value;
+  const desc=document.getElementById('incDesc').value.trim();
+  const animal=document.getElementById('incAnimal').value;
+  if(!desc){showToast('Please describe the incident.','error');return;}
+  const dotC=selSev==='high'?'var(--red)':selSev==='medium'?'var(--orange)':'#2e8b77';
+  const sev=selSev.charAt(0).toUpperCase()+selSev.slice(1);
+  const time=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('incidentHistory').insertAdjacentHTML('afterbegin',
+    `<div class="inc-row"><div class="inc-dot-col"><div class="inc-dot" style="background:${dotC};"></div><div class="inc-line"></div></div><div><div class="inc-title">${type}${animal?' — '+animal.split(' ')[0]:''} (${sev})</div><div class="inc-desc">${desc}</div><div class="inc-meta">📅 Today ${time} · Reported by John Doe</div></div></div>`
+  );
+  document.getElementById('incAnimal').value='';document.getElementById('incDesc').value='';
+  showToast('🚨 Incident report submitted!');
+}
+
+// ─── BOOT ───
+initSession();
+</script>
+</body>
+</html>
