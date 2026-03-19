@@ -30,8 +30,8 @@
     --text-light: #B8CEB4;
     --white: #FFFFFF;
     --border: #D8E8D4;
-    --sidebar-w: 280px;
-    --topbar-h: 72px;
+    --sidebar-w: 240px;
+    --topbar-h: 60px;
     --radius: 14px;
     --radius-sm: 10px;
     --shadow: 0 2px 12px rgba(30, 60, 25, 0.08);
@@ -48,7 +48,7 @@
 }
 
 html {
-    font-size: 14px;
+    font-size: 13px;
 }
 
 body {
@@ -57,7 +57,7 @@ body {
     color: var(--text-dark);
     min-height: 100vh;
     display: flex;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 /* ===== SCROLLBAR ===== */
@@ -89,7 +89,7 @@ body {
     background: var(--green-dark);
     display: flex;
     flex-direction: column;
-    z-index: 100;
+    z-index: 200;
     transition: transform var(--transition);
     overflow-y: auto;
     overflow-x: hidden;
@@ -99,7 +99,7 @@ body {
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 28px 22px 22px;
+    padding: 18px 22px 22px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -131,7 +131,7 @@ body {
 
 .brand-sub {
     display: block;
-    font-size: 18px;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.5);
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -139,7 +139,7 @@ body {
 }
 
 .sidebar-nav {
-    padding: 18px 14px;
+    padding: 12px 10px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -147,7 +147,7 @@ body {
 }
 
 .nav-section-label {
-    font-size: 18px;
+    font-size: 12px;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.35);
@@ -159,11 +159,11 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 14px;
+    padding: 9px 12px;
     border-radius: 11px;
     color: rgba(255, 255, 255, 0.65);
     text-decoration: none;
-    font-size: 21px;
+    font-size: 14px;
     font-weight: 700;
     transition: all var(--transition);
     cursor: pointer;
@@ -199,7 +199,7 @@ body {
     margin-left: auto;
     background: var(--orange);
     color: #fff;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
     padding: 3px 9px;
     border-radius: 20px;
@@ -234,7 +234,7 @@ body {
     border-radius: 50%;
     background: var(--green-light);
     color: #fff;
-    font-size: 21px;
+    font-size: 14px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -244,14 +244,14 @@ body {
 
 .user-name {
     display: block;
-    font-size: 21px;
+    font-size: 14px;
     font-weight: 600;
     color: #fff;
 }
 
 .user-role {
     display: block;
-    font-size: 18px;
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.5);
     margin-top: 1px;
 }
@@ -335,13 +335,13 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 21px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-dark);
 }
 
 .live-badge {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--green-light);
     background: var(--green-pale);
@@ -377,10 +377,10 @@ body {
     border: none;
     background: none;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-dark);
     outline: none;
-    width: 220px;
+    width: 180px;
 }
 
 .search-bar input::placeholder {
@@ -449,13 +449,13 @@ body {
     padding: 16px 18px;
     border-bottom: 1px solid var(--border);
     font-weight: 600;
-    font-size: 23px;
+    font-size: 15px;
 }
 
 .notif-header button {
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 12px;
     color: var(--green-mid);
     cursor: pointer;
     font-weight: 600;
@@ -472,9 +472,9 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 12px 14px;
+    padding: 9px 12px;
     border-radius: 9px;
-    font-size: 19px;
+    font-size: 13px;
     transition: background var(--transition);
 }
 
@@ -493,7 +493,7 @@ body {
 
 .notif-item small {
     color: var(--text-muted);
-    font-size: 18px;
+    font-size: 12px;
 }
 
 .notif-icon {
@@ -529,7 +529,7 @@ body {
 /* ===== PAGES ===== */
 .page {
     display: none;
-    padding: 32px;
+    padding: 20px;
     flex: 1;
 }
 
@@ -542,21 +542,21 @@ body {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 28px;
+    margin-bottom: 18px;
     gap: 16px;
     flex-wrap: wrap;
 }
 
 .page-header h1 {
 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 33px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-dark);
     line-height: 1.2;
 }
 
 .page-header p {
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-muted);
     margin-top: 5px;
 }
@@ -566,10 +566,10 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 11px 22px;
+    padding: 8px 16px;
     border-radius: var(--radius-sm);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19.5px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     border: none;
@@ -610,7 +610,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 8px 16px;
     border-radius: 8px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 18.5px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
@@ -627,7 +627,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 8px 16px;
     border-radius: 8px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 18.5px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
@@ -644,7 +644,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 6px 14px;
     border-radius: 7px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
@@ -661,7 +661,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 7px 16px;
     border-radius: 7px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
@@ -679,7 +679,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 9px;
     border-radius: 9px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition);
@@ -700,7 +700,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 11px;
     border-radius: 9px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     margin-top: 4px;
@@ -719,7 +719,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 6px 14px;
     border-radius: 7px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
@@ -735,7 +735,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 8px 18px;
     border-radius: 8px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19px;
+    font-size: 13px;
     cursor: pointer;
     transition: all var(--transition);
     color: var(--text-mid);
@@ -755,7 +755,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     border: none;
     cursor: pointer;
     color: var(--text-muted);
-    font-size: 26px;
+    font-size: 17px;
     line-height: 1;
     padding: 2px 6px;
     border-radius: 4px;
@@ -778,19 +778,19 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 22px 26px 18px;
+    padding: 14px 18px 12px;
     gap: 12px;
     flex-wrap: wrap;
 }
 
 .card-header h3 {
-    font-size: 23px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--text-dark);
 }
 
 .card-link {
-    font-size: 19px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--green-mid);
     text-decoration: none;
@@ -805,8 +805,8 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .stat-card {
@@ -814,7 +814,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    padding: 24px;
+    padding: 16px;
 }
 
 .stat-top {
@@ -859,7 +859,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .stat-change {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 20px;
@@ -882,7 +882,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
 .stat-value {
 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 37px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-dark);
     line-height: 1.1;
@@ -890,7 +890,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .stat-label {
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-muted);
     font-weight: 500;
     margin-bottom: 14px;
@@ -926,8 +926,8 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .charts-row {
     display: grid;
     grid-template-columns: 1fr 340px;
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .chart-card {
@@ -950,7 +950,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 6px 14px;
     border-radius: 20px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition);
@@ -974,7 +974,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-mid);
 }
 
@@ -1017,7 +1017,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 19.5px;
+    font-size: 13px;
 }
 
 .data-table thead tr {
@@ -1027,7 +1027,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .data-table thead th {
     padding: 12px 26px;
     text-align: left;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.8px;
     text-transform: uppercase;
@@ -1060,19 +1060,19 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .data-table tbody td small {
-    font-size: 18px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
 .txn-id {
     font-family: monospace;
-    font-size: 18px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
 .price-cell strong {
     color: var(--green-dark);
-    font-size: 21px;
+    font-size: 14px;
 }
 
 .action-cell {
@@ -1087,7 +1087,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: inline-block;
     padding: 5px 14px;
     border-radius: 20px;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -1136,7 +1136,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .promo-badge {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 1px;
     color: var(--text-muted);
@@ -1144,13 +1144,13 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .promo-title {
-    font-size: 20px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--text-dark);
 }
 
 .promo-sub {
-    font-size: 18px;
+    font-size: 12px;
     color: var(--text-muted);
     margin-top: 3px;
 }
@@ -1173,7 +1173,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     border: none;
     background: none;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19.5px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text-muted);
     cursor: pointer;
@@ -1197,7 +1197,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .tab-count {
     background: var(--orange);
     color: #fff;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
     padding: 3px 9px;
     border-radius: 20px;
@@ -1240,14 +1240,14 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .promo-card h4 {
-    font-size: 21px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--text-dark);
     margin-bottom: 7px;
 }
 
 .promo-card p {
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-muted);
     line-height: 1.55;
 }
@@ -1257,14 +1257,14 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     align-items: center;
     justify-content: space-between;
     margin-top: 16px;
-    font-size: 18px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
 .discount-tag {
     background: var(--orange-light);
     color: var(--orange);
-    font-size: 19px;
+    font-size: 13px;
     font-weight: 700;
     padding: 4px 12px;
     border-radius: 7px;
@@ -1287,12 +1287,12 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .add-promo-inner {
     text-align: center;
     color: var(--text-muted);
-    font-size: 19px;
+    font-size: 13px;
 }
 
 .add-icon {
     display: block;
-    font-size: 37px;
+    font-size: 18px;
     margin-bottom: 10px;
     opacity: 0.4;
 }
@@ -1310,7 +1310,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .rating-label {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -1327,25 +1327,25 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .stars {
-    font-size: 33px;
+    font-size: 14px;
     color: #F59E0B;
     margin-bottom: 10px;
 }
 
 .rating-sub {
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-muted);
 }
 
 .satisfaction-card {
-    padding: 28px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
 .satisfaction-card h3 {
-    font-size: 22px;
+    font-size: 14px;
     font-weight: 700;
     margin-bottom: 6px;
 }
@@ -1354,7 +1354,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     align-items: center;
     gap: 14px;
-    font-size: 19px;
+    font-size: 13px;
 }
 
 .bar-row>span:first-child {
@@ -1422,7 +1422,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--white);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 24px 28px;
+    padding: 16px 28px;
     box-shadow: var(--shadow);
 }
 
@@ -1441,7 +1441,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--amber-light);
     color: var(--amber);
     font-weight: 700;
-    font-size: 21px;
+    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1455,7 +1455,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
 .reviewer-name {
     font-weight: 700;
-    font-size: 20px;
+    font-size: 13px;
     color: var(--text-dark);
 }
 
@@ -1470,19 +1470,19 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .review-stars {
-    font-size: 21px;
+    font-size: 14px;
     color: #F59E0B;
     margin-top: 4px;
 }
 
 .review-stars span {
-    font-size: 18px;
+    font-size: 12px;
     color: var(--text-muted);
     margin-left: 8px;
 }
 
 .review-text {
-    font-size: 21px;
+    font-size: 14px;
     color: var(--text-mid);
     line-height: 1.7;
     font-style: italic;
@@ -1492,8 +1492,8 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .media-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .media-card {
@@ -1524,7 +1524,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     position: absolute;
     top: 12px;
     left: 12px;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.5px;
     padding: 4px 12px;
@@ -1554,12 +1554,12 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .media-id {
-    font-size: 18px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
 .media-meta {
-    font-size: 18.5px;
+    font-size: 12px;
     color: var(--text-muted);
     line-height: 2;
 }
@@ -1598,7 +1598,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     border: 1.5px solid var(--border);
     border-radius: 9px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-mid);
     background: var(--white);
     cursor: pointer;
@@ -1615,7 +1615,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     border: 1.5px solid var(--border);
     border-radius: 9px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-mid);
     outline: none;
     transition: border-color var(--transition);
@@ -1632,7 +1632,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 27px;
+    font-size: 12px;
     flex-shrink: 0;
 }
 
@@ -1661,7 +1661,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 27px;
+    font-size: 12px;
     flex-shrink: 0;
 }
 
@@ -1679,20 +1679,20 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
 .announce-body strong {
     display: block;
-    font-size: 20px;
+    font-size: 13px;
     font-weight: 700;
     margin-bottom: 5px;
 }
 
 .announce-body p {
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-mid);
     margin-bottom: 7px;
     line-height: 1.6;
 }
 
 .announce-body small {
-    font-size: 18px;
+    font-size: 12px;
     color: var(--text-muted);
 }
 
@@ -1700,15 +1700,15 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 .settings-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 14px;
 }
 
 .settings-section {
-    padding: 28px;
+    padding: 18px;
 }
 
 .settings-section h3 {
-    font-size: 22px;
+    font-size: 14px;
     font-weight: 700;
     margin-bottom: 22px;
 }
@@ -1719,7 +1719,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
 .form-group label {
     display: block;
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text-muted);
     margin-bottom: 7px;
@@ -1733,7 +1733,7 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     border: 1.5px solid var(--border);
     border-radius: 9px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
-    font-size: 20px;
+    font-size: 13px;
     color: var(--text-dark);
     background: var(--white);
     outline: none;
@@ -1754,7 +1754,7 @@ textarea.form-input {
     justify-content: space-between;
     padding: 14px 0;
     border-bottom: 1px solid var(--green-bg);
-    font-size: 20px;
+    font-size: 13px;
     color: var(--text-mid);
 }
 
@@ -1800,11 +1800,21 @@ textarea.form-input {
     transform: translateX(20px);
 }
 
+.form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 6px;
+}
+
 /* ===== PROFILE ===== */
 .profile-grid {
     display: grid;
     grid-template-columns: 260px 1fr;
-    gap: 20px;
+    gap: 14px;
 }
 
 .profile-card {
@@ -1818,7 +1828,7 @@ textarea.form-input {
     border-radius: 50%;
     background: var(--green-dark);
     color: #fff;
-    font-size: 37px;
+    font-size: 18px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -1827,12 +1837,12 @@ textarea.form-input {
 }
 
 .profile-card h2 {
-    font-size: 27px;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .profile-card p {
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-muted);
     margin-top: 5px;
 }
@@ -1843,7 +1853,7 @@ textarea.form-input {
     align-items: center;
     justify-content: space-between;
     padding: 18px 26px;
-    font-size: 19px;
+    font-size: 13px;
     color: var(--text-muted);
     border-top: 1px solid var(--green-bg);
     gap: 12px;
@@ -1898,12 +1908,12 @@ textarea.form-input {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 22px 28px;
+    padding: 14px 20px;
     border-bottom: 1px solid var(--border);
 }
 
 .modal-header h3 {
-    font-size: 23px;
+    font-size: 15px;
     font-weight: 700;
 }
 
@@ -1914,7 +1924,7 @@ textarea.form-input {
     border: none;
     background: var(--green-bg);
     cursor: pointer;
-    font-size: 22px;
+    font-size: 14px;
     color: var(--text-muted);
     transition: all var(--transition);
 }
@@ -1925,7 +1935,7 @@ textarea.form-input {
 }
 
 .modal-body {
-    padding: 28px;
+    padding: 18px;
 }
 
 /* UPLOAD ZONE */
@@ -1949,12 +1959,12 @@ textarea.form-input {
 }
 
 .upload-drop-zone p {
-    font-size: 19px;
+    font-size: 13px;
     font-weight: 600;
 }
 
 .upload-drop-zone small {
-    font-size: 18px;
+    font-size: 12px;
 }
 
 /* ===== TOAST ===== */
@@ -1966,7 +1976,7 @@ textarea.form-input {
     color: white;
     padding: 16px 26px;
     border-radius: 12px;
-    font-size: 20px;
+    font-size: 13px;
     font-weight: 500;
     box-shadow: var(--shadow-lg);
     opacity: 0;
@@ -2827,7 +2837,70 @@ textarea.form-input {
 
 </main>
 
-<!-- MODALS -->
+<!-- Edit & Approve Modal -->
+<div class="modal-overlay" id="editApproveModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h3>Review &amp; Approve Booking</h3>
+      <button onclick="closeModal('editApproveModal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div id="eaProofThumb" style="margin-bottom:20px;display:none;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;">Payment Screenshot</p>
+        <img id="eaProofImg" src="" alt="Payment proof"
+             style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid var(--border);background:var(--green-bg);"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+        <p style="display:none;color:var(--text-muted);font-size:13px;margin-top:6px;">⚠ Screenshot not accessible from this machine.</p>
+      </div>
+
+      <input type="hidden" id="eaBookingRef"/>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label class="form-label">Booking Ref</label>
+          <input id="eaRefDisplay" type="text" readonly class="form-input" style="background:var(--green-bg);color:var(--text-muted);"/>
+        </div>
+        <div>
+          <label class="form-label">Ticket Type</label>
+          <select id="eaTicketType" class="form-input">
+            <option value="">— keep as submitted —</option>
+            <option value="Adult">Adult</option>
+            <option value="Child">Child</option>
+            <option value="Group">Group</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Visit Date</label>
+          <input id="eaVisitDate" type="date" class="form-input"/>
+        </div>
+        <div>
+          <label class="form-label">Price per Ticket (RM)</label>
+          <input id="eaPrice" type="number" min="0" step="0.01" placeholder="e.g. 20.00" class="form-input"/>
+        </div>
+        <div>
+          <label class="form-label">Visitor Name</label>
+          <input id="eaUsername" type="text" placeholder="Leave blank to keep" class="form-input"/>
+        </div>
+        <div>
+          <label class="form-label">Visitor Email</label>
+          <input id="eaEmail" type="email" placeholder="Leave blank to keep" class="form-input"/>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-muted);margin-top:14px;">
+        ✏ Only change fields that need correcting. Blank fields keep the visitor's original values.
+        Approving generates QR codes and notifies the visitor instantly.
+      </p>
+
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button class="btn-approve" style="flex:1;padding:12px;" onclick="submitApproval()">✓ Confirm &amp; Approve</button>
+        <button class="btn-reject" style="padding:12px 20px;" onclick="closeModal('editApproveModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Proof Modal -->
 <div class="modal-overlay" id="proofModal">
   <div class="modal" style="max-width:640px;">
@@ -2961,7 +3034,7 @@ function toggleNotifications() {
 document.addEventListener('click', e => {
   const panel = document.getElementById('notifPanel');
   const btn = document.querySelector('.notif-btn');
-  if (!panel.contains(e.target) && !btn.contains(e.target)) {
+  if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
     panel.classList.remove('open');
   }
 });
@@ -2989,12 +3062,11 @@ let _allPayments = [];
 
 async function loadPendingPayments() {
   try {
-    const res = await fetch('api/tickets.php?action=pending_payments', { credentials: 'include' });
+    const res = await fetch('api/tickets.php?action=get_pending', { credentials: 'include' });
     const data = await res.json();
     if (!data.success) {
       if (res.status === 401 || res.status === 403) {
-        showToast('Session expired. Please log in again.', 'error');
-        setTimeout(() => window.location.href = 'login.html', 1500);
+        // Not logged in as admin — silently skip, don't redirect mid-page
         return;
       }
       showToast(data.message || 'Failed to load payments.', 'error');
@@ -3026,10 +3098,12 @@ function renderApprovalTable(payments) {
   }
   tbody.innerHTML = payments.map(p => {
     const proofBtn = p.payment_proof
-      ? `<button class="btn-view-proof" onclick="viewProof('${p.payment_proof}','${p.booking_ref}','${p.username}','${p.visit_date}')">View Receipt</button>`
+      ? `<button class="btn-view-proof" onclick="viewProof('${p.payment_proof}','${p.booking_ref}','${p.username}','${p.visit_date}')">View Screenshot</button>`
       : '<span style="color:var(--text-muted);font-size:12px;">No file</span>';
     const dateStr = p.purchase_date ? p.purchase_date.split(' ')[0] : '—';
     const statusBadge = `<span class="status-badge ${p.status}">${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span>`;
+    const ticketSummary = `${p.ticket_types || p.ticket_type || '—'} × ${p.ticket_count || 1}`;
+    const totalPrice = parseFloat(p.total_price || p.price || 0).toFixed(2);
     const actionCell = p.status === 'pending'
       ? `<button class="btn-approve" onclick="approveTicket(this,'${p.booking_ref}')">✓ Approve</button>
          <button class="btn-reject"  onclick="rejectTicket(this,'${p.booking_ref}')">✕ Reject</button>`
@@ -3037,8 +3111,8 @@ function renderApprovalTable(payments) {
     return `<tr>
       <td class="txn-id">${p.booking_ref}</td>
       <td><strong>${p.username}</strong><br/><small>${p.email||''}</small></td>
-      <td>${p.ticket_type} × 1</td>
-      <td><strong>RM${parseFloat(p.price).toFixed(2)}</strong></td>
+      <td>${ticketSummary}</td>
+      <td><strong>RM${totalPrice}</strong></td>
       <td>${proofBtn}</td>
       <td>${dateStr}</td>
       <td>${statusBadge}</td>
@@ -3057,8 +3131,8 @@ function renderOverviewApprovals(payments) {
   tbody.innerHTML = payments.map(p => `<tr>
     <td class="txn-id">${p.booking_ref}</td>
     <td><strong>${p.username}</strong></td>
-    <td>${p.ticket_type}</td>
-    <td><strong>RM${parseFloat(p.price).toFixed(2)}</strong></td>
+    <td>${p.ticket_types || p.ticket_type || '—'} × ${p.ticket_count || 1}</td>
+    <td><strong>RM${parseFloat(p.total_price || p.price || 0).toFixed(2)}</strong></td>
     <td class="action-cell">
       <button class="btn-approve" onclick="approveTicket(this,'${p.booking_ref}')">Approve</button>
       <button class="btn-reject"  onclick="rejectTicket(this,'${p.booking_ref}')">Reject</button>
@@ -3066,19 +3140,66 @@ function renderOverviewApprovals(payments) {
   </tr>`).join('');
 }
 
-async function approveTicket(btn, bookingRef) {
-  if (!confirm(`Approve booking ${bookingRef}? QR codes will be generated and the visitor notified.`)) return;
-  btn.disabled = true; btn.textContent = 'Approving…';
+function approveTicket(btn, bookingRef) {
+  const row = _allPayments.find(p => p.booking_ref === bookingRef);
+
+  document.getElementById('eaBookingRef').value  = bookingRef;
+  document.getElementById('eaRefDisplay').value  = bookingRef;
+  document.getElementById('eaTicketType').value  = '';
+  document.getElementById('eaVisitDate').value   = row?.visit_date || '';
+  document.getElementById('eaPrice').value       = row?.total_price
+    ? (parseFloat(row.total_price) / (parseInt(row.ticket_count) || 1)).toFixed(2) : '';
+  document.getElementById('eaUsername').value    = row?.username || '';
+  document.getElementById('eaEmail').value       = row?.email || '';
+
+  const thumbWrap = document.getElementById('eaProofThumb');
+  const thumbImg  = document.getElementById('eaProofImg');
+  if (row?.payment_proof) {
+    thumbImg.src = 'http://localhost/WildTrack/' + row.payment_proof;
+    thumbWrap.style.display = 'block';
+  } else {
+    thumbWrap.style.display = 'none';
+  }
+
+  openModal('editApproveModal');
+}
+
+async function submitApproval() {
+  const bookingRef = document.getElementById('eaBookingRef').value;
+  const priceVal   = document.getElementById('eaPrice').value.trim();
+  const payload = {
+    booking_ref:  bookingRef,
+    ticket_type:  document.getElementById('eaTicketType').value.trim(),
+    visit_date:   document.getElementById('eaVisitDate').value.trim(),
+    price:        priceVal ? parseFloat(priceVal) : null,
+    username:     document.getElementById('eaUsername').value.trim(),
+    email:        document.getElementById('eaEmail').value.trim(),
+  };
+  // Strip empty so backend COALESCE keeps original values
+  Object.keys(payload).forEach(k => { if (payload[k] === '' || payload[k] === null) delete payload[k]; });
+
+  const confirmBtn = document.querySelector('#editApproveModal .btn-approve');
+  confirmBtn.disabled = true; confirmBtn.textContent = 'Approving…';
+
   try {
-    const res = await fetch('api/tickets.php?action=approve_payment', {
+    const res  = await fetch('api/tickets.php?action=approve_payment', {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ booking_ref: bookingRef })
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (data.success) { showToast(`${bookingRef} approved — visitor notified ✓`); await loadPendingPayments(); }
-    else { showToast(data.message || 'Approval failed.', 'error'); btn.disabled = false; btn.textContent = '✓ Approve'; }
-  } catch (err) { showToast('Network error. Try again.', 'error'); btn.disabled = false; btn.textContent = '✓ Approve'; }
+    if (data.success) {
+      closeModal('editApproveModal');
+      showToast(`${bookingRef} approved — visitor notified ✓`);
+      await loadPendingPayments();
+    } else {
+      showToast(data.message || 'Approval failed.', 'error');
+    }
+  } catch (err) {
+    showToast('Network error. Try again.', 'error');
+  } finally {
+    confirmBtn.disabled = false; confirmBtn.textContent = '✓ Confirm & Approve';
+  }
 }
 
 async function rejectTicket(btn, bookingRef) {
@@ -3125,9 +3246,12 @@ async function loadAdminNotifications() {
 }
 
 function startAutoRefresh() {
-  loadPendingPayments();
-  loadAdminNotifications();
-  setInterval(() => { loadPendingPayments(); loadAdminNotifications(); }, 30000);
+  try { loadPendingPayments(); } catch(e) {}
+  try { loadAdminNotifications(); } catch(e) {}
+  setInterval(() => {
+    try { loadPendingPayments(); } catch(e) {}
+    try { loadAdminNotifications(); } catch(e) {}
+  }, 30000);
 }
 
 // ---- PRICE EDIT ----
@@ -3196,6 +3320,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 // ---- TOAST ----
 function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
+  if (!toast) return;
   toast.textContent = (type === 'error' ? '✕ ' : '✓ ') + message;
   toast.style.background = type === 'error' ? '#DC2626' : '#2D5A27';
   toast.classList.add('show');
