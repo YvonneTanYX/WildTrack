@@ -209,20 +209,95 @@ switch ($action) {
     }
 
     // ─────────────────────────────────────────────────────
-    //  NEW: pending_payments — admin lists all pending
+    //  stats — overview dashboard numbers (admin)
+    // ─────────────────────────────────────────────────────
+    case 'stats': {
+        requireRole('admin');
+        $pdo = getDB();
+
+        // Total tickets sold (all time, approved only)
+        $totalTickets = $pdo->query(
+            "SELECT COUNT(*) FROM tickets WHERE status = 'approved'"
+        )->fetchColumn();
+
+        // Pending approvals count
+        $pendingCount = $pdo->query(
+            "SELECT COUNT(DISTINCT booking_ref) FROM tickets WHERE status = 'pending'"
+        )->fetchColumn();
+
+        // Total revenue (approved tickets)
+        $totalRevenue = $pdo->query(
+            "SELECT COALESCE(SUM(price),0) FROM tickets WHERE status = 'approved'"
+        )->fetchColumn();
+
+        // Today's tickets (approved, visit_date = today)
+        $todayTickets = $pdo->query(
+            "SELECT COUNT(*) FROM tickets WHERE status = 'approved' AND DATE(purchase_date) = CURDATE()"
+        )->fetchColumn();
+
+        respond(true, 'OK', [
+            'total_tickets'  => (int) $totalTickets,
+            'pending_count'  => (int) $pendingCount,
+            'total_revenue'  => (float) $totalRevenue,
+            'today_tickets'  => (int) $todayTickets,
+        ]);
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  get_pending — admin lists pending bookings (grouped)
+    // ─────────────────────────────────────────────────────
+    case 'get_pending': {
+        requireRole('admin');
+        $pdo  = getDB();
+        // One row per booking_ref — shows ticket summary, total price, proof from first ticket
+        $stmt = $pdo->query(
+            "SELECT
+                t.booking_ref,
+                t.user_id,
+                t.visit_date,
+                t.status,
+                MIN(t.payment_proof) AS payment_proof,
+                MIN(t.purchase_date) AS purchase_date,
+                COUNT(t.ticket_id)   AS ticket_count,
+                SUM(t.price)         AS total_price,
+                GROUP_CONCAT(DISTINCT t.ticket_type ORDER BY t.ticket_type SEPARATOR ', ') AS ticket_types,
+                u.username,
+                u.email
+             FROM tickets t
+             JOIN users u ON t.user_id = u.user_id
+             WHERE t.status = 'pending'
+             GROUP BY t.booking_ref, t.user_id, t.visit_date, t.status, u.username, u.email
+             ORDER BY MIN(t.purchase_date) DESC"
+        );
+        respond(true, 'OK', ['payments' => $stmt->fetchAll()]);
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  NEW: pending_payments — kept for compatibility
     // ─────────────────────────────────────────────────────
     case 'pending_payments': {
         requireRole('admin');
         $pdo  = getDB();
         $stmt = $pdo->query(
-            "SELECT t.ticket_id, t.user_id, t.ticket_type, t.price, t.visit_date,
-                    t.booking_ref, t.status, t.payment_proof, t.purchase_date,
-                    u.username, u.email
+            "SELECT
+                t.booking_ref,
+                t.user_id,
+                t.visit_date,
+                t.status,
+                MIN(t.payment_proof) AS payment_proof,
+                MIN(t.purchase_date) AS purchase_date,
+                COUNT(t.ticket_id)   AS ticket_count,
+                SUM(t.price)         AS total_price,
+                GROUP_CONCAT(DISTINCT t.ticket_type ORDER BY t.ticket_type SEPARATOR ', ') AS ticket_types,
+                u.username,
+                u.email
              FROM tickets t
              JOIN users u ON t.user_id = u.user_id
              WHERE t.status = 'pending'
-             GROUP BY t.booking_ref
-             ORDER BY t.purchase_date DESC"
+             GROUP BY t.booking_ref, t.user_id, t.visit_date, t.status, u.username, u.email
+             ORDER BY MIN(t.purchase_date) DESC"
         );
         respond(true, 'OK', ['payments' => $stmt->fetchAll()]);
         break;
@@ -230,7 +305,7 @@ switch ($action) {
 
     // ─────────────────────────────────────────────────────
     //  NEW: approve_payment — admin approves a booking ref
-    //       Generates QR for all tickets, sends notification
+    //       Saves any admin edits, generates QR, notifies visitor
     // ─────────────────────────────────────────────────────
     case 'approve_payment': {
         $admin = requireRole('admin');
@@ -238,6 +313,11 @@ switch ($action) {
         $ref   = clean($body['booking_ref'] ?? '');
 
         if (!$ref) respond(false, 'booking_ref required.');
+
+        // Optional admin overrides
+        $newType      = isset($body['ticket_type'])  && $body['ticket_type']  !== '' ? clean($body['ticket_type'])       : null;
+        $newPrice     = isset($body['price'])         && $body['price']         !== '' ? floatval($body['price'])          : null;
+        $newVisitDate = isset($body['visit_date'])    && $body['visit_date']    !== '' ? clean($body['visit_date'])        : null;
 
         $pdo = getDB();
 
@@ -260,13 +340,20 @@ switch ($action) {
             $userId    = $tickets[0]['user_id'];
             $ticketIds = [];
 
+            // Build the UPDATE — apply admin edits where provided, generate QR
             $updateStmt = $pdo->prepare(
-                "UPDATE tickets SET status = 'approved', qr_code = ? WHERE ticket_id = ?"
+                "UPDATE tickets
+                 SET status     = 'approved',
+                     qr_code    = ?,
+                     ticket_type = COALESCE(?, ticket_type),
+                     price       = COALESCE(?, price),
+                     visit_date  = COALESCE(?, visit_date)
+                 WHERE ticket_id = ?"
             );
 
             foreach ($tickets as $t) {
                 $qr = 'http://localhost/WildTrack/verify.php?code=QR-' . strtoupper(uniqid()) . '-' . $t['user_id'];
-                $updateStmt->execute([$qr, $t['ticket_id']]);
+                $updateStmt->execute([$qr, $newType, $newPrice, $newVisitDate, $t['ticket_id']]);
                 $ticketIds[] = $t['ticket_id'];
             }
 
