@@ -1301,7 +1301,7 @@
                         <div class="ticket-name">Adult Pass</div>
                         <div class="ticket-sub">Age 13-64 • Full access</div>
                     </div>
-                    <div class="ticket-price">RM20</div>
+                    <div class="ticket-price" id="ticket-price-adult">RM20</div>
                 </div>
                 <div class="ticket-bottom">
                     <span class="badge-orange">Best Seller</span>
@@ -1324,7 +1324,7 @@
                         <div class="ticket-name">Child Pass</div>
                         <div class="ticket-sub">Age 4-12 • Under 4 free</div>
                     </div>
-                    <div class="ticket-price">RM10</div>
+                    <div class="ticket-price" id="ticket-price-child">RM10</div>
                 </div>
                 <div class="ticket-bottom">
                     <span class="badge-green">Interactive Map Included</span>
@@ -1347,7 +1347,7 @@
                     <div class="ticket-name">Senior Pass</div>
                     <div class="ticket-sub">Age 65+ • Full access</div>
                 </div>
-                <div class="ticket-price">RM15</div>
+                <div class="ticket-price" id="ticket-price-senior">RM15</div>
             </div>
              <div class="ticket-bottom">
                  <span class="badge-green">Senior Discount</span>
@@ -1371,7 +1371,7 @@
                         <div class="ticket-name">Family Bundle</div>
                             <div class="ticket-sub">2 Adults + 1 Child + 1 Senior</div>
                     </div>
-                        <div class="ticket-price">RM55</div>
+                        <div class="ticket-price" id="ticket-price-family">RM55</div>
                 </div>
                 <div class="ticket-bottom">
                     <span class="family-check">
@@ -1923,6 +1923,7 @@
 // ════════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════════
+// Prices loaded dynamically from DB — loadPrices() called on window load
 const prices     = { adult: 20, child: 10, senior: 15, family: 55 };
 const quantities = { adult: 1,  child: 0,  senior: 0,  family: 0  };
 const labels     = { adult: 'Adult Pass', child: 'Child Pass', senior: 'Senior Pass', family: 'Family Bundle' };
@@ -1931,6 +1932,26 @@ const addonPrices = { safari: 5, feeding: 12 };
 const addonQty    = { safari: 0, feeding: 0 };
 const addonLabels = { safari: 'Safari Shuttle', feeding: 'Feeding Pass' };
 const addonIcons  = { safari: 'lucide:bus', feeding: 'lucide:cookie' };
+
+// Map DB ticket_type value -> local key used in prices/quantities objects
+const typeKeyMap = { 'Adult': 'adult', 'Child': 'child', 'Senior': 'senior', 'Group': 'family' };
+
+async function loadPrices() {
+    try {
+        const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_prices');
+        const data = await res.json();
+        if (!data.success) return;
+        data.prices.forEach(function(row) {
+            const key = typeKeyMap[row.ticket_type];
+            if (!key) return;
+            prices[key] = parseFloat(row.price);
+            // Update the visible price tag on the ticket card
+            const priceEl = document.getElementById('ticket-price-' + key);
+            if (priceEl) priceEl.textContent = 'RM' + parseFloat(row.price).toFixed(0);
+        });
+        calculateTotal();
+    } catch(e) { /* silently fall back to defaults */ }
+}
 
 let appliedVoucher  = null;
 let selectedDate    = new Date();
@@ -2594,6 +2615,8 @@ function escHtml(str) {
 
 // Start polling on load in case user has pending bookings from previous sessions
 window.addEventListener('load', function() {
+    // Load prices from DB so admin edits reflect immediately
+    loadPrices();
     // Light poll on page load to update bell badge only
     pollNotifications();
     // Poll every 60s when not on pending page (less aggressive)

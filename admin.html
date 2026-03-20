@@ -2333,25 +2333,12 @@ textarea.form-input {
       <div class="card promos-card">
         <div class="card-header">
           <h3>Active Promotions</h3>
-          <a href="#" class="card-link" onclick="showPage('ticketing')">Manage →</a>
+          <a href="#" class="card-link" onclick="goToPromotions()">Manage →</a>
         </div>
-        <div class="promo-list">
+        <div class="promo-list" id="overviewPromoList">
           <div class="promo-item green-bg">
-            <div class="promo-badge">SUMMER SALE</div>
-            <div class="promo-title">20% Off All Family Passes</div>
-            <div class="promo-sub">Ends in: 14 Days</div>
+            <div class="promo-badge" style="color:var(--text-muted);">Loading…</div>
           </div>
-          <div class="promo-item blue-bg">
-            <div class="promo-badge">NIGHT SAFARI</div>
-            <div class="promo-title">Buy 1 Get 1 Free (Weekdays)</div>
-            <div class="promo-sub">Ends in: 3 Days</div>
-          </div>
-          <div class="promo-item amber-bg">
-            <div class="promo-badge">SENIOR WED</div>
-            <div class="promo-title">RM5 Off Every Wednesday</div>
-            <div class="promo-sub">Ongoing</div>
-          </div>
-          <button class="btn-outline-full" onclick="showPage('ticketing')">+ Create New Promotion</button>
         </div>
       </div>
     </div>
@@ -2398,96 +2385,32 @@ textarea.form-input {
     <div class="tab-content" id="tab-pricing">
       <div class="card">
         <div class="card-header">
-          <h3>Ticket Categories & Pricing</h3>
-          <p style="font-size:13px;color:var(--text-muted)">Manage standard admission rates</p>
+          <h3>Ticket Categories &amp; Pricing</h3>
+          <p style="font-size:13px;color:var(--text-muted)">Changes take effect immediately on the visitor booking page</p>
         </div>
         <table class="data-table">
           <thead><tr><th>Category</th><th>Description</th><th>Age Range</th><th>Current Price</th><th>Actions</th></tr></thead>
-          <tbody>
-            <tr>
-              <td><strong>Adult Pass</strong></td>
-              <td>Full access · Best Seller</td>
-              <td>13 – 64 years</td>
-              <td class="price-cell" id="price-adult"><strong>RM20.00</strong></td>
-              <td><button class="btn-edit" onclick="editPrice('adult','RM20.00')">Edit Price</button></td>
-            </tr>
-            <tr>
-              <td><strong>Child Pass</strong></td>
-              <td>Interactive Map Included · Under 4 free</td>
-              <td>4 – 12 years</td>
-              <td class="price-cell" id="price-child"><strong>RM10.00</strong></td>
-              <td><button class="btn-edit" onclick="editPrice('child','RM10.00')">Edit Price</button></td>
-            </tr>
-            <tr>
-              <td><strong>Family Bundle</strong></td>
-              <td>Priority Entry · Save 15%</td>
-              <td>2 Adults + 1 Children + 1 Senior</td>
-              <td class="price-cell" id="price-family"><strong>RM55.00</strong></td>
-              <td><button class="btn-edit" onclick="editPrice('family','RM55.00')">Edit Price</button></td>
-            </tr>
-            <tr>
-              <td><strong>Senior Pass</strong></td>
-              <td>Full access</td>
-              <td>65+ years</td>
-              <td class="price-cell" id="price-senior"><strong>RM15.00</strong></td>
-              <td><button class="btn-edit" onclick="editPrice('senior','RM15.00')">Edit Price</button></td>
-            </tr>
+          <tbody id="pricingTableBody">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Loading prices&#8230;</td></tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Tab: Promotions -->
     <div class="tab-content" id="tab-promotions">
       <div class="card">
         <div class="card-header">
-          <h3>Active Promotions</h3>
-          <button class="btn btn-primary" onclick="openPromoModal()">+ Add Promotion</button>
+          <h3>Voucher Promotions</h3>
+          <button class="btn btn-primary" onclick="openPromoModal()">+ Add Voucher</button>
         </div>
-        <div class="promos-grid">
-          <div class="promo-card">
-            <div class="promo-card-header">
-              <span class="status-badge approved">ACTIVE</span>
-              <button class="icon-btn-sm">⋯</button>
-            </div>
-            <h4>SUMMER24</h4>
-            <p>20% off all Adult tickets for the summer season.</p>
-            <div class="promo-footer">
-              <span>Valid until Aug 31, 2024</span>
-              <span class="discount-tag">-20%</span>
-            </div>
-          </div>
-          <div class="promo-card">
-            <div class="promo-card-header">
-              <span class="status-badge approved">ACTIVE</span>
-              <button class="icon-btn-sm">⋯</button>
-            </div>
-            <h4>FAMILYPACK</h4>
-            <p>Buy 2 Adults, get 1 Child free. Valid weekdays only.</p>
-            <div class="promo-footer">
-              <span>Valid until Dec 31, 2024</span>
-              <span class="discount-tag green">B2G1 Free</span>
-            </div>
-          </div>
-          <div class="promo-card">
-            <div class="promo-card-header">
-              <span class="status-badge approved">ACTIVE</span>
-              <button class="icon-btn-sm">⋯</button>
-            </div>
-            <h4>SENIORWED</h4>
-            <p>Additional RM5 off for seniors every Wednesday.</p>
-            <div class="promo-footer">
-              <span>Ongoing</span>
-              <span class="discount-tag">-RM5</span>
-            </div>
-          </div>
-          <div class="promo-card add-promo-card" onclick="openPromoModal()">
-            <div class="add-promo-inner">
-              <span class="add-icon">+</span>
-              <span>Create New Promotion</span>
-            </div>
-          </div>
-        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Code</th><th>Type</th><th>Discount</th><th>Min Spend</th><th>Uses</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="vouchersTableBody">
+            <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">Loading vouchers…</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -2920,28 +2843,33 @@ textarea.form-input {
 <!-- Price Edit Modal -->
 <div class="modal-overlay" id="priceModal">
   <div class="modal" style="max-width:400px;">
-    <div class="modal-header"><h3>Edit Price</h3><button onclick="closeModal('priceModal')">✕</button></div>
+    <div class="modal-header"><h3>Edit Ticket Price</h3><button onclick="closeModal('priceModal')">✕</button></div>
     <div class="modal-body">
+      <input type="hidden" id="priceTicketType"/>
       <div class="form-group"><label>Category</label><input type="text" class="form-input" id="priceCategory" readonly/></div>
-      <div class="form-group"><label>New Price (RM)</label><input type="number" class="form-input" id="priceValue" placeholder="0.00"/></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="savePrice()">Save Price</button>
+      <div class="form-group"><label>New Price (RM)</label><input type="number" class="form-input" id="priceValue" min="0.01" step="0.01" placeholder="0.00"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="savePrice()">Save &amp; Update Live</button>
     </div>
   </div>
 </div>
 
-<!-- Promo Modal -->
+<!-- Promo / Voucher Modal -->
 <div class="modal-overlay" id="promoModal">
   <div class="modal" style="max-width:480px;">
-    <div class="modal-header"><h3>Create New Promotion</h3><button onclick="closeModal('promoModal')">✕</button></div>
+    <div class="modal-header"><h3>Add New Voucher</h3><button onclick="closeModal('promoModal')">✕</button></div>
     <div class="modal-body">
-      <div class="form-group"><label>Promo Code</label><input type="text" class="form-input" placeholder="e.g. SUMMER25"/></div>
-      <div class="form-group"><label>Description</label><input type="text" class="form-input" placeholder="Describe the promotion"/></div>
+      <div class="form-group"><label>Voucher Code</label><input type="text" class="form-input" id="pmCode" placeholder="e.g. SUMMER25" style="text-transform:uppercase;"/></div>
       <div class="form-group"><label>Discount Type</label>
-        <select class="form-input"><option>Percentage (%)</option><option>Fixed Amount (RM)</option><option>Buy X Get Y Free</option></select>
+        <select class="form-input" id="pmDiscountType">
+          <option value="fixed">Fixed Amount (RM)</option>
+          <option value="percent">Percentage (%)</option>
+        </select>
       </div>
-      <div class="form-group"><label>Discount Value</label><input type="number" class="form-input" placeholder="0"/></div>
-      <div class="form-group"><label>Valid Until</label><input type="date" class="form-input"/></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="closeModal('promoModal')">Create Promotion</button>
+      <div class="form-group"><label>Discount Value</label><input type="number" class="form-input" id="pmDiscountValue" min="0.01" step="0.01" placeholder="e.g. 10"/></div>
+      <div class="form-group"><label>Minimum Spend (RM) <small style="color:var(--text-muted);font-weight:400;">0 = no minimum</small></label><input type="number" class="form-input" id="pmMinSpend" min="0" step="0.01" value="0"/></div>
+      <div class="form-group"><label>Max Uses</label><input type="number" class="form-input" id="pmMaxUses" min="1" value="1"/></div>
+      <div class="form-group"><label>Expires On <small style="color:var(--text-muted);font-weight:400;">leave blank = no expiry</small></label><input type="date" class="form-input" id="pmExpiresAt"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="submitNewVoucher()">Create Voucher</button>
     </div>
   </div>
 </div>
@@ -3054,6 +2982,10 @@ function switchTab(btn, tabId) {
   page.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
   const target = document.getElementById(tabId);
   if (target) target.classList.add('active');
+
+  // Lazy-load dynamic tabs
+  if (tabId === 'tab-pricing')    loadPricingTable();
+  if (tabId === 'tab-promotions') loadVouchersTable();
 }
 
 // ---- TICKET ACTIONS (LIVE — connected to database) ----
@@ -3288,6 +3220,8 @@ function startAutoRefresh() {
   try { loadAllStats(); } catch(e) {}
   try { loadPendingPayments(); } catch(e) {}
   try { loadAdminNotifications(); } catch(e) {}
+  try { loadPricingTable(); } catch(e) {}
+  try { loadVouchersTable(); } catch(e) {}
   setInterval(() => {
     try { loadAllStats(); } catch(e) {}
     try { loadPendingPayments(); } catch(e) {}
@@ -3295,21 +3229,230 @@ function startAutoRefresh() {
   }, 30000);
 }
 
-// ---- PRICE EDIT ----
+// ---- PRICE EDIT (dynamic — saves to DB) ----
+
+// DB ticket_type value for each admin key
+const adminTypeMap = {
+  adult: 'Adult', child: 'Child', senior: 'Senior', family: 'Group'
+};
+const ageRangeMap = {
+  adult: '13 – 64 years', child: '4 – 12 years', senior: '65+ years', family: '2 Adults + 1 Child + 1 Senior'
+};
+const descMap = {
+  adult: 'Full access · Best Seller', child: 'Interactive Map Included · Under 4 free',
+  senior: 'Full access', family: 'Priority Entry · Save 15%'
+};
+
+async function loadPricingTable() {
+  try {
+    const res  = await fetch('api/tickets.php?action=get_prices', { credentials: 'include' });
+    const data = await res.json();
+    const tbody = document.getElementById('pricingTableBody');
+    if (!tbody) return;
+    if (!data.success || !data.prices.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">No prices found. Run the SQL file first.</td></tr>';
+      return;
+    }
+    // Map DB type back to admin key
+    const reverseMap = { Adult:'adult', Child:'child', Senior:'senior', Group:'family' };
+    tbody.innerHTML = data.prices.map(row => {
+      const key  = reverseMap[row.ticket_type] || row.ticket_type.toLowerCase();
+      const age  = ageRangeMap[key]  || '—';
+      const desc = descMap[key] || row.description || '—';
+      return `<tr>
+        <td><strong>${row.label}</strong></td>
+        <td>${desc}</td>
+        <td>${age}</td>
+        <td class="price-cell" id="price-${key}"><strong>RM${parseFloat(row.price).toFixed(2)}</strong></td>
+        <td><button class="btn-edit" onclick="editPrice('${key}','${row.ticket_type}','RM${parseFloat(row.price).toFixed(2)}')">Edit Price</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error('loadPricingTable error', e); }
+}
+
 let currentPriceCategory = '';
-function editPrice(category, currentPrice) {
+let currentPriceDBType   = '';
+function editPrice(category, dbType, currentPrice) {
   currentPriceCategory = category;
-  document.getElementById('priceCategory').value = category.charAt(0).toUpperCase() + category.slice(1) + ' Pass';
-  document.getElementById('priceValue').value = currentPrice.replace('RM','');
+  currentPriceDBType   = dbType;
+  document.getElementById('priceTicketType').value = dbType;
+  document.getElementById('priceCategory').value   = dbType === 'Group' ? 'Family Bundle' : dbType + ' Pass';
+  document.getElementById('priceValue').value      = currentPrice.replace('RM','');
   openModal('priceModal');
 }
-function savePrice() {
-  const val = parseFloat(document.getElementById('priceValue').value);
-  if (isNaN(val) || val <= 0) { alert('Please enter a valid price'); return; }
-  const cell = document.getElementById('price-' + currentPriceCategory);
-  if (cell) cell.innerHTML = `<strong>RM${val.toFixed(2)}</strong>`;
-  closeModal('priceModal');
-  showToast(`Price updated to RM${val.toFixed(2)}`);
+
+async function savePrice() {
+  const val    = parseFloat(document.getElementById('priceValue').value);
+  const dbType = document.getElementById('priceTicketType').value;
+  if (isNaN(val) || val <= 0) { showToast('Please enter a valid price.', 'error'); return; }
+
+  const btn = document.querySelector('#priceModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const res  = await fetch('api/tickets.php?action=save_price', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticket_type: dbType, price: val })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('priceModal');
+      showToast(`${dbType} price updated to RM${val.toFixed(2)} — live on visitor page ✓`);
+      await loadPricingTable();
+    } else {
+      showToast(data.message || 'Failed to save price.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save & Update Live'; }
+}
+
+// ---- VOUCHERS / PROMOTIONS (dynamic — loads from DB) ----
+
+async function loadVouchersTable() {
+  try {
+    const res  = await fetch('api/tickets.php?action=get_vouchers', { credentials: 'include' });
+    const data = await res.json();
+
+    // Always update overview widget with active vouchers
+    renderOverviewPromos(data.success ? data.vouchers : []);
+
+    const tbody = document.getElementById('vouchersTableBody');
+    if (!tbody) return;
+    if (!data.success || !data.vouchers.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">No vouchers yet. Click + Add Voucher to create one.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.vouchers.map(v => {
+      const discountLabel = v.discount_type === 'percent'
+        ? `${v.discount_value}%` : `RM${parseFloat(v.discount_value).toFixed(2)}`;
+      const expiryLabel = v.expires_at ? v.expires_at : 'No expiry';
+      const usesLabel   = `${v.used_count} / ${v.max_uses}`;
+      const activeClass = v.is_active == 1 ? 'approved' : 'rejected';
+      const activeLabel = v.is_active == 1 ? 'Active' : 'Inactive';
+      const toggleLabel = v.is_active == 1 ? 'Deactivate' : 'Activate';
+      return `<tr>
+        <td><strong style="letter-spacing:0.5px;">${v.code}</strong></td>
+        <td>${v.discount_type === 'percent' ? 'Percent' : 'Fixed'}</td>
+        <td><strong style="color:var(--green-dark);">${discountLabel} off</strong></td>
+        <td>${parseFloat(v.min_spend) > 0 ? 'RM' + parseFloat(v.min_spend).toFixed(2) : '—'}</td>
+        <td>${usesLabel}</td>
+        <td>${expiryLabel}</td>
+        <td><span class="status-badge ${activeClass}">${activeLabel}</span></td>
+        <td class="action-cell">
+          <button class="btn-edit" onclick="toggleVoucher(${v.id})">${toggleLabel}</button>
+          <button class="btn-reject" onclick="deleteVoucher(${v.id},'${v.code}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error('loadVouchersTable error', e); }
+}
+
+function renderOverviewPromos(vouchers) {
+  const list = document.getElementById('overviewPromoList');
+  if (!list) return;
+  const colors = ['green-bg', 'blue-bg', 'amber-bg'];
+  // Only show active vouchers, max 4
+  const active = vouchers.filter(v => v.is_active == 1).slice(0, 4);
+  if (!active.length) {
+    list.innerHTML =
+      '<div class="promo-item" style="color:var(--text-muted);font-size:13px;padding:14px 16px;">No active promotions.</div>' +
+      '<button class="btn-outline-full" onclick="goOverviewTicketing()">+ Create New Promotion</button>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  list.innerHTML = active.map((v, i) => {
+    const colorClass = colors[i % colors.length];
+    const discountLabel = v.discount_type === 'percent'
+      ? v.discount_value + '% Off'
+      : 'RM' + parseFloat(v.discount_value).toFixed(2) + ' Off';
+    const minLabel = parseFloat(v.min_spend) > 0
+      ? ' (min spend RM' + parseFloat(v.min_spend).toFixed(2) + ')' : '';
+    let expiryLabel = 'Ongoing';
+    if (v.expires_at) {
+      const exp = new Date(v.expires_at); exp.setHours(0,0,0,0);
+      const diff = Math.round((exp - today) / 86400000);
+      expiryLabel = diff < 0 ? 'Expired' : diff === 0 ? 'Expires today' : 'Ends in: ' + diff + ' day' + (diff !== 1 ? 's' : '');
+    }
+    return '<div class="promo-item ' + colorClass + '">' +
+      '<div class="promo-badge">' + v.code + '</div>' +
+      '<div class="promo-title">' + discountLabel + minLabel + '</div>' +
+      '<div class="promo-sub">' + expiryLabel + '</div>' +
+      '</div>';
+  }).join('') +
+  '<button class="btn-outline-full" onclick="goOverviewTicketing()">+ Create New Promotion</button>';
+
+  // Update the Active Promotions count in the stat card
+  document.querySelectorAll('.stat-card').forEach(card => {
+    if (card.querySelector('.stat-label')?.textContent === 'Active Promotions') {
+      const val = card.querySelector('.stat-value');
+      if (val) val.textContent = String(active.length).padStart(2,'0');
+    }
+  });
+}
+
+async function submitNewVoucher() {
+  const code     = document.getElementById('pmCode').value.trim().toUpperCase();
+  const dtype    = document.getElementById('pmDiscountType').value;
+  const dvalue   = parseFloat(document.getElementById('pmDiscountValue').value);
+  const minSpend = parseFloat(document.getElementById('pmMinSpend').value) || 0;
+  const maxUses  = parseInt(document.getElementById('pmMaxUses').value)    || 1;
+  const expires  = document.getElementById('pmExpiresAt').value || null;
+
+  if (!code)             { showToast('Voucher code is required.', 'error'); return; }
+  if (!dvalue || dvalue <= 0) { showToast('Discount value must be > 0.', 'error'); return; }
+
+  const btn = document.querySelector('#promoModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  try {
+    const res  = await fetch('api/tickets.php?action=save_voucher', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, discount_type: dtype, discount_value: dvalue, min_spend: minSpend, max_uses: maxUses, expires_at: expires })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('promoModal');
+      showToast(`Voucher ${code} created ✓`);
+      // Clear form
+      ['pmCode','pmDiscountValue','pmMinSpend','pmExpiresAt'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      document.getElementById('pmMaxUses').value = '1';
+      await loadVouchersTable();
+    } else {
+      showToast(data.message || 'Failed to create voucher.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Create Voucher'; }
+}
+
+async function deleteVoucher(id, code) {
+  if (!confirm(`Delete voucher "${code}"? This cannot be undone.`)) return;
+  try {
+    const res  = await fetch('api/tickets.php?action=delete_voucher', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) { showToast(`Voucher ${code} deleted.`, 'error'); await loadVouchersTable(); }
+    else showToast(data.message || 'Delete failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+async function toggleVoucher(id) {
+  try {
+    const res  = await fetch('api/tickets.php?action=toggle_voucher', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.is_active ? 'Voucher activated.' : 'Voucher deactivated.');
+      await loadVouchersTable();
+    } else showToast(data.message || 'Toggle failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
 }
 
 // ---- MEDIA ----
@@ -3348,6 +3491,12 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 function openPromoModal() { openModal('promoModal'); }
+function goOverviewTicketing() { showPage('ticketing'); }
+function goToPromotions() {
+  showPage('ticketing');
+  const btn = document.querySelector('.tab[onclick*="tab-promotions"]');
+  if (btn) switchTab(btn, 'tab-promotions');
+}
 function openUploadModal() { openModal('uploadModal'); }
 function openAttractionModal() { openModal('attractionModal'); }
 
@@ -3440,7 +3589,7 @@ function initReportsChart() {
         datasets: [{
           label: 'Revenue (RM)',
           data: [280000, 310000, 340000, 295000, 320000, 312890],
-          backgroundColor: 'rgba(45,90,39,0.8)',          backgroundColor: 'rgba(45,90,39,0.8)',
+          backgroundColor: 'rgba(45,90,39,0.8)',
           borderRadius: 6,
           borderSkipped: false,
         }]

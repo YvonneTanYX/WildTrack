@@ -448,6 +448,121 @@ switch ($action) {
         break;
     }
 
+    // ─────────────────────────────────────────────────────
+    //  get_prices — public, visitor side loads this on init
+    // ─────────────────────────────────────────────────────
+    case 'get_prices': {
+        $pdo  = getDB();
+        $stmt = $pdo->query(
+            "SELECT ticket_type, label, description, price
+             FROM ticket_prices
+             ORDER BY FIELD(ticket_type,'Adult','Child','Senior','Group')"
+        );
+        respond(true, 'OK', ['prices' => $stmt->fetchAll()]);
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  save_price — admin updates a single ticket price
+    // ─────────────────────────────────────────────────────
+    case 'save_price': {
+        requireRole('admin');
+        $body  = jsonBody();
+        $type  = clean($body['ticket_type'] ?? '');
+        $price = floatval($body['price']       ?? 0);
+
+        if (!$type || $price <= 0) respond(false, 'ticket_type and price are required.');
+
+        $pdo = getDB();
+        $pdo->prepare(
+            "UPDATE ticket_prices SET price = ? WHERE ticket_type = ?"
+        )->execute([$price, $type]);
+
+        respond(true, 'Price updated.', ['ticket_type' => $type, 'price' => $price]);
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  get_vouchers — admin loads all vouchers
+    // ─────────────────────────────────────────────────────
+    case 'get_vouchers': {
+        requireRole('admin');
+        $pdo  = getDB();
+        $stmt = $pdo->query(
+            "SELECT id, code, discount_type, discount_value, min_spend,
+                    max_uses, used_count, expires_at, is_active, created_at
+             FROM vouchers
+             ORDER BY created_at DESC"
+        );
+        respond(true, 'OK', ['vouchers' => $stmt->fetchAll()]);
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  save_voucher — admin adds a new voucher
+    // ─────────────────────────────────────────────────────
+    case 'save_voucher': {
+        requireRole('admin');
+        $body          = jsonBody();
+        $code          = strtoupper(clean($body['code']           ?? ''));
+        $discountType  = clean($body['discount_type']             ?? 'fixed');
+        $discountValue = floatval($body['discount_value']         ?? 0);
+        $minSpend      = floatval($body['min_spend']              ?? 0);
+        $maxUses       = intval($body['max_uses']                 ?? 1);
+        $expiresAt     = clean($body['expires_at']                ?? '') ?: null;
+
+        if (!$code)           respond(false, 'Voucher code is required.');
+        if ($discountValue <= 0) respond(false, 'Discount value must be greater than 0.');
+        if (!in_array($discountType, ['fixed', 'percent'])) respond(false, 'Invalid discount type.');
+
+        $pdo = getDB();
+        try {
+            $pdo->prepare(
+                "INSERT INTO vouchers (code, discount_type, discount_value, min_spend, max_uses, expires_at, is_active)
+                 VALUES (?, ?, ?, ?, ?, ?, 1)"
+            )->execute([$code, $discountType, $discountValue, $minSpend, $maxUses, $expiresAt]);
+            $newId = $pdo->lastInsertId();
+            respond(true, 'Voucher created.', ['id' => $newId, 'code' => $code]);
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) respond(false, 'Voucher code already exists.');
+            respond(false, 'Could not create voucher: ' . $e->getMessage());
+        }
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  delete_voucher — admin deletes a voucher by id
+    // ─────────────────────────────────────────────────────
+    case 'delete_voucher': {
+        requireRole('admin');
+        $body = jsonBody();
+        $id   = intval($body['id'] ?? 0);
+        if (!$id) respond(false, 'Voucher id required.');
+        $pdo = getDB();
+        $pdo->prepare("DELETE FROM vouchers WHERE id = ?")->execute([$id]);
+        respond(true, 'Voucher deleted.');
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
+    //  toggle_voucher — admin flips is_active on a voucher
+    // ─────────────────────────────────────────────────────
+    case 'toggle_voucher': {
+        requireRole('admin');
+        $body = jsonBody();
+        $id   = intval($body['id'] ?? 0);
+        if (!$id) respond(false, 'Voucher id required.');
+        $pdo = getDB();
+        $pdo->prepare(
+            "UPDATE vouchers SET is_active = 1 - is_active WHERE id = ?"
+        )->execute([$id]);
+        $row = $pdo->prepare("SELECT is_active FROM vouchers WHERE id = ?");
+        $row->execute([$id]);
+        $result = $row->fetch();
+        respond(true, 'Toggled.', ['is_active' => (int)$result['is_active']]);
+        break;
+    }
+
     default:
         respond(false, 'Unknown action.');
 }

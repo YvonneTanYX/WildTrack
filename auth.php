@@ -7,14 +7,16 @@ $action = $_GET['action'] ?? '';
 switch ($action) {
 
     case 'register': {
-        $body     = jsonBody();
-        $username = clean($body['username'] ?? '');
-        $password = $body['password'] ?? '';
-        $role     = clean($body['role']     ?? 'visitor');
-        $email    = clean($body['email']    ?? '');
+        $body      = jsonBody();
+        $firstName = clean($body['firstName'] ?? '');
+        $lastName  = clean($body['lastName']  ?? '');
+        $username  = trim($firstName . ' ' . $lastName);
+        $password  = $body['password'] ?? '';
+        $role      = clean($body['role']      ?? 'visitor');
+        $email     = clean($body['email']     ?? '');
 
-        if (!$username || !$password)
-            respond(false, 'Username and password are required.');
+        if (!$username || !$password || !$email)
+            respond(false, 'Name, email and password are required.');
 
         if (!in_array($role, ['admin','worker','visitor']))
             respond(false, 'Invalid role.');
@@ -37,15 +39,15 @@ switch ($action) {
 
     case 'login': {
         $body     = jsonBody();
-        $username = clean($body['username'] ?? '');
+        $email    = clean($body['email'] ?? '');
         $password = $body['password'] ?? '';
 
-        if (!$username || !$password)
-            respond(false, 'Username and password required.');
+        if (!$email || !$password)
+            respond(false, 'Email and password required.');
 
         $pdo  = getDB();
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-        $stmt->execute([$username]);
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
         $user = $stmt->fetch();
 
         if (!$user || !password_verify($password, $user['password'])) {
