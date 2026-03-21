@@ -563,6 +563,19 @@ switch ($action) {
         break;
     }
 
+    // ─────────────────────────────────────────────────────
+    //  get_session — return the logged-in admin's identity
+    //  Used by admin.html to populate name, avatar & greeting
+    // ─────────────────────────────────────────────────────
+    case 'get_session': {
+        $admin = requireRole('admin');
+        respond(true, 'OK', [
+            'username' => $admin['username'],
+            'role'     => $admin['role'] ?? 'Administrator',
+        ]);
+        break;
+    }
+
     default:
         respond(false, 'Unknown action.');
 }

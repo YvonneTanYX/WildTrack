@@ -2154,9 +2154,9 @@ textarea.form-input {
 
   <div class="sidebar-footer">
     <div class="user-card" data-page="profile" onclick="showPage('profile')">
-      <div class="user-avatar">AR</div>
+      <div class="user-avatar" id="sidebarAvatar">AR</div>
       <div class="user-info">
-        <span class="user-name">Admin Ranger</span>
+        <span class="user-name" id="sidebarUsername">Admin Ranger</span>
         <span class="user-role">System Administrator</span>
       </div>
     </div>
@@ -2222,7 +2222,7 @@ textarea.form-input {
     <div class="page-header">
       <div>
         <h1>Zoo Dashboard Overview</h1>
-        <p>Monday, 16 March 2026 — Good morning, Admin Ranger</p>
+        <p id="overviewGreeting">Loading…</p>
       </div>
       <button class="btn btn-primary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -3007,8 +3007,57 @@ document.addEventListener('DOMContentLoaded', () => {
       showPage(item.dataset.page);
     });
   });
+  initAdminIdentity();
+  startLiveClock();
   startAutoRefresh();
 });
+
+// ---- LIVE CLOCK & GREETING ----
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatAdminDate(d) {
+  return d.toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+let _adminDisplayName = 'Admin';
+
+function updateGreeting() {
+  const el = document.getElementById('overviewGreeting');
+  if (el) el.textContent = formatAdminDate(new Date()) + ' \u2014 ' + getGreeting() + ', ' + _adminDisplayName;
+}
+
+function startLiveClock() {
+  updateGreeting();
+  setInterval(updateGreeting, 60000); // refresh every minute
+}
+
+// ---- SESSION / ADMIN IDENTITY ----
+async function initAdminIdentity() {
+  try {
+    const res  = await fetch('api/tickets.php?action=get_session', { credentials: 'include' });
+    const data = await res.json();
+    if (data.success && data.username) {
+      const name = data.username;
+      // Build initials from up to 2 words
+      const initials = name.trim().split(/\s+/).map(w => w[0].toUpperCase()).slice(0, 2).join('');
+
+      _adminDisplayName = name;
+
+      const avatarEl = document.getElementById('sidebarAvatar');
+      const nameEl   = document.getElementById('sidebarUsername');
+      if (avatarEl) avatarEl.textContent = initials;
+      if (nameEl)   nameEl.textContent   = name;
+      updateGreeting(); // re-render with real name immediately
+    }
+  } catch (_) {
+    // Session endpoint not yet available — keep defaults
+  }
+}
 
 // ---- SIDEBAR TOGGLE ----
 function toggleSidebar() {
