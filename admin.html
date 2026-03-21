@@ -3418,6 +3418,12 @@ async function saveAddonPrice() {
     });
     const data = await res.json();
     if (data.success) {
+      // Mirror feeding pass price to localStorage so animalFeeding.php stays in sync
+      if (key === 'feeding') {
+        const stored = JSON.parse(localStorage.getItem('wildtrack_feeding_prices') || '{}');
+        stored['feeding_pass'] = val;
+        localStorage.setItem('wildtrack_feeding_prices', JSON.stringify(stored));
+      }
       closeModal('addonPriceModal');
       showToast(`Add-on price updated to RM${val.toFixed(2)} — live on visitor page ✓`);
       await loadAddonPricingTable();

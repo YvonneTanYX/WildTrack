@@ -189,25 +189,30 @@ $currentPage = 'visit'; ?>
   ];
 </script>
 <script>
-  // Load feeding cup prices saved by admin via localStorage
+  // Load feeding cup prices AND pass price saved by admin via localStorage
   (function loadFeedingPrices() {
     try {
       const stored = localStorage.getItem('wildtrack_feeding_prices');
-      if (!stored) return;
-      const prices = JSON.parse(stored);
+      const prices = stored ? JSON.parse(stored) : {};
 
-      const map = {
+      // Cup prices (goat, sheep, rabbit)
+      const cupMap = {
         feeding_goat:   'price-goat',
         feeding_sheep:  'price-sheep',
         feeding_rabbit: 'price-rabbit',
       };
-
-      Object.entries(map).forEach(([key, elId]) => {
+      Object.entries(cupMap).forEach(function([key, elId]) {
         if (prices[key] != null) {
           const el = document.getElementById(elId);
-          if (el) el.textContent = 'RM ' + parseFloat(prices[key]).toFixed(0) + ' / cup';
+          if (el) el.textContent = 'RM ' + parseFloat(prices[key]).toFixed(2) + ' / cup';
         }
       });
+
+      // Feeding Experience Pass price (saved under 'feeding_pass' key by admin)
+      const passEl = document.getElementById('price-pass');
+      if (passEl && prices['feeding_pass'] != null) {
+        passEl.textContent = 'RM' + parseFloat(prices['feeding_pass']).toFixed(2) + ' / person';
+      }
     } catch(e) {
       // Silently fall back to static HTML defaults
     }

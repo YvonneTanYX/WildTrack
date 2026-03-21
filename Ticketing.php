@@ -1772,7 +1772,7 @@ async function loadPrices() {
                 if (!key) return;
                 prices[key] = parseFloat(row.price);
                 const priceEl = document.getElementById('ticket-price-' + key);
-                if (priceEl) priceEl.textContent = 'RM' + parseFloat(row.price).toFixed(0);
+                if (priceEl) priceEl.textContent = 'RM' + parseFloat(row.price).toFixed(2);
             });
         }
     } catch(e) { /* silently fall back to defaults */ }
@@ -1786,7 +1786,7 @@ async function loadPrices() {
                 addonPrices[key] = parseFloat(row.price);
                 // Update the "RMx / person" label visible on the card
                 const labelEl = document.getElementById('addon-label-' + key);
-                if (labelEl) labelEl.textContent = 'RM' + parseFloat(row.price).toFixed(0) + ' / person';
+                if (labelEl) labelEl.textContent = 'RM' + parseFloat(row.price).toFixed(2) + ' / person';
             });
         }
     } catch(e) { /* silently fall back to defaults */ }
