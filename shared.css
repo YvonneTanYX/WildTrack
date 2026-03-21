@@ -1,0 +1,449 @@
+/* =====================================================
+   shared.css — WildTrack Zoo Visitor Pages
+   ===================================================== */
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f8f2;
+  color: #3a3a3a;
+}
+
+/* =====================================================
+   NAV
+   ===================================================== */
+.container-header {
+  background-color: #4e7a51;
+}
+
+.nav-list {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 30px;
+  margin: 0;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.nav-list .logo {
+  margin-right: 20px;
+}
+
+.nav-list .logo img {
+  display: block;
+}
+
+.nav-list > li > a,
+.dropbutton {
+  text-decoration: none;
+  font-size: 17px;
+  color: white;
+  padding: 10px 14px;
+  display: block;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+
+.nav-list > li > a:hover,
+.dropbutton:hover {
+  color: #76d7c4;
+  background: rgba(255,255,255,0.08);
+}
+
+/* ── Dropdown ── */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 560px;
+  background-color: #4e7a51;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  z-index: 100;
+  border-radius: 0 0 10px 10px;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.dropdown-menu.active {
+  display: flex;
+}
+
+/* Left column — image */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 200px;
+}
+
+.left-column img {
+  width: 200px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  transition: opacity 0.2s;
+}
+
+.left-column img:hover {
+  opacity: 0.85;
+}
+
+/* Image containers with overlay text */
+.image-container-visit,
+.image-container-thingToDo,
+.image-container-animal,
+.image-container-conservation,
+.image-container-venue,
+.image-container-getInTouch {
+  position: relative;
+  width: 200px;
+}
+
+.image-text-visit,
+.image-text-thingToDo,
+.image-text-animal,
+.image-text-conservation,
+.image-text-venue,
+.image-text-getInTouch {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+  z-index: 2;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+
+/* Right column — links */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+}
+
+.dropdown-menu .right-column a {
+  display: block;
+  background-color: #76d7c4;
+  color: #1a3a1a;
+  text-decoration: none;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.dropdown-menu .right-column a:hover {
+  background-color: #3a3a3a;
+  color: white;
+}
+
+/* Active nav section highlight */
+.dropdown.active-section > .dropbutton {
+  color: #76d7c4;
+}
+
+/* =====================================================
+   BREADCRUMB
+   ===================================================== */
+.breadcrumb {
+  background-color: #67976a;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.breadcrumb a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: #c5e8c6;
+  text-decoration: underline;
+}
+
+.breadcrumb span {
+  color: #e8f5e8;
+}
+
+.breadcrumb .sep {
+  margin: 0 6px;
+  color: #c5e8c6;
+}
+
+/* =====================================================
+   PAGE HERO IMAGE
+   ===================================================== */
+.page-img {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  display: block;
+}
+
+/* =====================================================
+   SHARED CONTENT LAYOUT
+   ===================================================== */
+.content-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 50px 40px;
+}
+
+.content-section h1 {
+  font-size: 44px;
+  font-weight: bold;
+  color: #2a5a2e;
+  margin-bottom: 16px;
+}
+
+.content-section h2 {
+  font-size: 32px;
+  font-weight: bold;
+  color: #3a3a3a;
+  margin-bottom: 12px;
+}
+
+.content-section h3 {
+  font-size: 22px;
+  color: #3a3a3a;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.content-section p {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #4a4a4a;
+  max-width: 820px;
+  margin-bottom: 16px;
+}
+
+/* Two-column layout (image + info) */
+.two-col {
+  display: flex;
+  align-items: flex-start;
+  gap: 60px;
+  margin: 40px 0;
+  flex-wrap: wrap;
+}
+
+.two-col .col-img img {
+  width: 480px;
+  max-width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.two-col .col-info {
+  flex: 1;
+  min-width: 260px;
+}
+
+/* ── CTA Button ── */
+.btn-cta {
+  display: inline-block;
+  background-color: #76d7c4;
+  color: #1a3a1a;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin-top: 12px;
+}
+
+.btn-cta:hover {
+  background-color: #3a3a3a;
+  color: white;
+}
+
+/* ── Download link ── */
+.download-link {
+  color: #2a5a2e;
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.download-link:hover {
+  text-decoration: underline;
+}
+
+/* =====================================================
+   FOOTER
+   ===================================================== */
+footer {
+  background-color: #67976a;
+  padding: 40px 0 30px;
+  margin-top: 60px;
+}
+
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.footer-col h3 {
+  font-size: 16px;
+  font-weight: bold;
+  color: #1a3a1a;
+  margin-bottom: 12px;
+}
+
+.footer-col h3 a {
+  color: #1a3a1a;
+  text-decoration: none;
+}
+
+.footer-col h3 a:hover {
+  text-decoration: underline;
+}
+
+.footer-col a {
+  display: block;
+  color: #1a3a1a;
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.footer-col a:hover {
+  color: white;
+}
+
+.footer-bottom {
+  text-align: center;
+  color: #2a4a2a;
+  font-size: 13px;
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0,0,0,0.12);
+}
+
+/* =====================================================
+   MAIN PAGE — SLIDER
+   ===================================================== */
+.slider {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  overflow: hidden;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slide.active {
+  display: block;
+}
+
+.slider-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.45));
+  pointer-events: none;
+}
+
+.slider-caption {
+  position: absolute;
+  bottom: 70px;
+  left: 60px;
+  color: white;
+  z-index: 2;
+}
+
+.slider-caption h1 {
+  font-size: 48px;
+  font-weight: bold;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  line-height: 1.15;
+}
+
+.slider-caption p {
+  font-size: 18px;
+  margin-top: 8px;
+  opacity: 0.9;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.slider-nav {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+
+.slider-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  border: none;
+}
+
+.slider-dot.active {
+  background-color: #76d7c4;
+  transform: scale(1.25);
+}
+
+/* ── User menu (right side of nav) ── */
+.nav-list li[style*="margin-left:auto"] > .dropbutton {
+  background: rgba(255,255,255,0.12);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.nav-list li[style*="margin-left:auto"] .dropdown-menu {
+  left: auto;
+  right: 0;
+  transform: none;
+  min-width: 180px;
+}

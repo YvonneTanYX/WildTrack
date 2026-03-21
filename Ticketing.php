@@ -1862,7 +1862,7 @@
             </div>
         </div>
 
-        <button class="qr-done-btn" onclick="window.location.href='index.html'">
+        <button class="qr-done-btn" onclick="window.location.href='mainPage.php'">
             <span class="iconify" data-icon="lucide:house" data-width="18"></span>
             Back to Home
         </button>
@@ -1910,7 +1910,7 @@
             Your e-ticket has been saved to your account
         </p>
 
-        <button class="qr-done-btn" onclick="window.location.href='index.html'">
+        <button class="qr-done-btn" onclick="window.location.href='mainPage.php'">
             <span class="iconify" data-icon="lucide:house" data-width="18"></span>
             Back to Home
         </button>

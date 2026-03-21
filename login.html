@@ -627,7 +627,7 @@
         const data = await res.json();
         if (data.success) {
             showToast('Welcome back! Redirecting... 🧭');
-            setTimeout(() => { window.location.href = 'ticketing.php'; }, 1200);
+            setTimeout(() => { window.location.href = 'mainPage.php'; }, 1200);
         } else {
             showToast('❌ ' + data.message, '❌');
             setLoading('btn-vlogin', false);
