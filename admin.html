@@ -2383,6 +2383,7 @@ textarea.form-input {
 
     <!-- Tab: Pricing -->
     <div class="tab-content" id="tab-pricing">
+      <!-- Ticket Prices -->
       <div class="card">
         <div class="card-header">
           <h3>Ticket Categories &amp; Pricing</h3>
@@ -2392,6 +2393,20 @@ textarea.form-input {
           <thead><tr><th>Category</th><th>Description</th><th>Age Range</th><th>Current Price</th><th>Actions</th></tr></thead>
           <tbody id="pricingTableBody">
             <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Loading prices&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add-on Prices (NEW SECTION) -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <h3>Add-on &amp; Enhance Visit Pricing</h3>
+          <p style="font-size:13px;color:var(--text-muted)">Changes take effect immediately on the visitor booking page</p>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Add-on</th><th>Description</th><th>Current Price</th><th>Actions</th></tr></thead>
+          <tbody id="addonPricingTableBody">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Loading add-on prices&#8230;</td></tr>
           </tbody>
         </table>
       </div>
@@ -2853,6 +2868,19 @@ textarea.form-input {
   </div>
 </div>
 
+<!-- Addon Price Edit Modal (NEW) -->
+<div class="modal-overlay" id="addonPriceModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header"><h3>Edit Add-on Price</h3><button onclick="closeModal('addonPriceModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="addonPriceKey"/>
+      <div class="form-group"><label>Add-on</label><input type="text" class="form-input" id="addonPriceLabel" readonly/></div>
+      <div class="form-group"><label>New Price (RM) per person</label><input type="number" class="form-input" id="addonPriceValue" min="0.01" step="0.01" placeholder="0.00"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="saveAddonPrice()">Save &amp; Update Live</button>
+    </div>
+  </div>
+</div>
+
 <!-- Promo / Voucher Modal -->
 <div class="modal-overlay" id="promoModal">
   <div class="modal" style="max-width:480px;">
@@ -2984,7 +3012,7 @@ function switchTab(btn, tabId) {
   if (target) target.classList.add('active');
 
   // Lazy-load dynamic tabs
-  if (tabId === 'tab-pricing')    loadPricingTable();
+  if (tabId === 'tab-pricing')    { loadPricingTable(); loadAddonPricingTable(); }
   if (tabId === 'tab-promotions') loadVouchersTable();
 }
 
@@ -3221,6 +3249,7 @@ function startAutoRefresh() {
   try { loadPendingPayments(); } catch(e) {}
   try { loadAdminNotifications(); } catch(e) {}
   try { loadPricingTable(); } catch(e) {}
+  try { loadAddonPricingTable(); } catch(e) {}
   try { loadVouchersTable(); } catch(e) {}
   setInterval(() => {
     try { loadAllStats(); } catch(e) {}
@@ -3307,7 +3336,66 @@ async function savePrice() {
   finally { btn.disabled = false; btn.textContent = 'Save & Update Live'; }
 }
 
-// ---- VOUCHERS / PROMOTIONS (dynamic — loads from DB) ----
+// ---- ADDON PRICE EDIT (NEW — connects to api/addon_prices.php) ----
+
+const addonDescMap = {
+  safari:  'Safari Shuttle ride through the park',
+  feeding: 'Animal Feeding Pass (weekends & public holidays)'
+};
+
+async function loadAddonPricingTable() {
+  const tbody = document.getElementById('addonPricingTableBody');
+  if (!tbody) return;
+  try {
+    const res  = await fetch('api/addon_prices.php?action=get', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Could not load add-on prices.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = Object.entries(data.prices).map(([key, row]) => `<tr>
+      <td><strong>${row.label}</strong></td>
+      <td>${addonDescMap[key] || '—'}</td>
+      <td class="price-cell" id="addon-price-${key}"><strong>RM${parseFloat(row.price).toFixed(2)}</strong></td>
+      <td><button class="btn-edit" onclick="editAddonPrice('${key}','${row.label}','${parseFloat(row.price).toFixed(2)}')">Edit Price</button></td>
+    </tr>`).join('');
+  } catch(e) { console.error('loadAddonPricingTable error', e); }
+}
+
+function editAddonPrice(key, label, currentPrice) {
+  document.getElementById('addonPriceKey').value   = key;
+  document.getElementById('addonPriceLabel').value = label;
+  document.getElementById('addonPriceValue').value = currentPrice;
+  openModal('addonPriceModal');
+}
+
+async function saveAddonPrice() {
+  const key   = document.getElementById('addonPriceKey').value;
+  const val   = parseFloat(document.getElementById('addonPriceValue').value);
+  if (isNaN(val) || val <= 0) { showToast('Please enter a valid price.', 'error'); return; }
+
+  const btn = document.querySelector('#addonPriceModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const res  = await fetch('api/addon_prices.php?action=save', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, price: val })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('addonPriceModal');
+      showToast(`Add-on price updated to RM${val.toFixed(2)} — live on visitor page ✓`);
+      await loadAddonPricingTable();
+    } else {
+      showToast(data.message || 'Failed to save add-on price.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save & Update Live'; }
+}
+
+
 
 async function loadVouchersTable() {
   try {
