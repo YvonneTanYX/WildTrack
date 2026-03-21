@@ -86,7 +86,7 @@ $currentPage = 'visit'; ?>
   </div>
 
   <!-- Link to actual ticketing system -->
-  <a href="tickets.php" class="btn-cta" style="font-size:18px; padding:16px 36px;">
+  <a href="Ticketing.php" class="btn-cta" style="font-size:18px; padding:16px 36px;">
     Proceed to Booking →
   </a>
 

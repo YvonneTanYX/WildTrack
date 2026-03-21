@@ -122,7 +122,6 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
         </a>
         <div class="dropdown-menu" style="min-width:200px;left:auto;right:0;transform:none;">
           <div class="right-column" style="margin-left:0;">
-            <a href="Ticketing.php">🎟 My Tickets</a>
             <a href="#" onclick="doLogout();return false;">🚪 Sign Out</a>
           </div>
         </div>

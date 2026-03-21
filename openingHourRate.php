@@ -102,7 +102,7 @@ $currentPage = 'visit'; ?>
         <span class="t-note">Family Bundle: 2 Adults + 2 Children — save 15%</span>
       </div>
 
-      <a href="buyTicket.php" class="btn-cta">Book Tickets Now →</a>
+      <a href="Ticketing.php" class="btn-cta">Book Tickets Now →</a>
     </div>
   </div>
 

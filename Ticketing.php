@@ -1015,16 +1015,6 @@
 
         .qr-code-text { font-size: 11px; color: #aaa; letter-spacing: 0.5px; word-break: break-all; }
 
-        .qr-summary-box {
-            background: linear-gradient(135deg, #2D5A27, #3d7a35);
-            border-radius: 20px;
-            padding: 20px 24px;
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
         .qr-done-btn {
             width: 100%;
             height: 54px;
@@ -1740,15 +1730,6 @@
         </div>
 
         <div id="qr-tickets-container" style="display:flex;flex-direction:column;gap:16px;"></div>
-
-        <div class="qr-summary-box">
-            <div>
-                <div style="color:rgba(255,255,255,0.7);font-size:13px;margin-bottom:4px;">Amount Paid</div>
-                <div style="font-size:28px;font-weight:700;" id="qr-total">RM0.00</div>
-                <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:2px;">Touch 'n Go eWallet</div>
-            </div>
-            <span class="iconify" data-icon="lucide:receipt" style="font-size:44px;color:rgba(255,255,255,0.25);"></span>
-        </div>
 
         <p style="text-align:center;font-size:12px;color:#7F8C8D;">
             Your e-ticket has been saved to your account
