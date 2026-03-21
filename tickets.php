@@ -564,6 +564,103 @@ switch ($action) {
     }
 
     // ─────────────────────────────────────────────────────
+    //  chart_data — live data for overview & reports charts
+    // ─────────────────────────────────────────────────────
+    case 'chart_data': {
+        requireRole('admin');
+        $pdo  = getDB();
+        $days = intval($_GET['days'] ?? 7);
+        if (!in_array($days, [7, 30, 90])) $days = 7;
+
+        // ── Visitor Trend: approved tickets grouped by purchase_date ──
+        $visitorStmt = $pdo->prepare(
+            "SELECT DATE(purchase_date) AS day, COUNT(*) AS visitors
+             FROM tickets
+             WHERE status = 'approved'
+               AND purchase_date >= CURDATE() - INTERVAL ? DAY
+             GROUP BY DATE(purchase_date)
+             ORDER BY day ASC"
+        );
+        $visitorStmt->execute([$days]);
+        $visitorRows = $visitorStmt->fetchAll();
+
+        // Fill every date in range with 0 if no tickets that day
+        $visitorMap = [];
+        foreach ($visitorRows as $r) $visitorMap[$r['day']] = (int)$r['visitors'];
+        $visitorLabels = [];
+        $visitorData   = [];
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-{$i} days"));
+            $visitorLabels[] = $days <= 7
+                ? date('D', strtotime($date))          // Mon, Tue…
+                : date('d M', strtotime($date));        // 01 Mar…
+            $visitorData[] = $visitorMap[$date] ?? 0;
+        }
+
+        // ── Ticket Type Breakdown: approved tickets all-time ──
+        $typeStmt = $pdo->query(
+            "SELECT ticket_type, COUNT(*) AS cnt
+             FROM tickets
+             WHERE status = 'approved'
+             GROUP BY ticket_type"
+        );
+        $typeRows  = $typeStmt->fetchAll();
+        $typeLabels = [];
+        $typeCounts = [];
+        foreach ($typeRows as $r) {
+            $typeLabels[] = $r['ticket_type'];
+            $typeCounts[] = (int)$r['cnt'];
+        }
+
+        // ── Monthly Revenue: last 6 months of approved tickets ──
+        $revenueStmt = $pdo->query(
+            "SELECT DATE_FORMAT(purchase_date, '%b') AS month,
+                    DATE_FORMAT(purchase_date, '%Y-%m') AS ym,
+                    COALESCE(SUM(price), 0) AS revenue
+             FROM tickets
+             WHERE status = 'approved'
+               AND purchase_date >= DATE_FORMAT(CURDATE() - INTERVAL 5 MONTH, '%Y-%m-01')
+             GROUP BY ym, month
+             ORDER BY ym ASC"
+        );
+        $revenueRows    = $revenueStmt->fetchAll();
+        $revenueLabels  = array_column($revenueRows, 'month');
+        $revenueData    = array_map(fn($r) => (float)$r['revenue'], $revenueRows);
+
+        // ── Reports stat cards ──
+        $monthVisitors = (int)$pdo->query(
+            "SELECT COUNT(*) FROM tickets
+             WHERE status = 'approved'
+               AND DATE_FORMAT(purchase_date,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')"
+        )->fetchColumn();
+
+        $monthRevenue = (float)$pdo->query(
+            "SELECT COALESCE(SUM(price),0) FROM tickets
+             WHERE status = 'approved'
+               AND DATE_FORMAT(purchase_date,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')"
+        )->fetchColumn();
+
+        $monthTickets = (int)$pdo->query(
+            "SELECT COUNT(*) FROM tickets
+             WHERE status = 'approved'
+               AND DATE_FORMAT(purchase_date,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')"
+        )->fetchColumn();
+
+        respond(true, 'OK', [
+            'visitor_labels'  => $visitorLabels,
+            'visitor_data'    => $visitorData,
+            'type_labels'     => $typeLabels,
+            'type_counts'     => $typeCounts,
+            'revenue_labels'  => $revenueLabels,
+            'revenue_data'    => $revenueData,
+            'month_visitors'  => $monthVisitors,
+            'month_revenue'   => $monthRevenue,
+            'month_tickets'   => $monthTickets,
+        ]);
+        break;
+    }
+
+    // ─────────────────────────────────────────────────────
     //  get_session — return the logged-in admin's identity
     //  Used by admin.html to populate name, avatar & greeting
     // ─────────────────────────────────────────────────────

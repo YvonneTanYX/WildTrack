@@ -2284,9 +2284,9 @@ textarea.form-input {
         <div class="card-header">
           <h3>Visitor Trends</h3>
           <div class="chart-filters">
-            <button class="filter-btn active">7D</button>
-            <button class="filter-btn">30D</button>
-            <button class="filter-btn">90D</button>
+            <button class="filter-btn active" onclick="setVisitorFilter(this,7)">7D</button>
+            <button class="filter-btn" onclick="setVisitorFilter(this,30)">30D</button>
+            <button class="filter-btn" onclick="setVisitorFilter(this,90)">90D</button>
           </div>
         </div>
         <canvas id="visitorChart" height="200"></canvas>
@@ -2296,11 +2296,8 @@ textarea.form-input {
           <h3>Ticket Types</h3>
         </div>
         <canvas id="ticketChart" height="200"></canvas>
-        <div class="donut-legend">
-          <div class="legend-item"><span class="legend-dot green"></span>Adult — 52%</div>
-          <div class="legend-item"><span class="legend-dot amber"></span>Child — 28%</div>
-          <div class="legend-item"><span class="legend-dot orange"></span>Family — 15%</div>
-          <div class="legend-item"><span class="legend-dot purple"></span>Senior — 5%</div>
+        <div class="donut-legend" id="donutLegend">
+          <div class="legend-item"><span class="legend-dot green"></span>Loading…</div>
         </div>
       </div>
     </div>
@@ -2708,10 +2705,10 @@ textarea.form-input {
       <button class="btn btn-primary">Export PDF</button>
     </div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="stat-value">18,240</div><div class="stat-label">Monthly Visitors</div></div>
-      <div class="stat-card"><div class="stat-top"><div class="stat-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="stat-value">RM312,890</div><div class="stat-label">Monthly Revenue</div></div>
-      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div></div><div class="stat-value">94.2%</div><div class="stat-label">Satisfaction Rate</div></div>
-      <div class="stat-card"><div class="stat-top"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg></div></div><div class="stat-value">4,891</div><div class="stat-label">Tickets Sold</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="stat-value" id="reportMonthVisitors">—</div><div class="stat-label">Monthly Visitors</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="stat-value" id="reportMonthRevenue">—</div><div class="stat-label">Monthly Revenue</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div></div><div class="stat-value">—</div><div class="stat-label">Satisfaction Rate</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg></div></div><div class="stat-value" id="reportMonthTickets">—</div><div class="stat-label">Tickets Sold</div></div>
     </div>
     <div class="card" style="margin-top:20px;"><div class="card-header"><h3>Monthly Revenue Trend</h3></div><canvas id="revenueChart" height="120"></canvas></div>
   </section>
@@ -3746,92 +3743,174 @@ function showToast(message, type = 'success') {
 }
 
 // ---- CHARTS ----
+const CHART_COLORS = {
+  labels:  ['Adult', 'Child', 'Family', 'Senior', 'Group'],
+  colors:  ['#2D5A27', '#D4872A', '#C9541E', '#6B52A3', '#2563EB'],
+  dotClass:['green',   'amber',   'orange',  'purple',  'blue'],
+};
+
+let _visitorChart  = null;
+let _ticketChart   = null;
+let _revenueChart  = null;
+let _currentDays   = 7;
+
+// ── Fetch chart data from PHP and refresh all charts ──
+async function loadChartData(days) {
+  days = days || _currentDays;
+  _currentDays = days;
+  try {
+    const res  = await fetch(`api/tickets.php?action=chart_data&days=${days}`, { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+
+    updateVisitorChart(data.visitor_labels, data.visitor_data);
+    updateTicketChart(data.type_labels, data.type_counts);
+    updateRevenueChart(data.revenue_labels, data.revenue_data);
+    updateReportsStatCards(data);
+  } catch(e) { console.error('loadChartData error', e); }
+}
+
+// ── Visitor Trend (line) ──
+function updateVisitorChart(labels, data) {
+  const ctx = document.getElementById('visitorChart')?.getContext('2d');
+  if (!ctx) return;
+  if (_visitorChart) {
+    _visitorChart.data.labels        = labels;
+    _visitorChart.data.datasets[0].data = data;
+    _visitorChart.update();
+    return;
+  }
+  _visitorChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Tickets Sold',
+        data,
+        borderColor: '#3E7A34',
+        backgroundColor: 'rgba(90,158,78,0.1)',
+        borderWidth: 2.5,
+        pointRadius: 5,
+        pointBackgroundColor: '#2D5A27',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#7A9170', font: { size: 12 }, precision: 0 } },
+        x: { grid: { display: false }, ticks: { color: '#7A9170', font: { size: 12 } } }
+      }
+    }
+  });
+}
+
+// ── Ticket Type Donut ──
+function updateTicketChart(labels, counts) {
+  const ctx = document.getElementById('ticketChart')?.getContext('2d');
+  if (!ctx) return;
+
+  // Map types to fixed color slots (Adult→green, Child→amber, etc.)
+  const colorMap = {};
+  CHART_COLORS.labels.forEach((l, i) => { colorMap[l] = { color: CHART_COLORS.colors[i], dot: CHART_COLORS.dotClass[i] }; });
+
+  const bgColors = labels.map(l => colorMap[l]?.color || '#aaa');
+  const total    = counts.reduce((a, b) => a + b, 0);
+
+  if (_ticketChart) {
+    _ticketChart.data.labels            = labels;
+    _ticketChart.data.datasets[0].data  = counts;
+    _ticketChart.data.datasets[0].backgroundColor = bgColors;
+    _ticketChart.update();
+  } else {
+    _ticketChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: counts, backgroundColor: bgColors, borderWidth: 3, borderColor: '#fff' }]
+      },
+      options: { responsive: true, cutout: '65%', plugins: { legend: { display: false } } }
+    });
+  }
+
+  // Update legend
+  const legendEl = document.getElementById('donutLegend');
+  if (legendEl) {
+    legendEl.innerHTML = labels.map((l, i) => {
+      const pct  = total > 0 ? Math.round((counts[i] / total) * 100) : 0;
+      const dot  = colorMap[l]?.dot || 'green';
+      return `<div class="legend-item"><span class="legend-dot ${dot}"></span>${l} — ${pct}%</div>`;
+    }).join('');
+  }
+}
+
+// ── Monthly Revenue Bar ──
+function updateRevenueChart(labels, data) {
+  const ctx = document.getElementById('revenueChart')?.getContext('2d');
+  if (!ctx) return;
+  if (_revenueChart) {
+    _revenueChart.data.labels           = labels;
+    _revenueChart.data.datasets[0].data = data;
+    _revenueChart.update();
+    return;
+  }
+  _revenueChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue (RM)',
+        data,
+        backgroundColor: 'rgba(45,90,39,0.8)',
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#7A9170', font: { size: 12 }, callback: v => 'RM' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) } },
+        x: { grid: { display: false }, ticks: { color: '#7A9170', font: { size: 12 } } }
+      }
+    }
+  });
+}
+
+// ── Reports stat cards ──
+function updateReportsStatCards(data) {
+  const mv = document.getElementById('reportMonthVisitors');
+  const mr = document.getElementById('reportMonthRevenue');
+  const mt = document.getElementById('reportMonthTickets');
+  if (mv) mv.textContent = (data.month_visitors || 0).toLocaleString();
+  if (mr) mr.textContent = 'RM' + parseFloat(data.month_revenue || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (mt) mt.textContent = (data.month_tickets  || 0).toLocaleString();
+}
+
+// ── Filter button handler ──
+function setVisitorFilter(btn, days) {
+  document.querySelectorAll('.chart-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadChartData(days);
+}
+
+// ── Called when overview page is shown ──
 let overviewChartsInit = false;
 function initOverviewCharts() {
   if (overviewChartsInit) return;
   overviewChartsInit = true;
-
-  // Visitor Chart
-  const vCtx = document.getElementById('visitorChart')?.getContext('2d');
-  if (vCtx) {
-    new Chart(vCtx, {
-      type: 'line',
-      data: {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        datasets: [{
-          label: 'Visitors',
-          data: [1820, 2100, 1950, 2340, 2680, 3100, 2482],
-          borderColor: '#3E7A34',
-          backgroundColor: 'rgba(90,158,78,0.1)',
-          borderWidth: 2.5,
-          pointRadius: 5,
-          pointBackgroundColor: '#2D5A27',
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#7A9170', font: { size: 12 } } },
-          x: { grid: { display: false }, ticks: { color: '#7A9170', font: { size: 12 } } }
-        }
-      }
-    });
-  }
-
-  // Ticket Donut
-  const tCtx = document.getElementById('ticketChart')?.getContext('2d');
-  if (tCtx) {
-    new Chart(tCtx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Adult', 'Child', 'Family', 'Senior'],
-        datasets: [{
-          data: [52, 28, 15, 5],
-          backgroundColor: ['#2D5A27', '#D4872A', '#C9541E', '#6B52A3'],
-          borderWidth: 3,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        cutout: '65%',
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
+  loadChartData(7);
 }
 
+// ── Called when reports page is shown ──
 let reportsChartInit = false;
 function initReportsChart() {
   if (reportsChartInit) return;
   reportsChartInit = true;
-  const ctx = document.getElementById('revenueChart')?.getContext('2d');
-  if (ctx) {
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Oct','Nov','Dec','Jan','Feb','Mar'],
-        datasets: [{
-          label: 'Revenue (RM)',
-          data: [280000, 310000, 340000, 295000, 320000, 312890],
-          backgroundColor: 'rgba(45,90,39,0.8)',
-          borderRadius: 6,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#7A9170', font: { size: 12 }, callback: v => 'RM' + (v/1000).toFixed(0) + 'k' } },
-          x: { grid: { display: false }, ticks: { color: '#7A9170', font: { size: 12 } } }
-        }
-      }
-    });
-  }
+  // Re-use same data fetch; charts share instances
+  loadChartData(_currentDays);
 }
 
 </script>
