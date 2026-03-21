@@ -57,6 +57,58 @@ $currentPage = 'visit'; ?>
       font-weight: bold;
       color: #3a3a3a;
     }
+
+    /* Feeding Experience Pass */
+    .pass-section h2 {
+      font-size: 22px;
+      color: #2a5a2e;
+      margin: 36px 0 16px;
+    }
+    .pass-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 24px 28px;
+      max-width: 460px;
+      border-left: 5px solid #e05a6e;
+    }
+    .pass-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .pass-label {
+      font-size: 17px;
+      font-weight: bold;
+      color: #1a3a1a;
+    }
+    .pass-price {
+      font-size: 15px;
+      color: #555;
+      margin: 4px 0 16px;
+    }
+    .pass-perks {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .pass-perks li {
+      font-size: 14px;
+      color: #333;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .pass-perks li .perk-check {
+      color: #6c63ff;
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
   </style>
 </head>
 <body>
@@ -106,6 +158,24 @@ $currentPage = 'visit'; ?>
       </div>
     </div>
 
+  </div>
+
+  <!-- Feeding Experience Pass -->
+  <div class="pass-section">
+    <h2>🎟️ Upgrade Your Experience</h2>
+    <div class="pass-card">
+      <div class="pass-card-header">
+        <span style="font-size:20px;">🎟️</span>
+        <span class="pass-label">Feeding Experience Pass</span>
+      </div>
+      <div class="pass-price">RM12 / person</div>
+      <ul class="pass-perks">
+        <li><span class="perk-check">✔</span> Includes 2 complimentary feed cups</li>
+        <li><span class="perk-check">✔</span> Priority access to feeding sessions</li>
+        <li><span class="perk-check">✔</span> Access to selected animal feeding experiences</li>
+        <li><span class="perk-check">✔</span> Valid for any day (subject to schedule)</li>
+      </ul>
+    </div>
   </div>
 
 </div>
