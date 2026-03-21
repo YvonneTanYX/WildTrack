@@ -128,6 +128,18 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
         </div>
       </li>
 
+      <!-- NOTIFICATION BELL -->
+      <li style="list-style:none; display:flex; align-items:center; padding-left:8px;">
+        <div class="wt-nav-bell" id="wt-bell-btn" onclick="wtToggleNotifDropdown()" title="Notifications">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="#2D5A27" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="wt-notif-badge" id="wt-notif-badge"></span>
+        </div>
+      </li>
+
     </ul>
   </div>
 </nav>
@@ -142,4 +154,178 @@ function doLogout() {
   fetch('api/auth.php?action=logout', { credentials: 'include' })
     .finally(function() { window.location.href = 'login.html'; });
 }
+</script>
+
+<!-- ── NOTIFICATION DROPDOWN ── -->
+<div class="wt-notif-dropdown" id="wt-notif-dropdown">
+  <div class="wt-notif-dropdown-header">Notifications</div>
+  <div id="wt-notif-list">
+    <div class="wt-notif-empty">No notifications yet</div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="wt-toast" id="wt-toast"></div>
+
+<style>
+.wt-nav-bell {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #fff; border: 1px solid #e4e9e0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  position: relative; transition: background 0.2s, border-color 0.2s;
+}
+.wt-nav-bell:hover { background: #f0f4ee; border-color: #2D5A27; }
+.wt-notif-badge {
+  position: absolute; top: -4px; right: -4px;
+  width: 18px; height: 18px; background: #E74C3C;
+  border-radius: 50%; border: 2px solid #fff;
+  font-size: 10px; font-weight: 700; color: #fff;
+  display: none; align-items: center; justify-content: center;
+}
+.wt-notif-dropdown {
+  position: fixed; top: 72px; right: 20px; width: 320px;
+  background: #fff; border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 1px solid #e4e9e0; z-index: 9999;
+  display: none; overflow: hidden;
+}
+.wt-notif-dropdown.open { display: block; }
+.wt-notif-dropdown-header {
+  padding: 16px 20px 12px; font-size: 14px; font-weight: 700;
+  color: #2F3640; border-bottom: 1px solid #f0f4ee;
+}
+.wt-notif-item {
+  padding: 14px 20px; border-bottom: 1px solid #f0f4ee;
+  cursor: pointer; transition: background 0.15s;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.wt-notif-item:last-child { border-bottom: none; }
+.wt-notif-item:hover { background: #f7faf5; }
+.wt-notif-item-dot {
+  width: 8px; height: 8px; background: #2D5A27;
+  border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+}
+.wt-notif-item-title { font-size: 13px; font-weight: 600; color: #2F3640; margin-bottom: 3px; }
+.wt-notif-item-body  { font-size: 12px; color: #7F8C8D; }
+.wt-notif-empty { padding: 24px 20px; text-align: center; font-size: 13px; color: #aaa; }
+.wt-toast {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2D5A27; color: #fff; padding: 14px 24px;
+  border-radius: 16px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(45,90,39,0.35);
+  z-index: 99999; opacity: 0; transition: all 0.35s ease;
+  pointer-events: none; text-align: center; max-width: 340px; width: 90%;
+}
+.wt-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+<script>
+(function() {
+  var wtPollingInterval = null;
+  var wtNotifCache = [];
+  var wtToastTimer = null;
+
+  function wtEscHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function wtShowToast(msg, duration) {
+    duration = duration || 3500;
+    var toast = document.getElementById('wt-toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    if (wtToastTimer) clearTimeout(wtToastTimer);
+    wtToastTimer = setTimeout(function() { toast.classList.remove('show'); }, duration);
+  }
+
+  function wtRenderNotifDropdown(notifications) {
+    var listEl = document.getElementById('wt-notif-list');
+    if (!notifications || notifications.length === 0) {
+      listEl.innerHTML = '<div class="wt-notif-empty">No notifications yet</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    notifications.forEach(function(n) {
+      var item = document.createElement('div');
+      item.className = 'wt-notif-item';
+      item.innerHTML =
+        (n.is_read ? '' : '<div class="wt-notif-item-dot"></div>') +
+        '<div><div class="wt-notif-item-title">' + wtEscHtml(n.title) + '</div>' +
+        '<div class="wt-notif-item-body">' + wtEscHtml(n.body) + '</div></div>';
+      item.onclick = function() {
+        wtMarkNotifRead(n.id);
+        wtCloseNotifDropdown();
+        if (n.type === 'booking_approved') {
+          var ids = n.ticket_ids ? (typeof n.ticket_ids === 'string' ? n.ticket_ids : JSON.stringify(n.ticket_ids)) : '';
+          window.location.href = 'Ticketing.php?show=qr&ticket_ids=' + encodeURIComponent(ids);
+        }
+      };
+      listEl.appendChild(item);
+    });
+  }
+
+  async function wtMarkNotifRead(notifId) {
+    try {
+      await fetch('http://localhost/WildTrack/api/tickets.php?action=mark_notification_read', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notification_id: notifId })
+      });
+    } catch(e) {}
+  }
+
+  async function wtPollNotifications() {
+    try {
+      var res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=check_notifications', { credentials: 'include' });
+      var data = await res.json();
+      if (!data.success) return;
+      var notifications = data.notifications || [];
+      var unread = notifications.filter(function(n) { return !n.is_read; });
+      var count  = unread.length;
+      var badge  = document.getElementById('wt-notif-badge');
+      if (badge) { badge.style.display = count > 0 ? 'flex' : 'none'; badge.textContent = count > 0 ? count : ''; }
+
+      // Use sessionStorage to track which notifications have already shown a toast
+      // so navigating between pages doesn't re-trigger the toast
+      var shownKey = 'wt_shown_notifs';
+      var shownRaw = '';
+      try { shownRaw = sessionStorage.getItem(shownKey) || ''; } catch(e) {}
+      var shownIds = shownRaw ? shownRaw.split(',') : [];
+
+      notifications.forEach(function(n) {
+        var idStr = String(n.id);
+        if (n.type === 'booking_approved' && shownIds.indexOf(idStr) === -1) {
+          wtShowToast('✓ Booking ' + n.booking_ref + ' approved! Click the bell to view your QR ticket.', 6000);
+          shownIds.push(idStr);
+        }
+      });
+
+      try { sessionStorage.setItem(shownKey, shownIds.join(',')); } catch(e) {}
+
+      wtNotifCache = notifications;
+      wtRenderNotifDropdown(notifications);
+    } catch(e) {}
+  }
+
+  window.wtToggleNotifDropdown = function() {
+    document.getElementById('wt-notif-dropdown').classList.toggle('open');
+  };
+  window.wtCloseNotifDropdown = function() {
+    document.getElementById('wt-notif-dropdown').classList.remove('open');
+  };
+
+  document.addEventListener('click', function(e) {
+    var dd   = document.getElementById('wt-notif-dropdown');
+    var bell = e.target.closest('#wt-bell-btn');
+    if (dd && !bell && !dd.contains(e.target)) dd.classList.remove('open');
+  });
+
+  window.addEventListener('load', function() {
+    wtPollNotifications();
+    wtPollingInterval = setInterval(wtPollNotifications, 30000);
+  });
+})();
 </script>

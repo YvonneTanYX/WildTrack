@@ -80,132 +80,6 @@
             border-color: #2D5A27;
         }
 
-        .nav-bell {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #fff;
-            border: 1px solid #e4e9e0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-            position: relative;
-        }
-
-        /* ── NOTIFICATION BADGE ── */
-        .notif-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            width: 18px;
-            height: 18px;
-            background: #E74C3C;
-            border-radius: 50%;
-            border: 2px solid #F9FBF7;
-            font-size: 10px;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            display: none;
-        }
-
-        /* ── NOTIFICATION DROPDOWN ── */
-        .notif-dropdown {
-            position: absolute;
-            top: 72px;
-            right: 40px;
-            width: 320px;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-            border: 1px solid #e4e9e0;
-            z-index: 200;
-            display: none;
-            overflow: hidden;
-        }
-
-        .notif-dropdown.open {
-            display: block;
-        }
-
-        .notif-dropdown-header {
-            padding: 16px 20px 12px;
-            font-size: 14px;
-            font-weight: 700;
-            color: #2F3640;
-            border-bottom: 1px solid #f0f4ee;
-        }
-
-        .notif-item {
-            padding: 14px 20px;
-            border-bottom: 1px solid #f0f4ee;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-
-        .notif-item:last-child { border-bottom: none; }
-
-        .notif-item:hover { background: #f7faf5; }
-
-        .notif-item-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #2F3640;
-            margin-bottom: 3px;
-        }
-
-        .notif-item-body {
-            font-size: 12px;
-            color: #7F8C8D;
-        }
-
-        .notif-item-dot {
-            width: 8px;
-            height: 8px;
-            background: #2D5A27;
-            border-radius: 50%;
-            flex-shrink: 0;
-            margin-top: 3px;
-        }
-
-        .notif-empty {
-            padding: 24px 20px;
-            text-align: center;
-            font-size: 13px;
-            color: #aaa;
-        }
-
-        /* ── TOAST ── */
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: #2D5A27;
-            color: #fff;
-            padding: 14px 24px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 8px 24px rgba(45,90,39,0.35);
-            z-index: 9999;
-            opacity: 0;
-            transition: all 0.35s ease;
-            pointer-events: none;
-            text-align: center;
-            max-width: 320px;
-            width: 90%;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
         /* ── LAYOUT ── */
         .page-wrap {
             max-width: 860px;
@@ -1245,33 +1119,19 @@
 <body>
 
 <!-- ═══════════════════════════════
-     NOTIFICATION DROPDOWN (global)
-═══════════════════════════════ -->
-<div class="notif-dropdown" id="notif-dropdown">
-    <div class="notif-dropdown-header">Notifications</div>
-    <div id="notif-list">
-        <div class="notif-empty">No notifications yet</div>
-    </div>
-</div>
-
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
-
-<!-- ═══════════════════════════════
      PAGE 1 — BOOKING
 ═══════════════════════════════ -->
 <div class="page active" id="page-booking">
 
     <nav>
         <div class="nav-left">
+            <button class="nav-back" onclick="backToHome()">
+                <span class="iconify" data-icon="lucide:arrow-left" data-width="18"></span>
+            </button>
             <div class="nav-brand">
                 <span class="iconify" data-icon="lucide:tent-tree" style="font-size:24px;color:#2D5A27;"></span>
                 Ticket Sale
             </div>
-        </div>
-        <div class="nav-bell" id="bell-btn-1" onclick="toggleNotifDropdown()">
-            <span class="iconify" data-icon="lucide:bell" style="font-size:18px;color:#2F3640;"></span>
-            <span class="notif-badge" id="notif-badge">0</span>
         </div>
     </nav>
 
@@ -1466,6 +1326,10 @@
 
 </div>
 
+<div class="page" id="page-home">
+   <a href="mainPage.php"></a>
+</div>
+
 
 <!-- ═══════════════════════════════
      PAGE 2 — ORDER SUMMARY
@@ -1481,10 +1345,6 @@
                 <span class="iconify" data-icon="lucide:tent-tree" style="font-size:22px;color:#2D5A27;"></span>
                 Order Summary
             </div>
-        </div>
-        <div class="nav-bell" onclick="toggleNotifDropdown()">
-            <span class="iconify" data-icon="lucide:bell" style="font-size:18px;color:#2F3640;"></span>
-            <span class="notif-badge" id="notif-badge-2">0</span>
         </div>
     </nav>
 
@@ -1604,10 +1464,6 @@
                 Payment
             </div>
         </div>
-        <div class="nav-bell" onclick="toggleNotifDropdown()">
-            <span class="iconify" data-icon="lucide:bell" style="font-size:18px;color:#2F3640;"></span>
-            <span class="notif-badge" id="notif-badge-3">0</span>
-        </div>
     </nav>
 
     <div class="page-wrap" style="padding-bottom:40px;">
@@ -1700,10 +1556,6 @@
                 Upload Proof
             </div>
         </div>
-        <div class="nav-bell" onclick="toggleNotifDropdown()">
-            <span class="iconify" data-icon="lucide:bell" style="font-size:18px;color:#2F3640;"></span>
-            <span class="notif-badge" id="notif-badge-4">0</span>
-        </div>
     </nav>
 
     <div class="page-wrap" style="padding-bottom:40px;">
@@ -1777,10 +1629,6 @@
                 <span class="iconify" data-icon="lucide:tent-tree" style="font-size:22px;color:#2D5A27;"></span>
                 Booking Status
             </div>
-        </div>
-        <div class="nav-bell" onclick="toggleNotifDropdown()">
-            <span class="iconify" data-icon="lucide:bell" style="font-size:18px;color:#2F3640;"></span>
-            <span class="notif-badge" id="notif-badge-5">0</span>
         </div>
     </nav>
 
@@ -1881,10 +1729,6 @@
                 <span class="iconify" data-icon="lucide:tent-tree" style="font-size:22px;color:#2D5A27;"></span>
                 Your Tickets
             </div>
-        </div>
-        <div class="nav-bell" onclick="toggleNotifDropdown()">
-            <span class="iconify" data-icon="lucide:bell" style="font-size:18px;color:#2F3640;"></span>
-            <span class="notif-badge" id="notif-badge-6">0</span>
         </div>
     </nav>
     <div class="page-wrap" style="padding-bottom:40px;">
@@ -2086,6 +1930,10 @@ function backToSummary() {
 
 function backToTNG() {
     showPage('page-upload', 'page-tng', 'back');
+}
+
+function backToHome() {
+    window.location.href = 'mainPage.php';
 }
 
 // ════════════════════════════════════════════════
@@ -2352,192 +2200,9 @@ function showPendingPage(data) {
 
     showPage('page-upload', 'page-pending', 'forward');
     // Start polling for approval
-    startApprovalPolling();
 }
 
-// ════════════════════════════════════════════════
-//  REQ 6 — NOTIFICATION POLLING
-// ════════════════════════════════════════════════
-let pollingInterval = null;
-let notifCache = [];
 
-function startApprovalPolling() {
-    // Poll immediately then every 30 seconds
-    pollNotifications();
-    if (pollingInterval) clearInterval(pollingInterval);
-    pollingInterval = setInterval(pollNotifications, 30000);
-}
-
-async function pollNotifications() {
-    try {
-        const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=check_notifications', {
-            credentials: 'include'
-        });
-        const data = await res.json();
-        if (!data.success) return;
-
-        const notifications = data.notifications || [];
-        const unread = notifications.filter(n => !n.is_read);
-        const count  = unread.length;
-
-        // Update all badge instances
-        document.querySelectorAll('.notif-badge').forEach(b => {
-            b.style.display = count > 0 ? 'flex' : 'none';
-            b.textContent   = count > 0 ? count : '';
-        });
-
-        // Check for newly approved bookings
-        notifications.forEach(function(n) {
-            const cached = notifCache.find(c => c.id === n.id);
-            if (!cached && n.type === 'booking_approved') {
-                // New approval notification — show toast
-                showToast('✓ Booking ' + n.booking_ref + ' approved! Tap bell for your QR ticket.', 6000);
-                // If user is still on pending page, jump to QR page
-                if (document.getElementById('page-pending').classList.contains('active')) {
-                    loadApprovedTickets(n.ticket_ids);
-                }
-            }
-        });
-
-        notifCache = notifications;
-        renderNotifDropdown(notifications);
-
-    } catch (e) {
-        // Silently fail — don't interrupt the user
-    }
-}
-
-function renderNotifDropdown(notifications) {
-    const listEl = document.getElementById('notif-list');
-    if (!notifications || notifications.length === 0) {
-        listEl.innerHTML = '<div class="notif-empty">No notifications yet</div>';
-        return;
-    }
-    listEl.innerHTML = '';
-    notifications.forEach(function(n) {
-        const item = document.createElement('div');
-        item.className = 'notif-item';
-        item.style.display = 'flex';
-        item.style.gap = '10px';
-        item.style.alignItems = 'flex-start';
-        item.innerHTML =
-            (n.is_read ? '' : '<div class="notif-item-dot"></div>') +
-            '<div>' +
-            '<div class="notif-item-title">' + escHtml(n.title) + '</div>' +
-            '<div class="notif-item-body">' + escHtml(n.body) + '</div>' +
-            '</div>';
-        item.onclick = function() {
-            markNotifRead(n.id);
-            if (n.type === 'booking_approved' && n.ticket_ids) {
-                loadApprovedTickets(n.ticket_ids);
-                closeNotifDropdown();
-            }
-        };
-        listEl.appendChild(item);
-    });
-}
-
-async function markNotifRead(notifId) {
-    try {
-        await fetch('http://localhost/WildTrack/api/tickets.php?action=mark_notification_read', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ notification_id: notifId })
-        });
-    } catch(e) {}
-}
-
-// ════════════════════════════════════════════════
-//  REQ 7 — Load approved tickets & show QR page
-// ════════════════════════════════════════════════
-async function loadApprovedTickets(ticketIdsJson) {
-    let ticketIds = ticketIdsJson;
-    if (typeof ticketIdsJson === 'string') {
-        try { ticketIds = JSON.parse(ticketIdsJson); } catch(e) { ticketIds = []; }
-    }
-    if (!ticketIds || ticketIds.length === 0) {
-        // Fall back to pending tickets we stored locally
-        ticketIds = pendingTicketIds;
-    }
-
-    try {
-        const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_tickets_by_ids', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ticket_ids: ticketIds })
-        });
-        const data = await res.json();
-        if (data.success) {
-            showQRPage(data.tickets, currentFinalTotal);
-        }
-    } catch(e) {
-        showToast('Could not load tickets. Please check your account.');
-    }
-}
-
-function showQRPage(tickets, totalPaid) {
-    const container = document.getElementById('qr-tickets-container');
-    container.innerHTML = '';
-    tickets.forEach(function(t) {
-        const div = document.createElement('div');
-        div.className = 'qr-ticket-card';
-        div.innerHTML =
-            '<div class="qr-ticket-type">' + escHtml(t.ticket_type) + ' Pass</div>' +
-            '<div class="qr-ticket-date">Visit: ' + escHtml(t.visit_date) + '</div>' +
-            '<div class="qr-code-box">' +
-            '<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(t.qr_code) + '" alt="QR Code" class="qr-img" />' +
-            '</div>' +
-            '<div class="qr-code-text">' + escHtml(t.qr_code) + '</div>';
-        container.appendChild(div);
-    });
-    document.getElementById('qr-total').textContent = 'RM' + parseFloat(totalPaid).toFixed(2);
-
-    // Hide all pages, show QR page
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const qrPage = document.getElementById('page-qr');
-    qrPage.classList.add('active', 'slide-in');
-    setTimeout(() => qrPage.classList.remove('slide-in'), 400);
-    window.scrollTo(0, 0);
-
-    // Stop polling once we have the tickets
-    if (pollingInterval) clearInterval(pollingInterval);
-}
-
-// ════════════════════════════════════════════════
-//  NOTIFICATION DROPDOWN UI
-// ════════════════════════════════════════════════
-function toggleNotifDropdown() {
-    const dd = document.getElementById('notif-dropdown');
-    dd.classList.toggle('open');
-}
-
-function closeNotifDropdown() {
-    document.getElementById('notif-dropdown').classList.remove('open');
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-    const dd   = document.getElementById('notif-dropdown');
-    const bell = e.target.closest('.nav-bell');
-    if (!bell && !dd.contains(e.target)) {
-        dd.classList.remove('open');
-    }
-});
-
-// ════════════════════════════════════════════════
-//  TOAST
-// ════════════════════════════════════════════════
-let toastTimer = null;
-function showToast(msg, duration) {
-    duration = duration || 3500;
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.classList.add('show');
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
-}
 
 // ════════════════════════════════════════════════
 //  VOUCHER LOGIC (unchanged from original)
@@ -2606,6 +2271,18 @@ function removeVoucher(silent) {
 // ════════════════════════════════════════════════
 //  UTILITY
 // ════════════════════════════════════════════════
+
+// showToast shim — delegates to the global notification toast in nav.php
+function showToast(msg, duration) {
+    if (typeof wtShowToast === 'function') {
+        wtShowToast(msg, duration);
+    } else {
+        // fallback
+        var t = document.getElementById('wt-toast');
+        if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, duration || 3500); }
+    }
+}
+
 function escHtml(str) {
     if (!str) return '';
     return String(str)
@@ -2617,11 +2294,64 @@ function escHtml(str) {
 window.addEventListener('load', function() {
     // Load prices from DB so admin edits reflect immediately
     loadPrices();
-    // Light poll on page load to update bell badge only
-    pollNotifications();
-    // Poll every 60s when not on pending page (less aggressive)
-    pollingInterval = setInterval(pollNotifications, 60000);
+
+    // If redirected from notification bell with ?show=qr, auto-load the QR page
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('show') === 'qr') {
+        var idsRaw = params.get('ticket_ids') || '';
+        var ticketIds = [];
+        try { ticketIds = JSON.parse(decodeURIComponent(idsRaw)); } catch(e) {}
+        if (ticketIds && ticketIds.length > 0) {
+            loadApprovedTickets(ticketIds);
+        }
+    }
 });
+
+// ════════════════════════════════════════════════
+//  Load approved tickets & show QR page
+//  (called from URL param on page load)
+// ════════════════════════════════════════════════
+async function loadApprovedTickets(ticketIds) {
+    if (!ticketIds || ticketIds.length === 0) return;
+    try {
+        const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_tickets_by_ids', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticket_ids: ticketIds })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showQRPage(data.tickets, currentFinalTotal);
+        }
+    } catch(e) {
+        showToast('Could not load tickets. Please check your account.');
+    }
+}
+
+function showQRPage(tickets, totalPaid) {
+    const container = document.getElementById('qr-tickets-container');
+    container.innerHTML = '';
+    tickets.forEach(function(t) {
+        const div = document.createElement('div');
+        div.className = 'qr-ticket-card';
+        div.innerHTML =
+            '<div class="qr-ticket-type">' + escHtml(t.ticket_type) + ' Pass</div>' +
+            '<div class="qr-ticket-date">Visit: ' + escHtml(t.visit_date) + '</div>' +
+            '<div class="qr-code-box">' +
+            '<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(t.qr_code) + '" alt="QR Code" class="qr-img" />' +
+            '</div>' +
+            '<div class="qr-code-text">' + escHtml(t.qr_code) + '</div>';
+        container.appendChild(div);
+    });
+    if (totalPaid) {
+        document.getElementById('qr-total').textContent = 'RM' + parseFloat(totalPaid).toFixed(2);
+    }
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const qrPage = document.getElementById('page-qr');
+    qrPage.classList.add('active');
+    window.scrollTo(0, 0);
+}
 </script>
 
 </body>
