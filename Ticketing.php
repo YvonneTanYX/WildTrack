@@ -1255,7 +1255,7 @@
                         </div>
                         <div class="addon-info">
                             <div class="addon-name">Safari Shuttle</div>
-                            <div class="addon-price">RM5 / person</div>
+                            <div class="addon-price" id="addon-label-safari">RM5 / person</div>
                         </div>
                     </div>
                     <div class="addon-bottom">
@@ -1280,7 +1280,7 @@
                         </div>
                         <div class="addon-info">
                             <div class="addon-name">Feeding Pass</div>
-                            <div class="addon-price">RM12 / person</div>
+                            <div class="addon-price" id="addon-label-feeding">RM12 / person</div>
                         </div>
                     </div>
                     <div class="addon-bottom">
@@ -1763,19 +1763,35 @@ const typeKeyMap = { 'Adult': 'adult', 'Child': 'child', 'Senior': 'senior', 'Gr
 
 async function loadPrices() {
     try {
+        // ── Load ticket prices from DB ───────────────────────────────────────
         const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_prices');
         const data = await res.json();
-        if (!data.success) return;
-        data.prices.forEach(function(row) {
-            const key = typeKeyMap[row.ticket_type];
-            if (!key) return;
-            prices[key] = parseFloat(row.price);
-            // Update the visible price tag on the ticket card
-            const priceEl = document.getElementById('ticket-price-' + key);
-            if (priceEl) priceEl.textContent = 'RM' + parseFloat(row.price).toFixed(0);
-        });
-        calculateTotal();
+        if (data.success) {
+            data.prices.forEach(function(row) {
+                const key = typeKeyMap[row.ticket_type];
+                if (!key) return;
+                prices[key] = parseFloat(row.price);
+                const priceEl = document.getElementById('ticket-price-' + key);
+                if (priceEl) priceEl.textContent = 'RM' + parseFloat(row.price).toFixed(0);
+            });
+        }
     } catch(e) { /* silently fall back to defaults */ }
+
+    try {
+        // ── Load add-on prices from addon_prices.php ─────────────────────────
+        const res2  = await fetch('http://localhost/WildTrack/api/addon_prices.php?action=get');
+        const data2 = await res2.json();
+        if (data2.success) {
+            Object.entries(data2.prices).forEach(function([key, row]) {
+                addonPrices[key] = parseFloat(row.price);
+                // Update the "RMx / person" label visible on the card
+                const labelEl = document.getElementById('addon-label-' + key);
+                if (labelEl) labelEl.textContent = 'RM' + parseFloat(row.price).toFixed(0) + ' / person';
+            });
+        }
+    } catch(e) { /* silently fall back to defaults */ }
+
+    calculateTotal();
 }
 
 let appliedVoucher  = null;
@@ -2098,13 +2114,14 @@ async function submitPaymentProof() {
 
     // Build tickets & addons list
     const ticketsList = [];
-    if (quantities.adult  > 0) ticketsList.push({ ticket_type: 'Adult',  price: 20, quantity: quantities.adult  });
-    if (quantities.child  > 0) ticketsList.push({ ticket_type: 'Child',  price: 10, quantity: quantities.child  });
-    if (quantities.family > 0) ticketsList.push({ ticket_type: 'Group',  price: 50, quantity: quantities.family });
+    if (quantities.adult  > 0) ticketsList.push({ ticket_type: 'Adult',  price: prices.adult,  quantity: quantities.adult  });
+    if (quantities.child  > 0) ticketsList.push({ ticket_type: 'Child',  price: prices.child,  quantity: quantities.child  });
+    if (quantities.senior > 0) ticketsList.push({ ticket_type: 'Senior', price: prices.senior, quantity: quantities.senior });
+    if (quantities.family > 0) ticketsList.push({ ticket_type: 'Group',  price: prices.family, quantity: quantities.family });
 
     const addonsList = [];
-    if (addonQty.safari  > 0) addonsList.push({ addon_type: 'Safari Shuttle', quantity: addonQty.safari,  price_per: 5  });
-    if (addonQty.feeding > 0) addonsList.push({ addon_type: 'Feeding Pass',   quantity: addonQty.feeding, price_per: 12 });
+    if (addonQty.safari  > 0) addonsList.push({ addon_type: 'Safari Shuttle', quantity: addonQty.safari,  price_per: addonPrices.safari  });
+    if (addonQty.feeding > 0) addonsList.push({ addon_type: 'Feeding Pass',   quantity: addonQty.feeding, price_per: addonPrices.feeding });
 
     const formData = new FormData();
     formData.append('proof_image', proofFile);

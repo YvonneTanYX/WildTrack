@@ -2410,6 +2410,24 @@ textarea.form-input {
           </tbody>
         </table>
       </div>
+
+      <!-- Animal Feeding Prices -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <div>
+            <h3>🐾 Animal Feeding Session Prices</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Feed cup prices shown on the Animal Feeding page (weekends &amp; public holidays)</p>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Animal</th><th>Session Time</th><th>Price / Cup</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="feedingPricingTableBody">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Loading feeding prices&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="tab-content" id="tab-promotions">
@@ -2881,6 +2899,20 @@ textarea.form-input {
   </div>
 </div>
 
+<!-- Feeding Cup Price Edit Modal -->
+<div class="modal-overlay" id="feedingPriceModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header"><h3>Edit Feeding Cup Price</h3><button onclick="closeModal('feedingPriceModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="feedingPriceKey"/>
+      <div class="form-group"><label>Animal</label><input type="text" class="form-input" id="feedingPriceLabel" readonly/></div>
+      <div class="form-group"><label>New Price (RM) per cup</label><input type="number" class="form-input" id="feedingPriceValue" min="0.01" step="0.01" placeholder="0.00"/></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">This price will reflect immediately on the Animal Feeding visitor page.</p>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="saveFeedingPrice()">Save &amp; Update Live</button>
+    </div>
+  </div>
+</div>
+
 <!-- Promo / Voucher Modal -->
 <div class="modal-overlay" id="promoModal">
   <div class="modal" style="max-width:480px;">
@@ -3012,7 +3044,7 @@ function switchTab(btn, tabId) {
   if (target) target.classList.add('active');
 
   // Lazy-load dynamic tabs
-  if (tabId === 'tab-pricing')    { loadPricingTable(); loadAddonPricingTable(); }
+  if (tabId === 'tab-pricing')    { loadPricingTable(); loadAddonPricingTable(); loadFeedingPricingTable(); }
   if (tabId === 'tab-promotions') loadVouchersTable();
 }
 
@@ -3250,6 +3282,7 @@ function startAutoRefresh() {
   try { loadAdminNotifications(); } catch(e) {}
   try { loadPricingTable(); } catch(e) {}
   try { loadAddonPricingTable(); } catch(e) {}
+  try { loadFeedingPricingTable(); } catch(e) {}
   try { loadVouchersTable(); } catch(e) {}
   setInterval(() => {
     try { loadAllStats(); } catch(e) {}
@@ -3395,7 +3428,59 @@ async function saveAddonPrice() {
   finally { btn.disabled = false; btn.textContent = 'Save & Update Live'; }
 }
 
+// ---- FEEDING CUP PRICE EDIT (stored in localStorage, shared with visitor page) ----
 
+const feedingAnimals = {
+  feeding_goat:   { label: '🐐 Goat',   time: '11:30am – 12:00pm', default: 3.00 },
+  feeding_sheep:  { label: '🐑 Sheep',  time: '12:00pm – 12:30pm', default: 3.00 },
+  feeding_rabbit: { label: '🐇 Rabbit', time: '12:30pm – 1:00pm',  default: 2.00 },
+};
+
+function getFeedingPrices() {
+  try {
+    const stored = localStorage.getItem('wildtrack_feeding_prices');
+    return stored ? JSON.parse(stored) : {};
+  } catch(e) { return {}; }
+}
+
+function setFeedingPrice(key, val) {
+  const prices = getFeedingPrices();
+  prices[key] = val;
+  localStorage.setItem('wildtrack_feeding_prices', JSON.stringify(prices));
+}
+
+function loadFeedingPricingTable() {
+  const tbody = document.getElementById('feedingPricingTableBody');
+  if (!tbody) return;
+  const stored = getFeedingPrices();
+  tbody.innerHTML = Object.entries(feedingAnimals).map(([key, info]) => {
+    const price = stored[key] ?? info.default;
+    return `<tr>
+      <td><strong>${info.label}</strong></td>
+      <td style="color:var(--text-muted);">🕛 ${info.time}</td>
+      <td class="price-cell" id="price-${key}"><strong>RM${parseFloat(price).toFixed(2)}</strong></td>
+      <td><button class="btn-edit" onclick="editFeedingPrice('${key}','${info.label}','${parseFloat(price).toFixed(2)}')">Edit Price</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function editFeedingPrice(key, label, currentPrice) {
+  document.getElementById('feedingPriceKey').value   = key;
+  document.getElementById('feedingPriceLabel').value = label;
+  document.getElementById('feedingPriceValue').value = currentPrice;
+  openModal('feedingPriceModal');
+}
+
+function saveFeedingPrice() {
+  const key = document.getElementById('feedingPriceKey').value;
+  const val = parseFloat(document.getElementById('feedingPriceValue').value);
+  if (isNaN(val) || val <= 0) { showToast('Please enter a valid price.', 'error'); return; }
+
+  setFeedingPrice(key, val);
+  closeModal('feedingPriceModal');
+  showToast(`Feeding cup price updated to RM${val.toFixed(2)} — live on visitor page ✓`);
+  loadFeedingPricingTable();
+}
 
 async function loadVouchersTable() {
   try {

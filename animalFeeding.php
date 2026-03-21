@@ -134,7 +134,7 @@ $currentPage = 'visit'; ?>
       <div class="fc-body">
         <h2>🐐 Goat</h2>
         <div class="fc-time">🕛 11:30am – 12:00pm</div>
-        <div class="fc-price">RM 3 / cup</div>
+        <div class="fc-price" id="price-goat">RM 3 / cup</div>
       </div>
     </div>
 
@@ -144,7 +144,7 @@ $currentPage = 'visit'; ?>
       <div class="fc-body">
         <h2>🐑 Sheep</h2>
         <div class="fc-time">🕛 12:00pm – 12:30pm</div>
-        <div class="fc-price">RM 3 / cup</div>
+        <div class="fc-price" id="price-sheep">RM 3 / cup</div>
       </div>
     </div>
 
@@ -154,7 +154,7 @@ $currentPage = 'visit'; ?>
       <div class="fc-body">
         <h2>🐇 Rabbit</h2>
         <div class="fc-time">🕧 12:30pm – 1:00pm</div>
-        <div class="fc-price">RM 2 / cup</div>
+        <div class="fc-price" id="price-rabbit">RM 2 / cup</div>
       </div>
     </div>
 
@@ -168,7 +168,7 @@ $currentPage = 'visit'; ?>
         <span style="font-size:20px;">🎟️</span>
         <span class="pass-label">Feeding Experience Pass</span>
       </div>
-      <div class="pass-price">RM12 / person</div>
+      <div class="pass-price" id="price-pass">RM12 / person</div>
       <ul class="pass-perks">
         <li><span class="perk-check">✔</span> Includes 2 complimentary feed cups</li>
         <li><span class="perk-check">✔</span> Priority access to feeding sessions</li>
@@ -187,6 +187,31 @@ $currentPage = 'visit'; ?>
     { label: 'Visit', href: 'visitMain.php' },
     { label: 'Animal Feeding' }
   ];
+</script>
+<script>
+  // Load feeding cup prices saved by admin via localStorage
+  (function loadFeedingPrices() {
+    try {
+      const stored = localStorage.getItem('wildtrack_feeding_prices');
+      if (!stored) return;
+      const prices = JSON.parse(stored);
+
+      const map = {
+        feeding_goat:   'price-goat',
+        feeding_sheep:  'price-sheep',
+        feeding_rabbit: 'price-rabbit',
+      };
+
+      Object.entries(map).forEach(([key, elId]) => {
+        if (prices[key] != null) {
+          const el = document.getElementById(elId);
+          if (el) el.textContent = 'RM ' + parseFloat(prices[key]).toFixed(0) + ' / cup';
+        }
+      });
+    } catch(e) {
+      // Silently fall back to static HTML defaults
+    }
+  })();
 </script>
 <script src="FinalProject.js"></script>
 </body>
