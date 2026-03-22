@@ -95,11 +95,12 @@ $currentPage = 'visit'; ?>
       <p>Save by booking online! Group rates also available.</p>
 
       <div class="ticket-grid">
-        <span class="t-label">Adult</span>              <span class="t-price">RM 20</span>
-        <span class="t-label">Child</span>              <span class="t-price">RM 10</span>
+        <span class="t-label">Adult</span>              <span class="t-price" id="ohr-adult">RM 20</span>
+        <span class="t-label">Senior</span>              <span class="t-price" id="ohr-adult">RM 15</span>
+        <span class="t-label">Child</span>              <span class="t-price" id="ohr-child">RM 10</span>
         <span class="t-label">Child (Under 4)</span>    <span class="t-price">Free</span>
-        <span class="t-label">Family Bundle</span>       <span class="t-price">RM 50</span>
-        <span class="t-note">Family Bundle: 2 Adults + 2 Children — save 15%</span>
+        <span class="t-label">Family Bundle</span>       <span class="t-price" id="ohr-family">RM 55</span>
+        <span class="t-note">Family Bundle: 2 Adults + 1 Children + 1 Senior — save 15%</span>
       </div>
 
       <a href="Ticketing.php" class="btn-cta">Book Tickets Now →</a>
@@ -117,5 +118,22 @@ $currentPage = 'visit'; ?>
   ];
 </script>
 <script src="FinalProject.js"></script>
+<script>
+  // ── Dynamically load ticket prices from admin-controlled DB ──────────────
+  (async function loadTicketPrices() {
+    try {
+      const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_prices');
+      const data = await res.json();
+      if (!data.success) return;
+      const typeMap = { Adult: 'ohr-adult', Child: 'ohr-child', Group: 'ohr-family' };
+      data.prices.forEach(function(row) {
+        const elId = typeMap[row.ticket_type];
+        if (!elId) return;
+        const el = document.getElementById(elId);
+        if (el) el.textContent = 'RM ' + parseFloat(row.price).toFixed(0);
+      });
+    } catch(e) { /* silently keep defaults */ }
+  })();
+</script>
 </body>
 </html>

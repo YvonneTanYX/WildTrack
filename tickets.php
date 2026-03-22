@@ -245,32 +245,154 @@ switch ($action) {
     }
 
     // ─────────────────────────────────────────────────────
-    //  get_pending — admin lists pending bookings (grouped)
+    //  get_pending — admin lists ALL bookings (grouped)
+    //  Returns ticket_breakdown[], addons[], final_total,
+    //  payment_method, visitor_name, visitor_email
     // ─────────────────────────────────────────────────────
     case 'get_pending': {
         requireRole('admin');
-        $pdo  = getDB();
-        // One row per booking_ref — shows ticket summary, total price, proof from first ticket
+        $pdo = getDB();
+
+        // Step 1 — one summary row per booking_ref (all statuses)
+        // NOTE: Do NOT group by visit_date or status — they should be the same
+        // for all tickets in a booking, but grouping by them can split a booking
+        // into multiple rows if any data inconsistency exists.
         $stmt = $pdo->query(
             "SELECT
                 t.booking_ref,
                 t.user_id,
-                t.visit_date,
-                t.status,
-                MIN(t.payment_proof) AS payment_proof,
-                MIN(t.purchase_date) AS purchase_date,
-                COUNT(t.ticket_id)   AS ticket_count,
-                SUM(t.price)         AS total_price,
-                GROUP_CONCAT(DISTINCT t.ticket_type ORDER BY t.ticket_type SEPARATOR ', ') AS ticket_types,
+                MIN(t.visit_date)     AS visit_date,
+                MIN(t.status)         AS status,
+                MIN(t.payment_proof)  AS payment_proof,
+                MIN(t.purchase_date)  AS purchase_date,
+                COUNT(t.ticket_id)    AS ticket_count,
+                SUM(t.price)          AS total_price,
+                MIN(t.ticket_id)      AS first_ticket_id,
+                u.username            AS visitor_name,
+                u.email               AS visitor_email,
                 u.username,
                 u.email
              FROM tickets t
              JOIN users u ON t.user_id = u.user_id
-             WHERE t.status = 'pending'
-             GROUP BY t.booking_ref, t.user_id, t.visit_date, t.status, u.username, u.email
-             ORDER BY MIN(t.purchase_date) DESC"
+             WHERE t.booking_ref IS NOT NULL
+               AND t.booking_ref != ''
+             GROUP BY t.booking_ref, t.user_id, u.username, u.email
+             ORDER BY
+                FIELD(MIN(t.status),'pending','approved','rejected'),
+                MIN(t.purchase_date) DESC"
         );
-        respond(true, 'OK', ['payments' => $stmt->fetchAll()]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Step 2 — for each booking, fetch per-type breakdown + addons
+        $breakdownStmt = $pdo->prepare(
+            "SELECT ticket_type,
+                    COUNT(*)      AS qty,
+                    MIN(price)    AS price_per
+             FROM tickets
+             WHERE booking_ref = ?
+               AND ticket_type IS NOT NULL
+               AND ticket_type != ''
+             GROUP BY ticket_type
+             ORDER BY FIELD(ticket_type,'Adult','Child','Senior','Group')"
+        );
+
+        $addonStmt = $pdo->prepare(
+            "SELECT addon_type, quantity, price_per_pax AS price_per,
+                    subtotal
+             FROM ticket_addons
+             WHERE ticket_id = ?"
+        );
+
+        // Step 3 — fetch extra metadata stored on ticket rows.
+        // Uses separate column reads to avoid single-quote escaping issues.
+        $metaStmt = $pdo->prepare(
+            "SELECT payment_method, voucher_code, discount_amount
+             FROM tickets
+             WHERE booking_ref = ?
+             LIMIT 1"
+        );
+
+        $payments = [];
+        foreach ($rows as $row) {
+            $ref          = $row['booking_ref'];
+            $firstTicketId = (int) $row['first_ticket_id'];
+
+            // Per-type ticket breakdown (ALL types: Adult, Child, Senior, Group)
+            $breakdownStmt->execute([$ref]);
+            $ticketBreakdown = $breakdownStmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($ticketBreakdown as &$t) {
+                $t['qty']       = (int)   $t['qty'];
+                $t['price_per'] = (float) $t['price_per'];
+            }
+            unset($t);
+
+            // Add-ons (linked to first ticket of the booking)
+            $addonStmt->execute([$firstTicketId]);
+            $addons = $addonStmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($addons as &$a) {
+                $a['quantity']  = (int)   $a['quantity'];
+                $a['price_per'] = (float) $a['price_per'];
+                $a['subtotal']  = (float) $a['subtotal'];
+            }
+            unset($a);
+
+            // Extra metadata — silently ignore if columns not yet added
+            $paymentMethod  = "Touch 'n Go eWallet";
+            $voucherCode    = null;
+            $discountAmount = 0.0;
+            try {
+                $metaStmt->execute([$ref]);
+                $meta = $metaStmt->fetch(PDO::FETCH_ASSOC);
+                if ($meta) {
+                    if (!empty($meta['payment_method']))  $paymentMethod  = $meta['payment_method'];
+                    if (!empty($meta['voucher_code']))    $voucherCode    = $meta['voucher_code'];
+                    if (isset($meta['discount_amount']))  $discountAmount = (float) $meta['discount_amount'];
+                }
+            } catch (PDOException $e) {
+                // Columns don't exist yet — keep defaults, no problem
+            }
+
+            // Recalculate final_total: ticket sum + addon sum − discount
+            $ticketSum = array_sum(array_map(fn($t) => $t['qty'] * $t['price_per'], $ticketBreakdown));
+            $addonSum  = array_sum(array_map(fn($a) => $a['subtotal'], $addons));
+            $finalTotal = $ticketSum + $addonSum - $discountAmount;
+
+            // Legacy flat ticket_types string (for backward-compat with old JS)
+            $typeNames    = array_column($ticketBreakdown, 'ticket_type');
+            $ticketTypes  = implode(', ', $typeNames);
+
+            $payments[] = [
+                'booking_ref'      => $ref,
+                'visit_date'       => $row['visit_date'],
+                'purchase_date'    => $row['purchase_date'],
+                'status'           => $row['status'],
+                'payment_proof'    => $row['payment_proof'],
+                // visitor identity (not the admin)
+                'visitor_name'     => $row['visitor_name'],
+                'visitor_email'    => $row['visitor_email'],
+                'username'         => $row['visitor_name'],   // legacy key
+                'email'            => $row['visitor_email'],  // legacy key
+                // totals
+                'total_price'      => (float) $row['total_price'],
+                'final_total'      => round($finalTotal, 2),
+                // payment info
+                'payment_method'   => $paymentMethod,
+                'voucher_code'     => $voucherCode,
+                'discount_amount'  => $discountAmount,
+                // legacy flat fields
+                'ticket_types'     => $ticketTypes,
+                'ticket_count'     => (int) $row['ticket_count'],
+                // NEW: rich breakdown arrays consumed by admin.html
+                'ticket_breakdown' => $ticketBreakdown,
+                'addons'           => $addons,
+            ];
+        }
+
+        $pendingCount = count(array_filter($payments, fn($p) => $p['status'] === 'pending'));
+        respond(true, 'OK', [
+            'payments'      => $payments,
+            'pending_count' => $pendingCount,
+        ]);
         break;
     }
 
@@ -494,7 +616,7 @@ switch ($action) {
              FROM vouchers
              ORDER BY created_at DESC"
         );
-        respond(true, 'OK', ['vouchers' => $stmt->fetchAll()]);
+        respond(true, 'OK', ['vouchers' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
         break;
     }
 

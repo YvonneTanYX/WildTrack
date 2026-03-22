@@ -65,13 +65,18 @@ $currentPage = 'visit'; ?>
   <div class="ticket-options">
     <div class="ticket-card">
       <div class="tc-type">Adult</div>
-      <div class="tc-price">RM 20</div>
-      <div class="tc-note">Age 18 and above</div>
+      <div class="tc-price" id="btp-adult">RM 20</div>
+      <div class="tc-note">Age 13 - 64</div>
+    </div>
+    <div class="ticket-card">
+      <div class="tc-type">Senior</div>
+      <div class="tc-price" id="btp-child">RM 10</div>
+      <div class="tc-note">Age 65 and above</div>
     </div>
     <div class="ticket-card">
       <div class="tc-type">Child</div>
-      <div class="tc-price">RM 10</div>
-      <div class="tc-note">Age 4 – 17</div>
+      <div class="tc-price" id="btp-child">RM 10</div>
+      <div class="tc-note">Age 4 – 12</div>
     </div>
     <div class="ticket-card">
       <div class="tc-type">Under 4</div>
@@ -80,8 +85,8 @@ $currentPage = 'visit'; ?>
     </div>
     <div class="ticket-card" style="border-color:#76d7c4; background:#f0faf8;">
       <div class="tc-type">Family Bundle</div>
-      <div class="tc-price">RM 50</div>
-      <div class="tc-note">2 Adults + 2 Children<br>Save 15%</div>
+      <div class="tc-price" id="btp-family">RM 55</div>
+      <div class="tc-note">2 Adults + 1 Children + 1 Senior<br>Save 15%</div>
     </div>
   </div>
 
@@ -105,5 +110,22 @@ $currentPage = 'visit'; ?>
   ];
 </script>
 <script src="FinalProject.js"></script>
+<script>
+  // ── Dynamically load ticket prices from admin-controlled DB ──────────────
+  (async function loadTicketPrices() {
+    try {
+      const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_prices');
+      const data = await res.json();
+      if (!data.success) return;
+      const typeMap = { Adult: 'btp-adult', Child: 'btp-child', Group: 'btp-family' };
+      data.prices.forEach(function(row) {
+        const elId = typeMap[row.ticket_type];
+        if (!elId) return;
+        const el = document.getElementById(elId);
+        if (el) el.textContent = 'RM ' + parseFloat(row.price).toFixed(0);
+      });
+    } catch(e) { /* silently keep defaults */ }
+  })();
+</script>
 </body>
 </html>

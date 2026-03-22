@@ -729,6 +729,63 @@ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #DBEAFE;
 }
 
+/* ===== BOOKING DETAILS MODAL ===== */
+.bd-info-box {
+  background: var(--green-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.bd-info-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.bd-info-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.4;
+}
+.bd-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.bd-breakdown-box {
+  background: var(--green-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bd-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-dark);
+}
+.bd-total-row {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--green-dark);
+}
+/* Clickable rows in approval table */
+#approvalTableBody tr:hover td {
+  background: var(--green-pale);
+}
+
 .btn-page {
     background: var(--white);
     border: 1.5px solid var(--border);
@@ -2790,6 +2847,19 @@ textarea.form-input {
 
 </main>
 
+<!-- Booking Details Modal -->
+<div class="modal-overlay" id="bookingDetailsModal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <h3>Booking Details</h3>
+      <button onclick="closeModal('bookingDetailsModal')">✕</button>
+    </div>
+    <div class="modal-body" id="bdContent">
+      <!-- populated by openBookingDetails() -->
+    </div>
+  </div>
+</div>
+
 <!-- Edit & Approve Modal -->
 <div class="modal-overlay" id="editApproveModal">
   <div class="modal" style="max-width:560px;">
@@ -2810,26 +2880,16 @@ textarea.form-input {
       <input type="hidden" id="eaBookingRef"/>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div>
+        <div style="grid-column:1/-1;">
           <label class="form-label">Booking Ref</label>
           <input id="eaRefDisplay" type="text" readonly class="form-input" style="background:var(--green-bg);color:var(--text-muted);"/>
-        </div>
-        <div>
-          <label class="form-label">Ticket Type</label>
-          <select id="eaTicketType" class="form-input">
-            <option value="">— keep as submitted —</option>
-            <option value="Adult">Adult</option>
-            <option value="Child">Child</option>
-            <option value="Group">Group</option>
-          </select>
         </div>
         <div>
           <label class="form-label">Visit Date</label>
           <input id="eaVisitDate" type="date" class="form-input"/>
         </div>
-        <div>
-          <label class="form-label">Price per Ticket (RM)</label>
-          <input id="eaPrice" type="number" min="0" step="0.01" placeholder="e.g. 20.00" class="form-input"/>
+        <div style="display:flex;align-items:flex-end;">
+          <p style="font-size:12px;color:var(--text-muted);padding-bottom:4px;">Change date only if visitor selected the wrong day.</p>
         </div>
         <div>
           <label class="form-label">Visitor Name</label>
@@ -3135,20 +3195,48 @@ function renderApprovalTable(payments) {
     return;
   }
   tbody.innerHTML = payments.map(p => {
+    // Use visitor_name/visitor_email (the actual ticket buyer), fall back to username/email
+    const customerName  = p.visitor_name  || p.username || '—';
+    const customerEmail = p.visitor_email || p.email    || '';
+
     const proofBtn = p.payment_proof
-      ? `<button class="btn-view-proof" onclick="viewProof('${p.payment_proof}','${p.booking_ref}','${p.username}','${p.visit_date}')">View Screenshot</button>`
+      ? `<button class="btn-view-proof" onclick="event.stopPropagation();viewProof('${p.payment_proof}','${p.booking_ref}','${customerName}','${p.visit_date}')">View Screenshot</button>`
       : '<span style="color:var(--text-muted);font-size:12px;">No file</span>';
-    const dateStr = p.purchase_date ? p.purchase_date.split(' ')[0] : '—';
+
+    const dateStr    = p.purchase_date ? p.purchase_date.split(' ')[0] : '—';
     const statusBadge = `<span class="status-badge ${p.status}">${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span>`;
-    const ticketSummary = `${p.ticket_types || p.ticket_type || '—'} × ${p.ticket_count || 1}`;
-    const totalPrice = parseFloat(p.total_price || p.price || 0).toFixed(2);
+
+    // Build ticket summary: prefer ticket_breakdown (array), else ticket_types string
+    // Friendly names for DB ticket_type values
+    const _typeLabels = { Adult: 'Adult Pass', Child: 'Child Pass', Senior: 'Senior Pass', Group: 'Family Bundle' };
+    let ticketSummary = '—';
+    if (p.ticket_breakdown && Array.isArray(p.ticket_breakdown) && p.ticket_breakdown.length) {
+      ticketSummary = p.ticket_breakdown
+        .map(t => `${_typeLabels[t.ticket_type] || t.ticket_type} ×${t.qty}`)
+        .join(', ');
+    } else if (p.ticket_types) {
+      // Strip any leading/trailing commas or spaces (DB concatenation artefact)
+      const cleaned = p.ticket_types.replace(/^[\s,]+|[\s,]+$/g, '');
+      const typeList = cleaned ? cleaned.split(',').map(s => s.trim()).filter(Boolean) : [];
+      if (typeList.length > 0) {
+        const qty = p.ticket_count || typeList.length;
+        ticketSummary = typeList.map(t => _typeLabels[t] || t).join(', ') + ` ×${qty}`;
+      }
+    } else if (p.ticket_type) {
+      ticketSummary = (_typeLabels[p.ticket_type] || p.ticket_type) + ` ×${p.ticket_count || 1}`;
+    }
+
+    // Total: final_total includes addons + voucher discount — most accurate
+    const totalPrice = parseFloat(p.final_total || p.total_price || p.price || 0).toFixed(2);
+
     const actionCell = p.status === 'pending'
-      ? `<button class="btn-approve" onclick="approveTicket(this,'${p.booking_ref}')">✓ Approve</button>
-         <button class="btn-reject"  onclick="rejectTicket(this,'${p.booking_ref}')">✕ Reject</button>`
+      ? `<button class="btn-approve" onclick="event.stopPropagation();approveTicket(this,'${p.booking_ref}')">✓ Approve</button>
+         <button class="btn-reject"  onclick="event.stopPropagation();rejectTicket(this,'${p.booking_ref}')">✕ Reject</button>`
       : statusBadge;
-    return `<tr>
+
+    return `<tr style="cursor:pointer;" onclick="openBookingDetails('${p.booking_ref}')" title="Click to view booking details">
       <td class="txn-id">${p.booking_ref}</td>
-      <td><strong>${p.username}</strong><br/><small>${p.email||''}</small></td>
+      <td><strong>${customerName}</strong><br/><small>${customerEmail}</small></td>
       <td>${ticketSummary}</td>
       <td><strong>RM${totalPrice}</strong></td>
       <td>${proofBtn}</td>
@@ -3181,14 +3269,15 @@ function renderOverviewApprovals(payments) {
 function approveTicket(btn, bookingRef) {
   const row = _allPayments.find(p => p.booking_ref === bookingRef);
 
+  // Use visitor fields (ticket buyer), not session admin fields
+  const customerName  = row?.visitor_name  || row?.username || '';
+  const customerEmail = row?.visitor_email || row?.email    || '';
+
   document.getElementById('eaBookingRef').value  = bookingRef;
   document.getElementById('eaRefDisplay').value  = bookingRef;
-  document.getElementById('eaTicketType').value  = '';
   document.getElementById('eaVisitDate').value   = row?.visit_date || '';
-  document.getElementById('eaPrice').value       = row?.total_price
-    ? (parseFloat(row.total_price) / (parseInt(row.ticket_count) || 1)).toFixed(2) : '';
-  document.getElementById('eaUsername').value    = row?.username || '';
-  document.getElementById('eaEmail').value       = row?.email || '';
+  document.getElementById('eaUsername').value    = customerName;
+  document.getElementById('eaEmail').value       = customerEmail;
 
   const thumbWrap = document.getElementById('eaProofThumb');
   const thumbImg  = document.getElementById('eaProofImg');
@@ -3204,17 +3293,14 @@ function approveTicket(btn, bookingRef) {
 
 async function submitApproval() {
   const bookingRef = document.getElementById('eaBookingRef').value;
-  const priceVal   = document.getElementById('eaPrice').value.trim();
   const payload = {
-    booking_ref:  bookingRef,
-    ticket_type:  document.getElementById('eaTicketType').value.trim(),
-    visit_date:   document.getElementById('eaVisitDate').value.trim(),
-    price:        priceVal ? parseFloat(priceVal) : null,
-    username:     document.getElementById('eaUsername').value.trim(),
-    email:        document.getElementById('eaEmail').value.trim(),
+    booking_ref: bookingRef,
+    visit_date:  document.getElementById('eaVisitDate').value.trim(),
+    username:    document.getElementById('eaUsername').value.trim(),
+    email:       document.getElementById('eaEmail').value.trim(),
   };
-  // Strip empty so backend COALESCE keeps original values
-  Object.keys(payload).forEach(k => { if (payload[k] === '' || payload[k] === null) delete payload[k]; });
+  // Strip empty fields so backend COALESCE keeps original values
+  Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
 
   const confirmBtn = document.querySelector('#editApproveModal .btn-approve');
   confirmBtn.disabled = true; confirmBtn.textContent = 'Approving…';
@@ -3254,6 +3340,118 @@ async function rejectTicket(btn, bookingRef) {
     if (data.success) { showToast(`${bookingRef} rejected — visitor notified.`, 'error'); await loadPendingPayments(); }
     else { showToast(data.message || 'Rejection failed.', 'error'); btn.disabled = false; btn.textContent = '✕ Reject'; }
   } catch (err) { showToast('Network error. Try again.', 'error'); btn.disabled = false; btn.textContent = '✕ Reject'; }
+}
+
+// ---- BOOKING DETAILS MODAL (row click) ----
+function openBookingDetails(bookingRef) {
+  const p = _allPayments.find(x => x.booking_ref === bookingRef);
+  if (!p) return;
+
+  const customerName  = p.visitor_name  || p.username || '—';
+  const customerEmail = p.visitor_email || p.email    || '—';
+  const dateStr       = p.purchase_date ? p.purchase_date.split(' ')[0] : '—';
+  const visitDate     = p.visit_date    || '—';
+  // Use final_total (includes addons + voucher) as the authoritative paid amount
+  const totalPrice    = parseFloat(p.final_total || p.total_price || p.price || 0).toFixed(2);
+  const statusClass   = p.status || 'pending';
+  const statusLabel   = p.status ? p.status.charAt(0).toUpperCase() + p.status.slice(1) : 'Pending';
+  // Payment method: stored from Ticketing.php submission; default to TNG since it's the only option
+  const paymentMethod = p.payment_method || "Touch 'n Go eWallet";
+
+  // ── Ticket breakdown ──
+  // Friendly display names for DB ticket_type values
+  const typeLabels = { Adult: 'Adult Pass', Child: 'Child Pass', Senior: 'Senior Pass', Group: 'Family Bundle' };
+  let ticketRows = '';
+  let ticketSubtotal = 0;
+
+  if (p.ticket_breakdown && Array.isArray(p.ticket_breakdown) && p.ticket_breakdown.length) {
+    // Rich breakdown from API (preferred)
+    p.ticket_breakdown.forEach(t => {
+      const label     = typeLabels[t.ticket_type] || t.ticket_type;
+      const lineTotal = parseFloat(t.price_per || 0) * parseInt(t.qty || 1);
+      ticketSubtotal += lineTotal;
+      ticketRows += `<div class="bd-row"><span>${label} ×${t.qty} @ RM${parseFloat(t.price_per||0).toFixed(2)}</span><span>RM${lineTotal.toFixed(2)}</span></div>`;
+    });
+  } else if (p.ticket_types) {
+    // Fallback: comma-separated string like "Adult, Child" with ticket_count
+    // Strip leading/trailing commas & spaces then split
+    const rawTypes = p.ticket_types.replace(/^[\s,]+|[\s,]+$/g, '');
+    const typeList = rawTypes ? rawTypes.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const totalQty = parseInt(p.ticket_count || typeList.length || 1);
+    const qtyEach  = typeList.length > 0 ? Math.round(totalQty / typeList.length) : totalQty;
+    const subtotal = parseFloat(p.total_price || p.price || 0);
+    ticketSubtotal = subtotal;
+    if (typeList.length > 0) {
+      typeList.forEach(t => {
+        const label = typeLabels[t] || t + ' Pass';
+        ticketRows += `<div class="bd-row"><span>${label} ×${qtyEach}</span><span>—</span></div>`;
+      });
+      ticketRows += `<div class="bd-row" style="color:var(--text-muted);font-size:12px;"><span>Tickets subtotal</span><span>RM${subtotal.toFixed(2)}</span></div>`;
+    } else {
+      ticketRows = `<div class="bd-row" style="color:var(--text-muted)">No ticket type details available</div>`;
+    }
+  }
+
+  // ── Add-on breakdown ──
+  let addonRows = '';
+  let addonTotal = 0;
+  if (p.addons && Array.isArray(p.addons) && p.addons.length) {
+    p.addons.forEach(a => {
+      const lineTotal = parseFloat(a.price_per || 0) * parseInt(a.quantity || 1);
+      addonTotal += lineTotal;
+      addonRows += `<div class="bd-row"><span>${a.addon_type} ×${a.quantity} @ RM${parseFloat(a.price_per||0).toFixed(2)}</span><span>RM${lineTotal.toFixed(2)}</span></div>`;
+    });
+  }
+
+  // ── Voucher discount ──
+  let voucherRow = '';
+  const discountAmt = parseFloat(p.discount_amount || p.voucher_discount || 0);
+  const voucherCode  = p.voucher_code || '';
+  if (voucherCode && discountAmt > 0) {
+    voucherRow = `<div class="bd-row" style="color:var(--green-mid);">
+      <span>Voucher (${voucherCode})</span><span>−RM${discountAmt.toFixed(2)}</span>
+    </div>`;
+  }
+
+  // ── Payment proof ──
+  const proofSection = p.payment_proof
+    ? `<div style="margin-bottom:18px;">
+        <p class="bd-section-label">Payment Screenshot</p>
+        <img src="http://localhost/WildTrack/${p.payment_proof}" alt="Payment proof"
+             style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;border:1px solid var(--border);background:var(--green-bg);"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+        <p style="display:none;color:var(--text-muted);font-size:12px;margin-top:6px;">⚠ Screenshot not accessible from this machine.</p>
+       </div>` : '';
+
+  // ── Action buttons ──
+  const actionBtns = p.status === 'pending'
+    ? `<button class="btn-approve" style="flex:1;padding:12px;" onclick="closeModal('bookingDetailsModal');approveTicket(this,'${bookingRef}')">✓ Approve</button>
+       <button class="btn-reject" style="padding:12px 20px;" onclick="closeModal('bookingDetailsModal');rejectTicket(this,'${bookingRef}')">✕ Reject</button>`
+    : `<button class="btn-outline" style="flex:1;padding:12px;" onclick="closeModal('bookingDetailsModal')">Close</button>`;
+
+  document.getElementById('bdContent').innerHTML = `
+    ${proofSection}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div class="bd-info-box"><div class="bd-info-label">Booking Ref</div><div class="bd-info-val">${p.booking_ref}</div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Status</div><div class="bd-info-val"><span class="status-badge ${statusClass}">${statusLabel}</span></div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Customer</div><div class="bd-info-val"><strong>${customerName}</strong><br/><small style="color:var(--text-muted)">${customerEmail}</small></div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Visit Date</div><div class="bd-info-val">${visitDate}</div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Purchase Date</div><div class="bd-info-val">${dateStr}</div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Payment Method</div><div class="bd-info-val">${paymentMethod}</div></div>
+    </div>
+
+    <p class="bd-section-label">Ticket Breakdown</p>
+    <div class="bd-breakdown-box">
+      ${ticketRows || '<div class="bd-row" style="color:var(--text-muted)">No ticket details</div>'}
+      ${addonRows}
+      ${voucherRow}
+      <div class="bd-row bd-total-row"><span>Total Paid</span><span>RM${totalPrice}</span></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;">${actionBtns}</div>
+  `;
+
+  openModal('bookingDetailsModal');
 }
 
 function viewProof(proofPath, bookingRef, username, visitDate) {

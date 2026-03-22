@@ -2124,13 +2124,16 @@ async function submitPaymentProof() {
     if (addonQty.feeding > 0) addonsList.push({ addon_type: 'Feeding Pass',   quantity: addonQty.feeding, price_per: addonPrices.feeding });
 
     const formData = new FormData();
-    formData.append('proof_image', proofFile);
-    formData.append('visit_date',  visitDate);
-    formData.append('booking_ref', currentBookingRef);
-    formData.append('final_total', currentFinalTotal);
-    formData.append('voucher_id',  appliedVoucher ? appliedVoucher.voucher_id : '');
-    formData.append('tickets',     JSON.stringify(ticketsList));
-    formData.append('addons',      JSON.stringify(addonsList));
+    formData.append('proof_image',     proofFile);
+    formData.append('visit_date',      visitDate);
+    formData.append('booking_ref',     currentBookingRef);
+    formData.append('final_total',     currentFinalTotal);
+    formData.append('voucher_id',      appliedVoucher ? appliedVoucher.voucher_id : '');
+    formData.append('voucher_discount', appliedVoucher ? appliedVoucher.discount_amount : 0);
+    formData.append('voucher_code',    appliedVoucher ? appliedVoucher.code : '');
+    formData.append('payment_method',  "Touch 'n Go eWallet");
+    formData.append('tickets',         JSON.stringify(ticketsList));
+    formData.append('addons',          JSON.stringify(addonsList));
 
     try {
         const res  = await fetch('http://localhost/WildTrack/api/payment_proof.php', {

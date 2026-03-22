@@ -70,12 +70,15 @@ if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
 }
 
 // ── Parse form fields ───────────────────────────────────────────────────
-$visitDate  = clean($_POST['visit_date']  ?? '');
-$bookingRef = clean($_POST['booking_ref'] ?? '');
-$finalTotal = floatval($_POST['final_total'] ?? 0);
-$voucherId  = intval($_POST['voucher_id']  ?? 0);
-$tickets    = json_decode($_POST['tickets'] ?? '[]', true) ?: [];
-$addons     = json_decode($_POST['addons']  ?? '[]', true) ?: [];
+$visitDate       = clean($_POST['visit_date']       ?? '');
+$bookingRef      = clean($_POST['booking_ref']      ?? '');
+$finalTotal      = floatval($_POST['final_total']   ?? 0);
+$voucherId       = intval($_POST['voucher_id']      ?? 0);
+$voucherCode     = clean($_POST['voucher_code']     ?? '');
+$voucherDiscount = floatval($_POST['voucher_discount'] ?? 0);
+$paymentMethod   = clean($_POST['payment_method']   ?? "Touch 'n Go eWallet");
+$tickets         = json_decode($_POST['tickets']    ?? '[]', true) ?: [];
+$addons          = json_decode($_POST['addons']     ?? '[]', true) ?: [];
 
 if (!$visitDate) {
     @unlink($fullPath);
@@ -95,14 +98,33 @@ $pdo = getDB();
 $insertedIds = [];
 $firstTicketId = null;
 
+// Add optional columns if your tickets table has them
+// (payment_method, voucher_code, discount_amount on the first row)
+// We store these on all tickets of the booking so any lookup finds them.
+$hasExtraColumns = true; // set false if your tickets table lacks these columns
+try {
+    $pdo->query("SELECT payment_method FROM tickets LIMIT 1");
+} catch (PDOException $e) {
+    $hasExtraColumns = false;
+}
+
 try {
     $pdo->beginTransaction();
 
-    $stmtTicket = $pdo->prepare(
-        "INSERT INTO tickets
-            (user_id, ticket_type, price, visit_date, booking_ref, status, payment_proof, qr_code)
-         VALUES (?, ?, ?, ?, ?, 'pending', ?, '')"
-    );
+    if ($hasExtraColumns) {
+        $stmtTicket = $pdo->prepare(
+            "INSERT INTO tickets
+                (user_id, ticket_type, price, visit_date, booking_ref, status,
+                 payment_proof, qr_code, payment_method, voucher_code, discount_amount)
+             VALUES (?, ?, ?, ?, ?, 'pending', ?, '', ?, ?, ?)"
+        );
+    } else {
+        $stmtTicket = $pdo->prepare(
+            "INSERT INTO tickets
+                (user_id, ticket_type, price, visit_date, booking_ref, status, payment_proof, qr_code)
+             VALUES (?, ?, ?, ?, ?, 'pending', ?, '')"
+        );
+    }
 
     $stmtAddon = $pdo->prepare(
         "INSERT INTO ticket_addons (ticket_id, addon_type, quantity, price_per_pax, subtotal)
@@ -117,20 +139,37 @@ try {
         if (!$type || $quantity <= 0) continue;
 
         for ($i = 0; $i < $quantity; $i++) {
-            $stmtTicket->execute([
-                $user['user_id'],
-                $type,
-                $price,
-                $visitDate,
-                $bookingRef,
-                $dbPath,
-            ]);
+            if ($hasExtraColumns) {
+                $stmtTicket->execute([
+                    $user['user_id'],
+                    $type,
+                    $price,
+                    $visitDate,
+                    $bookingRef,
+                    $dbPath,
+                    $paymentMethod,
+                    $voucherCode ?: null,
+                    // Only store discount on first ticket to avoid double-counting
+                    $firstTicketId === null ? $voucherDiscount : 0,
+                ]);
+            } else {
+                $stmtTicket->execute([
+                    $user['user_id'],
+                    $type,
+                    $price,
+                    $visitDate,
+                    $bookingRef,
+                    $dbPath,
+                ]);
+            }
             $ticketId = (int) $pdo->lastInsertId();
             $insertedIds[] = $ticketId;
             if ($firstTicketId === null) $firstTicketId = $ticketId;
         }
     }
 
+    // Insert add-ons linked to the FIRST ticket of this booking
+    // (get_pending fetches addons via MIN(ticket_id) per booking_ref)
     foreach ($addons as $a) {
         $addonType = clean($a['addon_type']  ?? '');
         $qty       = intval($a['quantity']   ?? 0);

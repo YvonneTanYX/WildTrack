@@ -1,0 +1,10 @@
+{
+    "safari": {
+        "label": "Safari Shuttle",
+        "price": 5
+    },
+    "feeding": {
+        "label": "Feeding Pass",
+        "price": 12
+    }
+}
