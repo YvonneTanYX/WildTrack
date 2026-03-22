@@ -3334,6 +3334,7 @@ function startAutoRefresh() {
     try { loadAllStats(); } catch(e) {}
     try { loadPendingPayments(); } catch(e) {}
     try { loadAdminNotifications(); } catch(e) {}
+    try { loadVouchersTable(); } catch(e) {}
   }, 30000);
 }
 
@@ -3539,12 +3540,17 @@ async function loadVouchersTable() {
     const res  = await fetch('api/tickets.php?action=get_vouchers', { credentials: 'include' });
     const data = await res.json();
 
-    // Always update overview widget with active vouchers
-    renderOverviewPromos(data.success ? data.vouchers : []);
+    // Always update overview widget (pass empty array on failure)
+    renderOverviewPromos(data.success ? (data.vouchers || []) : []);
 
     const tbody = document.getElementById('vouchersTableBody');
     if (!tbody) return;
-    if (!data.success || !data.vouchers.length) {
+
+    if (!data.success) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">Failed to load vouchers.</td></tr>';
+      return;
+    }
+    if (!data.vouchers.length) {
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">No vouchers yet. Click + Add Voucher to create one.</td></tr>';
       return;
     }
@@ -3570,7 +3576,10 @@ async function loadVouchersTable() {
         </td>
       </tr>`;
     }).join('');
-  } catch(e) { console.error('loadVouchersTable error', e); }
+  } catch(e) {
+    console.error('loadVouchersTable error', e);
+    renderOverviewPromos([]); // clear loading state even on network error
+  }
 }
 
 function renderOverviewPromos(vouchers) {
