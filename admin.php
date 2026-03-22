@@ -1,0 +1,4303 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+// Redirect non-admins away
+$_u = $_SESSION['user'] ?? null;
+if (!$_u || $_u['role'] !== 'admin') {
+    header('Location: login.html');
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WildTrack Admin</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@600;700&display=swap');
+
+:root {
+    --green-dark: #2D5A27;
+    --green-mid: #3E7A34;
+    --green-light: #5A9E4E;
+    --green-pale: #EAF1E8;
+    --green-bg: #F2F5F0;
+    --amber: #D4872A;
+    --amber-light: #FFF3E0;
+    --orange: #C9541E;
+    --orange-light: #FBE9E0;
+    --purple: #6B52A3;
+    --purple-light: #F0ECFB;
+    --blue: #2563EB;
+    --blue-light: #EFF6FF;
+    --red: #DC2626;
+    --text-dark: #1A2B18;
+    --text-mid: #3D5234;
+    --text-muted: #7A9170;
+    --text-light: #B8CEB4;
+    --white: #FFFFFF;
+    --border: #D8E8D4;
+    --sidebar-w: 240px;
+    --topbar-h: 60px;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 12px rgba(30, 60, 25, 0.08);
+    --shadow-lg: 0 8px 32px rgba(30, 60, 25, 0.14);
+    --transition: 0.2s ease;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 13px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--green-bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: clip;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-light);
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--green-dark);
+    display: flex;
+    flex-direction: column;
+    z-index: 200;
+    transition: transform var(--transition);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-icon {
+    width: 46px;
+    height: 46px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.brand-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.brand-name {
+    display: block;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.3px;
+}
+
+.brand-sub {
+    display: block;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+.sidebar-nav {
+    padding: 12px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.nav-section-label {
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+    padding: 8px 10px 5px;
+    font-weight: 700;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    transition: all var(--transition);
+    cursor: pointer;
+    position: relative;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-weight: 700;
+}
+
+.nav-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.nav-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.nav-badge {
+    margin-left: auto;
+    background: var(--orange);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-card {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    flex: 1;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 8px 10px;
+    transition: background var(--transition);
+}
+
+.user-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--green-light);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.user-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.user-role {
+    display: block;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 1px;
+}
+
+.logout-btn {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all var(--transition);
+    flex-shrink: 0;
+}
+
+.logout-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.logout-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ===== MAIN CONTENT ===== */
+.main-content {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    transition: margin-left var(--transition);
+}
+
+.topbar {
+    height: var(--topbar-h);
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    gap: 16px;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 7px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+}
+
+.sidebar-toggle:hover {
+    background: var(--green-pale);
+    color: var(--green-dark);
+}
+
+.sidebar-toggle svg {
+    width: 22px;
+    height: 22px;
+}
+
+.page-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.live-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-light);
+    background: var(--green-pale);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: var(--green-bg);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 9px 16px;
+}
+
+.search-bar svg {
+    width: 17px;
+    height: 17px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.search-bar input {
+    border: none;
+    background: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    color: var(--text-dark);
+    outline: none;
+    width: 180px;
+}
+
+.search-bar input::placeholder {
+    color: var(--text-light);
+}
+
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-mid);
+    position: relative;
+    transition: all var(--transition);
+}
+
+.icon-btn:hover {
+    background: var(--green-pale);
+    border-color: var(--green-light);
+}
+
+.icon-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.notif-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--orange);
+    border: 2px solid var(--white);
+}
+
+/* NOTIFICATION PANEL */
+.notif-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 320px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    display: none;
+    z-index: 200;
+    overflow: hidden;
+}
+
+.notif-panel.open {
+    display: block;
+}
+
+.notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.notif-header button {
+    background: none;
+    border: none;
+    font-size: 12px;
+    color: var(--green-mid);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.notif-list {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    transition: background var(--transition);
+}
+
+.notif-item:hover {
+    background: var(--green-bg);
+}
+
+.notif-item.unread {
+    background: var(--green-pale);
+}
+
+.notif-item strong {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.notif-item small {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.notif-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notif-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.notif-icon.green {
+    background: var(--green-pale);
+    color: var(--green-dark);
+}
+
+.notif-icon.orange {
+    background: var(--orange-light);
+    color: var(--orange);
+}
+
+.notif-icon.blue {
+    background: var(--blue-light);
+    color: var(--blue);
+}
+
+/* ===== PAGES ===== */
+.page {
+    display: none;
+    padding: 20px;
+    flex: 1;
+}
+
+.page.active {
+    display: block;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.page-header h1 {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.page-header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition);
+    white-space: nowrap;
+}
+
+.btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.btn-primary {
+    background: var(--green-dark);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--green-mid);
+}
+
+.btn-outline {
+    background: var(--white);
+    color: var(--green-dark);
+    border: 1.5px solid var(--border);
+}
+
+.btn-outline:hover {
+    background: var(--green-pale);
+    border-color: var(--green-light);
+}
+
+.btn-approve {
+    background: var(--green-dark);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-approve:hover {
+    background: var(--green-mid);
+}
+
+.btn-reject {
+    background: none;
+    color: var(--red);
+    border: 1.5px solid #FECACA;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-reject:hover {
+    background: #FEE2E2;
+}
+
+.btn-reject-sm {
+    background: none;
+    color: var(--red);
+    border: 1.5px solid #FECACA;
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-reject-sm:hover {
+    background: #FEE2E2;
+}
+
+.btn-edit {
+    background: var(--green-pale);
+    color: var(--green-dark);
+    border: 1.5px solid var(--border);
+    padding: 7px 16px;
+    border-radius: 7px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-edit:hover {
+    background: var(--border);
+}
+
+.btn-edit-full {
+    width: 100%;
+    background: var(--green-bg);
+    color: var(--text-mid);
+    border: 1.5px solid var(--border);
+    padding: 9px;
+    border-radius: 9px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-top: 10px;
+}
+
+.btn-edit-full:hover {
+    background: var(--green-pale);
+    border-color: var(--green-light);
+    color: var(--green-dark);
+}
+
+.btn-outline-full {
+    width: 100%;
+    background: none;
+    color: var(--green-dark);
+    border: 1.5px dashed var(--border);
+    padding: 11px;
+    border-radius: 9px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: all var(--transition);
+}
+
+.btn-outline-full:hover {
+    background: var(--green-pale);
+    border-color: var(--green-light);
+}
+
+.btn-view-proof {
+    background: var(--blue-light);
+    color: var(--blue);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 7px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-view-proof:hover {
+    background: #DBEAFE;
+}
+
+/* ===== BOOKING DETAILS MODAL ===== */
+.bd-info-box {
+  background: var(--green-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.bd-info-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.bd-info-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.4;
+}
+.bd-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.bd-breakdown-box {
+  background: var(--green-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bd-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text-dark);
+}
+.bd-total-row {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--green-dark);
+}
+/* Clickable rows in approval table */
+#approvalTableBody tr:hover td {
+  background: var(--green-pale);
+}
+
+.btn-page {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+    color: var(--text-mid);
+}
+
+.btn-page:hover:not([disabled]) {
+    background: var(--green-pale);
+}
+
+.btn-page[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.icon-btn-sm {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 17px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.icon-btn-sm:hover {
+    background: var(--green-bg);
+}
+
+/* ===== CARDS ===== */
+.card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px 12px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.card-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.card-link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green-mid);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.card-link:hover {
+    color: var(--green-dark);
+}
+
+/* ===== STAT CARDS ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+}
+
+.stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.stat-icon.green {
+    background: var(--green-pale);
+    color: var(--green-dark);
+}
+
+.stat-icon.amber {
+    background: var(--amber-light);
+    color: var(--amber);
+}
+
+.stat-icon.orange {
+    background: var(--orange-light);
+    color: var(--orange);
+}
+
+.stat-icon.purple {
+    background: var(--purple-light);
+    color: var(--purple);
+}
+
+.stat-change {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.stat-change.positive {
+    background: var(--green-pale);
+    color: var(--green-dark);
+}
+
+.stat-change.urgent {
+    background: var(--orange-light);
+    color: var(--orange);
+}
+
+.stat-change.neutral {
+    background: var(--purple-light);
+    color: var(--purple);
+}
+
+.stat-value {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.1;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 14px;
+}
+
+.stat-bar {
+    height: 4px;
+    background: var(--green-bg);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--green-light);
+    transition: width 1s ease;
+}
+
+.stat-bar-fill.amber {
+    background: var(--amber);
+}
+
+.stat-bar-fill.orange {
+    background: var(--orange);
+}
+
+.stat-bar-fill.purple {
+    background: var(--purple);
+}
+
+/* ===== CHARTS ===== */
+.charts-row {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.chart-card {
+    padding: 20px 24px;
+}
+
+.chart-card canvas {
+    margin-top: 12px;
+}
+
+.chart-filters {
+    display: flex;
+    gap: 7px;
+}
+
+.filter-btn {
+    background: none;
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background: var(--green-dark);
+    color: #fff;
+    border-color: var(--green-dark);
+}
+
+.donut-legend {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-mid);
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-dot.green {
+    background: var(--green-dark);
+}
+
+.legend-dot.amber {
+    background: var(--amber);
+}
+
+.legend-dot.orange {
+    background: var(--orange);
+}
+
+.legend-dot.purple {
+    background: var(--purple);
+}
+
+/* ===== BOTTOM ROW ===== */
+.bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 16px;
+}
+
+.approvals-card,
+.promos-card {
+    overflow: visible;
+}
+
+/* ===== TABLE ===== */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table thead tr {
+    border-bottom: 2px solid var(--green-bg);
+}
+
+.data-table thead th {
+    padding: 12px 26px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid var(--green-bg);
+    transition: background var(--transition);
+}
+
+.data-table tbody tr:hover {
+    background: var(--green-bg);
+}
+
+.data-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.data-table tbody td {
+    padding: 16px 26px;
+    vertical-align: middle;
+    color: var(--text-mid);
+    line-height: 1.5;
+}
+
+.data-table tbody td strong {
+    color: var(--text-dark);
+}
+
+.data-table tbody td small {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.txn-id {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.price-cell strong {
+    color: var(--green-dark);
+    font-size: 14px;
+}
+
+.action-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+/* STATUS BADGES */
+.status-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-badge.pending {
+    background: #FFF3E0;
+    color: var(--amber);
+}
+
+.status-badge.approved {
+    background: var(--green-pale);
+    color: var(--green-dark);
+}
+
+.status-badge.rejected {
+    background: #FEE2E2;
+    color: var(--red);
+}
+
+.status-badge.maintenance {
+    background: #FFF3E0;
+    color: var(--amber);
+}
+
+/* ===== PROMOS ===== */
+.promo-list {
+    padding: 0 22px 22px;
+}
+
+.promo-item {
+    border-radius: 11px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.promo-item.green-bg {
+    background: var(--green-pale);
+}
+
+.promo-item.blue-bg {
+    background: var(--blue-light);
+}
+
+.promo-item.amber-bg {
+    background: var(--amber-light);
+}
+
+.promo-badge {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+.promo-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.promo-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+/* ===== TABS ===== */
+.tab-bar {
+    display: flex;
+    gap: 4px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 7px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+}
+
+.tab {
+    padding: 10px 22px;
+    border-radius: 9px;
+    border: none;
+    background: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.tab.active {
+    background: var(--green-dark);
+    color: #fff;
+    font-weight: 600;
+}
+
+.tab:hover:not(.active) {
+    background: var(--green-bg);
+    color: var(--text-dark);
+}
+
+.tab-count {
+    background: var(--orange);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* PROMOS GRID */
+.promos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) 1fr;
+    gap: 16px;
+    padding: 0 24px 24px;
+}
+
+.promo-card {
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    background: var(--white);
+    transition: all var(--transition);
+}
+
+.promo-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.promo-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.promo-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 7px;
+}
+
+.promo-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+
+.promo-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.discount-tag {
+    background: var(--orange-light);
+    color: var(--orange);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 7px;
+}
+
+.discount-tag.green {
+    background: var(--green-pale);
+    color: var(--green-dark);
+}
+
+.add-promo-card {
+    border: 1.5px dashed var(--border) !important;
+    background: var(--green-bg) !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.add-promo-inner {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.add-icon {
+    display: block;
+    font-size: 18px;
+    margin-bottom: 10px;
+    opacity: 0.4;
+}
+
+/* ===== FEEDBACK ===== */
+.feedback-top {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 16px;
+}
+
+.rating-card {
+    padding: 36px;
+    text-align: center;
+}
+
+.rating-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.rating-big {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 73px;
+    font-weight: 700;
+    color: var(--green-dark);
+    line-height: 1;
+    margin: 10px 0;
+}
+
+.stars {
+    font-size: 14px;
+    color: #F59E0B;
+    margin-bottom: 10px;
+}
+
+.rating-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.satisfaction-card {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.satisfaction-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+}
+
+.bar-row>span:first-child {
+    width: 46px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.bar-row>span:last-child {
+    width: 40px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.bar-track {
+    flex: 1;
+    height: 10px;
+    background: var(--green-bg);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 5px;
+}
+
+.bar-fill.green {
+    background: var(--green-light);
+}
+
+.bar-fill.green-light {
+    background: #7CC86E;
+}
+
+.bar-fill.amber-fill {
+    background: var(--amber);
+}
+
+.bar-fill.orange-fill {
+    background: var(--orange);
+}
+
+.bar-fill.red-fill {
+    background: var(--red);
+}
+
+.review-filters {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 16px 24px;
+    flex-wrap: wrap;
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.review-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 28px;
+    box-shadow: var(--shadow);
+}
+
+.review-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.reviewer-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--amber-light);
+    color: var(--amber);
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.reviewer-avatar.green-avatar {
+    background: var(--green-pale);
+    color: var(--green-dark);
+}
+
+.reviewer-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-dark);
+}
+
+.verified-badge {
+    background: var(--green-pale);
+    color: var(--green-dark);
+    font-size: 17px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    margin-left: 8px;
+}
+
+.review-stars {
+    font-size: 14px;
+    color: #F59E0B;
+    margin-top: 4px;
+}
+
+.review-stars span {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 8px;
+}
+
+.review-text {
+    font-size: 14px;
+    color: var(--text-mid);
+    line-height: 1.7;
+    font-style: italic;
+}
+
+/* ===== MEDIA GALLERY ===== */
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.media-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: all var(--transition);
+}
+
+.media-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.media-img-wrap {
+    position: relative;
+}
+
+.media-img {
+    height: 160px;
+    background: var(--green-bg);
+    width: 100%;
+}
+
+.media-status {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.media-status.live {
+    background: var(--green-dark);
+    color: #fff;
+}
+
+.media-status.draft {
+    background: var(--amber);
+    color: #fff;
+}
+
+.media-info {
+    padding: 16px;
+}
+
+.media-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.media-id {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.media-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 2;
+}
+
+.add-media-card {
+    border: 1.5px dashed var(--border) !important;
+    background: var(--green-bg) !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+}
+
+.add-media-inner {
+    text-align: center;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ===== ATTRACTIONS ===== */
+.filters-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 18px 26px;
+    border-bottom: 1px solid var(--green-bg);
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 9px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    color: var(--text-mid);
+    background: var(--white);
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition);
+}
+
+.filter-select:focus {
+    border-color: var(--green-light);
+}
+
+.search-input {
+    padding: 9px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    color: var(--text-mid);
+    outline: none;
+    transition: border-color var(--transition);
+}
+
+.search-input:focus {
+    border-color: var(--green-light);
+}
+
+.exhibit-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* ===== ANNOUNCEMENTS ===== */
+.announce-list {
+    padding: 18px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.announce-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    padding: 18px;
+    background: var(--green-bg);
+    border-radius: 12px;
+}
+
+.announce-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.announce-icon.orange {
+    background: var(--orange-light);
+}
+
+.announce-icon.green {
+    background: var(--green-pale);
+}
+
+.announce-body {
+    flex: 1;
+}
+
+.announce-body strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.announce-body p {
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-bottom: 7px;
+    line-height: 1.6;
+}
+
+.announce-body small {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ===== SETTINGS ===== */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.settings-section {
+    padding: 18px;
+}
+
+.settings-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 22px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 11px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: var(--white);
+    outline: none;
+    transition: border-color var(--transition);
+}
+
+.form-input:focus {
+    border-color: var(--green-light);
+}
+
+textarea.form-input {
+    resize: vertical;
+}
+
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--green-bg);
+    font-size: 13px;
+    color: var(--text-mid);
+}
+
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform var(--transition);
+}
+
+.toggle input:checked+.toggle-slider {
+    background: var(--green-light);
+}
+
+.toggle input:checked+.toggle-slider::before {
+    transform: translateX(20px);
+}
+
+.form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 6px;
+}
+
+/* ===== PROFILE ===== */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 14px;
+}
+
+.profile-card {
+    padding: 36px;
+    text-align: center;
+}
+
+.profile-avatar-big {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: var(--green-dark);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+}
+
+.profile-card h2 {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.profile-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+/* ===== PAGINATION ===== */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 26px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--green-bg);
+    gap: 12px;
+}
+
+.pagination>div {
+    display: flex;
+    gap: 8px;
+}
+
+/* ===== MODALS ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.open {
+    display: flex;
+}
+
+.modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 16px;
+    animation: modalIn 0.2s ease;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.modal-header button {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: none;
+    background: var(--green-bg);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: all var(--transition);
+}
+
+.modal-header button:hover {
+    background: var(--border);
+    color: var(--text-dark);
+}
+
+.modal-body {
+    padding: 18px;
+}
+
+/* UPLOAD ZONE */
+.upload-drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.upload-drop-zone:hover {
+    border-color: var(--green-light);
+    background: var(--green-pale);
+}
+
+.upload-drop-zone p {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.upload-drop-zone small {
+    font-size: 12px;
+}
+
+/* ===== TOAST ===== */
+.toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--green-dark);
+    color: white;
+    padding: 16px 26px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    z-index: 500;
+    pointer-events: none;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+
+    .bottom-row {
+        grid-template-columns: 1fr;
+    }
+
+    .promos-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .media-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    :root {
+        --sidebar-w: 0px;
+    }
+
+    .sidebar {
+        transform: translateX(-258px);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        width: 258px;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feedback-top {
+        grid-template-columns: 1fr;
+    }
+
+    .promos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .page {
+        padding: 16px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .media-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+  </style>
+
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 4C9.4 4 4 9.4 4 16s5.4 12 12 12 12-5.4 12-12S22.6 4 16 4z" fill="currentColor" opacity="0.2"/>
+        <path d="M10 14c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2h-8c-1.1 0-2-.9-2-2v-6z" fill="currentColor"/>
+        <circle cx="13" cy="10" r="2" fill="currentColor"/>
+        <circle cx="19" cy="10" r="2" fill="currentColor"/>
+        <circle cx="13" cy="17" r="1" fill="white"/>
+        <circle cx="19" cy="17" r="1" fill="white"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <span class="brand-name">WildTrack</span>
+      <span class="brand-sub">Admin Portal</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="#" class="nav-item active" data-page="overview">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      </span>
+      <span class="nav-label">Overview</span>
+    </a>
+    <a href="#" class="nav-item" data-page="ticketing">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+      </span>
+      <span class="nav-label">Ticketing</span>
+      <span class="nav-badge">14</span>
+    </a>
+    <a href="#" class="nav-item" data-page="feedback">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </span>
+      <span class="nav-label">Feedback & Reviews</span>
+    </a>
+    <a href="#" class="nav-item" data-page="media">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </span>
+      <span class="nav-label">Media Gallery</span>
+    </a>
+    <a href="#" class="nav-item" data-page="attractions">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      </span>
+      <span class="nav-label">Attractions</span>
+    </a>
+
+    <div class="nav-section-label" style="margin-top:16px;">Management</div>
+    <a href="#" class="nav-item" data-page="staff">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </span>
+      <span class="nav-label">Staff</span>
+    </a>
+    <a href="#" class="nav-item" data-page="reports">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      </span>
+      <span class="nav-label">Reports</span>
+    </a>
+    <a href="#" class="nav-item" data-page="announcements">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 17H2a3 3 0 000 6h20a3 3 0 000-6z"/><path d="M17 11V5a5 5 0 00-10 0v6"/><path d="M12 20v2"/></svg>
+      </span>
+      <span class="nav-label">Announcements</span>
+    </a>
+    <a href="#" class="nav-item" data-page="settings">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      </span>
+      <span class="nav-label">Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card" data-page="profile" onclick="showPage('profile')">
+      <div class="user-avatar" id="sidebarAvatar">AR</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebarUsername">Admin Ranger</span>
+        <span class="user-role">System Administrator</span>
+      </div>
+    </div>
+    <a href="login.html" class="logout-btn" title="Logout">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main-content" id="mainContent">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="page-breadcrumb">
+        <span id="pageTitle">Overview</span>
+        <span class="live-badge">● LIVE</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search anything..." />
+      </div>
+      <button class="icon-btn notif-btn" onclick="toggleNotifications()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+      <!-- Notification Panel -->
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-header">
+          <span>Notifications</span>
+          <button onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="notif-list">
+          <div class="notif-item unread">
+            <div class="notif-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg></div>
+            <div><strong>14 tickets pending</strong><br/><small>Require your approval</small></div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg></div>
+            <div><strong>New 5-star review</strong><br/><small>John Stevenson left a review</small></div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <div><strong>Reptile House maintenance</strong><br/><small>Scheduled for tomorrow 8AM</small></div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+            <div><strong>New media upload</strong><br/><small>3 images awaiting review</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE: OVERVIEW -->
+  <section class="page active" id="page-overview">
+    <div class="page-header">
+      <div>
+        <h1>Zoo Dashboard Overview</h1>
+        <p id="overviewGreeting">Loading…</p>
+      </div>
+      <button class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export Report
+      </button>
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <span class="stat-change positive">All Time</span>
+        </div>
+        <div class="stat-value" id="statTotalTickets">—</div>
+        <div class="stat-label">Total Tickets Sold</div>
+        <div class="stat-bar"><div class="stat-bar-fill" id="statTotalTicketsBar" style="width:0%"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon amber">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          </div>
+          <span class="stat-change positive">All Time</span>
+        </div>
+        <div class="stat-value" id="statTotalRevenue">—</div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-bar"><div class="stat-bar-fill amber" style="width:70%"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+          </div>
+          <span class="stat-change urgent" id="statPendingUrgent">Urgent</span>
+        </div>
+        <div class="stat-value" id="statPendingCount">—</div>
+        <div class="stat-label">Pending Approvals</div>
+        <div class="stat-bar"><div class="stat-bar-fill orange" id="statPendingBar" style="width:0%"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+          </div>
+          <span class="stat-change neutral">Today</span>
+        </div>
+        <div class="stat-value" id="statTodayTickets">—</div>
+        <div class="stat-label">Today's Tickets</div>
+        <div class="stat-bar"><div class="stat-bar-fill purple" id="statTodayBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="charts-row">
+      <div class="card chart-card large">
+        <div class="card-header">
+          <h3>Visitor Trends</h3>
+          <div class="chart-filters">
+            <button class="filter-btn active" onclick="setVisitorFilter(this,7)">7D</button>
+            <button class="filter-btn" onclick="setVisitorFilter(this,30)">30D</button>
+            <button class="filter-btn" onclick="setVisitorFilter(this,90)">90D</button>
+          </div>
+        </div>
+        <canvas id="visitorChart" height="200"></canvas>
+      </div>
+      <div class="card chart-card small">
+        <div class="card-header">
+          <h3>Ticket Types</h3>
+        </div>
+        <canvas id="ticketChart" height="200"></canvas>
+        <div class="donut-legend" id="donutLegend">
+          <div class="legend-item"><span class="legend-dot green"></span>Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+      <!-- Pending Approvals -->
+      <div class="card approvals-card">
+        <div class="card-header">
+          <h3>Pending Ticket Approvals</h3>
+          <a href="#" class="card-link" onclick="showPage('ticketing')">View All →</a>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>TXN ID</th>
+              <th>Customer</th>
+              <th>Tickets</th>
+              <th>Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="overviewApprovalBody">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Active Promotions Summary -->
+      <div class="card promos-card">
+        <div class="card-header">
+          <h3>Active Promotions</h3>
+          <a href="#" class="card-link" onclick="goToPromotions()">Manage →</a>
+        </div>
+        <div class="promo-list" id="overviewPromoList">
+          <div class="promo-item green-bg">
+            <div class="promo-badge" style="color:var(--text-muted);">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: TICKETING -->
+  <section class="page" id="page-ticketing">
+    <div class="page-header">
+      <div>
+        <h1>Ticketing Management</h1>
+        <p>Approve payments, manage pricing & promotions</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab(this,'tab-approvals')">Payment Approvals <span class="tab-count" id="tabPendingCount">…</span></button>
+      <button class="tab" onclick="switchTab(this,'tab-pricing')">Pricing</button>
+      <button class="tab" onclick="switchTab(this,'tab-promotions')">Promotions</button>
+    </div>
+
+    <!-- Tab: Approvals -->
+    <div class="tab-content active" id="tab-approvals">
+      <div class="card">
+        <div class="card-header">
+          <h3>Pending Payment Approvals</h3>
+          <div style="display:flex;gap:8px;">
+            <input type="text" class="search-input" placeholder="Search by TXN or customer..."/>
+            <select class="filter-select"><option>All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>TXN ID</th><th>Customer</th><th>Tickets</th><th>Amount</th><th>Payment Proof</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="approvalTableBody">
+            <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">Loading payments…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Pricing -->
+    <div class="tab-content" id="tab-pricing">
+      <!-- Ticket Prices -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Ticket Categories &amp; Pricing</h3>
+          <p style="font-size:13px;color:var(--text-muted)">Changes take effect immediately on the visitor booking page</p>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Category</th><th>Description</th><th>Age Range</th><th>Current Price</th><th>Actions</th></tr></thead>
+          <tbody id="pricingTableBody">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">Loading prices&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add-on Prices (NEW SECTION) -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <h3>Add-on &amp; Enhance Visit Pricing</h3>
+          <p style="font-size:13px;color:var(--text-muted)">Changes take effect immediately on the visitor booking page</p>
+        </div>
+        <table class="data-table">
+          <thead><tr><th>Add-on</th><th>Description</th><th>Current Price</th><th>Actions</th></tr></thead>
+          <tbody id="addonPricingTableBody">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Loading add-on prices&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Animal Feeding Prices -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-header">
+          <div>
+            <h3>🐾 Animal Feeding Session Prices</h3>
+            <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">Feed cup prices shown on the Animal Feeding page (weekends &amp; public holidays)</p>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Animal</th><th>Session Time</th><th>Price / Cup</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="feedingPricingTableBody">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Loading feeding prices&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-content" id="tab-promotions">
+      <div class="card">
+        <div class="card-header">
+          <h3>Voucher Promotions</h3>
+          <button class="btn btn-primary" onclick="openPromoModal()">+ Add Voucher</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr><th>Code</th><th>Type</th><th>Discount</th><th>Min Spend</th><th>Uses</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="vouchersTableBody">
+            <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">Loading vouchers…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: FEEDBACK -->
+  <section class="page" id="page-feedback">
+    <div class="page-header">
+      <div>
+        <h1>Visitor Feedback & Reviews</h1>
+        <p>Guest satisfaction overview and sentiment analysis</p>
+      </div>
+      <button class="btn btn-outline">Export PDF</button>
+    </div>
+    <div class="feedback-top">
+      <div class="card rating-card">
+        <div class="rating-label">AVERAGE RATING</div>
+        <div class="rating-big">4.8</div>
+        <div class="stars">★★★★★</div>
+        <div class="rating-sub">Based on 1,248 reviews this month</div>
+      </div>
+      <div class="card satisfaction-card">
+        <h3>Satisfaction Breakdown</h3>
+        <div class="bar-row"><span>5 Star</span><div class="bar-track"><div class="bar-fill green" style="width:75%"></div></div><span>75%</span></div>
+        <div class="bar-row"><span>4 Star</span><div class="bar-track"><div class="bar-fill green-light" style="width:15%"></div></div><span>15%</span></div>
+        <div class="bar-row"><span>3 Star</span><div class="bar-track"><div class="bar-fill amber-fill" style="width:6%"></div></div><span>6%</span></div>
+        <div class="bar-row"><span>2 Star</span><div class="bar-track"><div class="bar-fill orange-fill" style="width:3%"></div></div><span>3%</span></div>
+        <div class="bar-row"><span>1 Star</span><div class="bar-track"><div class="bar-fill red-fill" style="width:1%"></div></div><span>1%</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div class="review-filters">
+        <div class="search-bar" style="flex:1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search keywords..." />
+        </div>
+        <select class="filter-select"><option>All Ratings</option><option>5 Star</option><option>4 Star</option><option>3 Star</option><option>1-2 Star</option></select>
+        <select class="filter-select"><option>Newest First</option><option>Oldest First</option><option>Highest Rated</option><option>Lowest Rated</option></select>
+      </div>
+    </div>
+
+    <div class="reviews-list">
+      <div class="review-card">
+        <div class="review-top">
+          <div class="reviewer-avatar">JS</div>
+          <div>
+            <div class="reviewer-name">John Stevenson <span class="verified-badge">Verified Visitor</span></div>
+            <div class="review-stars">★★★★★ <span>Oct 12, 2023</span></div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn-approve">↩ Reply</button>
+            <button class="btn-reject">⚑ Flag</button>
+          </div>
+        </div>
+        <p class="review-text">"Absolutely loved the new lion habitat! The view was incredible and the educational talks were very engaging. My kids didn't want to leave. Highly recommend for a family day out."</p>
+      </div>
+      <div class="review-card">
+        <div class="review-top">
+          <div class="reviewer-avatar green-avatar">AM</div>
+          <div>
+            <div class="reviewer-name">Aishah Malik <span class="verified-badge">Verified Visitor</span></div>
+            <div class="review-stars">★★★★☆ <span>Oct 10, 2023</span></div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn-approve">↩ Reply</button>
+            <button class="btn-reject">⚑ Flag</button>
+          </div>
+        </div>
+        <p class="review-text">"Great place for the whole family. The penguin exhibit was a highlight. Slightly crowded on weekends but overall a wonderful experience."</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: MEDIA GALLERY -->
+  <section class="page" id="page-media">
+    <div class="page-header">
+      <div>
+        <h1>Media Gallery — Slider Images</h1>
+        <p>Images marked <strong>LIVE</strong> appear in the visitor homepage slider.</p>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" onclick="loadMediaGallery()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          Refresh
+        </button>
+        <button class="btn btn-primary" onclick="openUploadModal()">+ Upload New Image</button>
+      </div>
+    </div>
+
+    <div style="background:#f0f7ef;border:1px solid #c3dbbe;border-radius:12px;padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px;font-size:13px;color:#2a5a2e;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;flex-shrink:0;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <span>Click <strong>Set Live</strong> / <strong>Set Draft</strong> on any card to instantly show or hide it on the visitor homepage slider.</span>
+    </div>
+
+    <div class="media-grid" id="mediaGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Loading images…</div>
+    </div>
+
+    <div class="pagination" id="mediaPagination" style="display:none;">
+      <span id="mediaCount"></span>
+    </div>
+  </section>
+
+  <!-- PAGE: ATTRACTIONS -->
+  <section class="page" id="page-attractions">
+    <div class="page-header">
+      <div>
+        <h1>Attractions Management</h1>
+        <p>Manage exhibits, habitats, and status updates for zoo visitors</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAttractionModal()">+ Add New Attraction</button>
+    </div>
+
+    <div class="card">
+      <div class="filters-row">
+        <div class="search-bar" style="flex:1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search by name or category..." oninput="filterAttractions(this.value)" />
+        </div>
+        <select class="filter-select" onchange="filterAttractions()"><option>All Statuses</option><option>Open</option><option>Under Maintenance</option><option>Closed</option></select>
+        <select class="filter-select"><option>Sort By: Newest</option><option>A–Z</option><option>Z–A</option></select>
+      </div>
+
+      <table class="data-table" id="attractionsTable">
+        <thead>
+          <tr><th>Exhibit Info</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="exhibit-thumb" style="background:#8B4513;">🦁</div>
+                <div><strong>Lion Habitat</strong><br/><small>Mammals · Savanna Zone</small></div>
+              </div>
+            </td>
+            <td>Home to our pride of African Lions. Features natural rock formations and a large viewing...</td>
+            <td><span class="status-badge approved">Open</span></td>
+            <td><button class="btn-edit" onclick="editAttraction('lion-habitat')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="exhibit-thumb" style="background:#4A7C59;">🦎</div>
+                <div><strong>Reptile House</strong><br/><small>Reptiles · Indoor Facility</small></div>
+              </div>
+            </td>
+            <td>Climate-controlled indoor facility showcasing rare snakes, lizards, and tortoises...</td>
+            <td><span class="status-badge maintenance">Under Maintenance</span></td>
+            <td><button class="btn-edit" onclick="editAttraction('reptile-house')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="exhibit-thumb" style="background:#1565C0;">🐧</div>
+                <div><strong>Penguin Coast</strong><br/><small>Birds · Aquatic Zone</small></div>
+              </div>
+            </td>
+            <td>Outdoor pool and rockery for our colony of Humboldt penguins. Includes underwater viewing...</td>
+            <td><span class="status-badge approved">Open</span></td>
+            <td><button class="btn-edit" onclick="editAttraction('penguin-coast')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
+          </tr>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="exhibit-thumb" style="background:#2E7D32;">🦜</div>
+                <div><strong>Tropical Aviary</strong><br/><small>Birds · Jungle Dome</small></div>
+              </div>
+            </td>
+            <td>Walk-through aviary with lush vegetation and free-flying exotic birds from the Amazon.</td>
+            <td><span class="status-badge approved">Open</span></td>
+            <td><button class="btn-edit" onclick="editAttraction('tropical-aviary')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pagination">
+        <span>Showing 1 to 4 of 4 exhibits</span>
+        <div><button class="btn-page" disabled>Previous</button><button class="btn-page" disabled>Next</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: STAFF -->
+  <section class="page" id="page-staff">
+    <div class="page-header">
+      <div><h1>Staff Management</h1><p>Manage zoo staff accounts and roles</p></div>
+      <button class="btn btn-primary">+ Add Staff Member</button>
+    </div>
+    <div class="card">
+      <table class="data-table">
+        <thead><tr><th>Staff</th><th>Role</th><th>Department</th><th>Status</th><th>Last Active</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:var(--green-dark);">AR</div><div><strong>Admin Ranger</strong><br/><small><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="08696c656166487f61646c7c7a696b63266b6765">[email&#160;protected]</a></small></div></div></td>
+            <td>System Admin</td><td>Management</td><td><span class="status-badge approved">Active</span></td><td>Just now</td>
+            <td><button class="btn-edit">Edit</button></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:#5B8A6B;">JR</div><div><strong>John Ranger</strong><br/><small><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e48e8b8c8aa4938d8880909685878fca878b89">[email&#160;protected]</a></small></div></div></td>
+            <td>Zoo Keeper</td><td>Animal Care</td><td><span class="status-badge approved">Active</span></td><td>2 hours ago</td>
+            <td><button class="btn-edit">Edit</button></td>
+          </tr>
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:#7B6FA0;">ML</div><div><strong>Maya Lee</strong><br/><small><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5b363a223a1b2c32373f2f293a383075383436">[email&#160;protected]</a></small></div></div></td>
+            <td>Ticket Officer</td><td>Operations</td><td><span class="status-badge approved">Active</span></td><td>Yesterday</td>
+            <td><button class="btn-edit">Edit</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PAGE: REPORTS -->
+  <section class="page" id="page-reports">
+    <div class="page-header">
+      <div><h1>Reports & Analytics</h1><p>Detailed insights on performance, revenue and visitors</p></div>
+      <button class="btn btn-primary">Export PDF</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="stat-value" id="reportMonthVisitors">—</div><div class="stat-label">Monthly Visitors</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="stat-value" id="reportMonthRevenue">—</div><div class="stat-label">Monthly Revenue</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div></div><div class="stat-value">—</div><div class="stat-label">Satisfaction Rate</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg></div></div><div class="stat-value" id="reportMonthTickets">—</div><div class="stat-label">Tickets Sold</div></div>
+    </div>
+    <div class="card" style="margin-top:20px;"><div class="card-header"><h3>Monthly Revenue Trend</h3></div><canvas id="revenueChart" height="120"></canvas></div>
+  </section>
+
+  <!-- PAGE: ANNOUNCEMENTS -->
+  <section class="page" id="page-announcements">
+    <div class="page-header">
+      <div><h1>Announcements</h1><p>Send notices to visitors and staff</p></div>
+      <button class="btn btn-primary">+ New Announcement</button>
+    </div>
+    <div class="card">
+      <div class="announce-list">
+        <div class="announce-item">
+          <div class="announce-icon orange">📢</div>
+          <div class="announce-body">
+            <strong>Reptile House Temporary Closure</strong>
+            <p>The Reptile House will be under maintenance from March 17–20. We apologize for the inconvenience.</p>
+            <small>Posted: 15 Mar 2026 · Visible to: All Visitors</small>
+          </div>
+          <div style="display:flex;gap:8px;"><button class="btn-edit">Edit</button><button class="btn-reject-sm">Delete</button></div>
+        </div>
+        <div class="announce-item">
+          <div class="announce-icon green">🌿</div>
+          <div class="announce-body">
+            <strong>Night Safari — This Saturday!</strong>
+            <p>Join us for an exclusive night safari experience starting 7PM. Limited slots — book your tickets today!</p>
+            <small>Posted: 14 Mar 2026 · Visible to: All Visitors</small>
+          </div>
+          <div style="display:flex;gap:8px;"><button class="btn-edit">Edit</button><button class="btn-reject-sm">Delete</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: SETTINGS -->
+  <section class="page" id="page-settings">
+    <div class="page-header"><div><h1>Settings</h1><p>System configuration and preferences</p></div></div>
+    <div class="settings-grid">
+      <div class="card settings-section">
+        <h3>Zoo Information</h3>
+        <div class="form-group"><label>Zoo Name</label><input type="text" class="form-input" value="WildTrack Zoo"/></div>
+        <div class="form-group"><label>Contact Email</label><input type="email" class="form-input" value="info@wildtrack.com"/></div>
+        <div class="form-group"><label>Operating Hours</label><input type="text" class="form-input" value="9:00 AM – 6:00 PM (Daily)"/></div>
+        <button class="btn btn-primary" style="margin-top:8px;">Save Changes</button>
+      </div>
+      <div class="card settings-section">
+        <h3>Notification Preferences</h3>
+        <div class="toggle-row"><span>Email alerts for pending approvals</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><span>New review notifications</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><span>Weekly summary report</span><label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><span>Staff login alerts</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: PROFILE -->
+  <section class="page" id="page-profile">
+    <div class="page-header"><div><h1>My Profile</h1><p>Manage your account details</p></div></div>
+    <div class="profile-grid">
+      <div class="card profile-card">
+        <div class="profile-avatar-big">AR</div>
+        <h2>Admin Ranger</h2>
+        <p>System Administrator</p>
+        <button class="btn btn-outline" style="margin-top:16px;">Change Avatar</button>
+      </div>
+      <div class="card" style="flex:1;">
+        <h3 style="margin-bottom:20px;">Account Details</h3>
+        <div class="form-group"><label>Full Name</label><input type="text" class="form-input" value="Admin Ranger"/></div>
+        <div class="form-group"><label>Email</label><input type="email" class="form-input" value="admin@wildtrack.com"/></div>
+        <div class="form-group"><label>Phone</label><input type="text" class="form-input" value="+60 12-345 6789"/></div>
+        <div class="form-group"><label>Role</label><input type="text" class="form-input" value="System Administrator" readonly/></div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button class="btn btn-primary">Save Changes</button>
+          <button class="btn btn-outline">Change Password</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Booking Details Modal -->
+<div class="modal-overlay" id="bookingDetailsModal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <h3>Booking Details</h3>
+      <button onclick="closeModal('bookingDetailsModal')">✕</button>
+    </div>
+    <div class="modal-body" id="bdContent">
+      <!-- populated by openBookingDetails() -->
+    </div>
+  </div>
+</div>
+
+<!-- Edit & Approve Modal -->
+<div class="modal-overlay" id="editApproveModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h3>Review &amp; Approve Booking</h3>
+      <button onclick="closeModal('editApproveModal')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div id="eaProofThumb" style="margin-bottom:20px;display:none;">
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;">Payment Screenshot</p>
+        <img id="eaProofImg" src="" alt="Payment proof"
+             style="width:100%;max-height:220px;object-fit:contain;border-radius:10px;border:1px solid var(--border);background:var(--green-bg);"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+        <p style="display:none;color:var(--text-muted);font-size:13px;margin-top:6px;">⚠ Screenshot not accessible from this machine.</p>
+      </div>
+
+      <input type="hidden" id="eaBookingRef"/>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div style="grid-column:1/-1;">
+          <label class="form-label">Booking Ref</label>
+          <input id="eaRefDisplay" type="text" readonly class="form-input" style="background:var(--green-bg);color:var(--text-muted);"/>
+        </div>
+        <div>
+          <label class="form-label">Visit Date</label>
+          <input id="eaVisitDate" type="date" class="form-input"/>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <p style="font-size:12px;color:var(--text-muted);padding-bottom:4px;">Change date only if visitor selected the wrong day.</p>
+        </div>
+        <div>
+          <label class="form-label">Visitor Name</label>
+          <input id="eaUsername" type="text" placeholder="Leave blank to keep" class="form-input"/>
+        </div>
+        <div>
+          <label class="form-label">Visitor Email</label>
+          <input id="eaEmail" type="email" placeholder="Leave blank to keep" class="form-input"/>
+        </div>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-muted);margin-top:14px;">
+        ✏ Only change fields that need correcting. Blank fields keep the visitor's original values.
+        Approving generates QR codes and notifies the visitor instantly.
+      </p>
+
+      <div style="display:flex;gap:10px;margin-top:22px;">
+        <button class="btn-approve" style="flex:1;padding:12px;" onclick="submitApproval()">✓ Confirm &amp; Approve</button>
+        <button class="btn-reject" style="padding:12px 20px;" onclick="closeModal('editApproveModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Proof Modal -->
+<div class="modal-overlay" id="proofModal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <h3>Payment Receipt — <span id="proofBookingRef"></span></h3>
+      <button onclick="closeModal('proofModal')">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:24px;">
+      <img id="proofImage" src="" alt="Payment proof"
+           style="max-width:100%;max-height:70vh;border-radius:10px;border:1px solid var(--border);display:block;margin:0 auto;"/>
+      <p id="proofImageError" style="display:none;color:var(--text-muted);margin-top:16px;">Could not load receipt image.</p>
+      <div id="proofMeta" style="margin-top:16px;font-size:13px;color:var(--text-muted);text-align:left;background:var(--green-bg);border-radius:10px;padding:14px 18px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Price Edit Modal -->
+<div class="modal-overlay" id="priceModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header"><h3>Edit Ticket Price</h3><button onclick="closeModal('priceModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="priceTicketType"/>
+      <div class="form-group"><label>Category</label><input type="text" class="form-input" id="priceCategory" readonly/></div>
+      <div class="form-group"><label>New Price (RM)</label><input type="number" class="form-input" id="priceValue" min="0.01" step="0.01" placeholder="0.00"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="savePrice()">Save &amp; Update Live</button>
+    </div>
+  </div>
+</div>
+
+<!-- Addon Price Edit Modal (NEW) -->
+<div class="modal-overlay" id="addonPriceModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header"><h3>Edit Add-on Price</h3><button onclick="closeModal('addonPriceModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="addonPriceKey"/>
+      <div class="form-group"><label>Add-on</label><input type="text" class="form-input" id="addonPriceLabel" readonly/></div>
+      <div class="form-group"><label>New Price (RM) per person</label><input type="number" class="form-input" id="addonPriceValue" min="0.01" step="0.01" placeholder="0.00"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="saveAddonPrice()">Save &amp; Update Live</button>
+    </div>
+  </div>
+</div>
+
+<!-- Feeding Cup Price Edit Modal -->
+<div class="modal-overlay" id="feedingPriceModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header"><h3>Edit Feeding Cup Price</h3><button onclick="closeModal('feedingPriceModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="feedingPriceKey"/>
+      <div class="form-group"><label>Animal</label><input type="text" class="form-input" id="feedingPriceLabel" readonly/></div>
+      <div class="form-group"><label>New Price (RM) per cup</label><input type="number" class="form-input" id="feedingPriceValue" min="0.01" step="0.01" placeholder="0.00"/></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">This price will reflect immediately on the Animal Feeding visitor page.</p>
+      <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="saveFeedingPrice()">Save &amp; Update Live</button>
+    </div>
+  </div>
+</div>
+
+<!-- Promo / Voucher Modal -->
+<div class="modal-overlay" id="promoModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3>Add New Voucher</h3><button onclick="closeModal('promoModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Voucher Code</label><input type="text" class="form-input" id="pmCode" placeholder="e.g. SUMMER25" style="text-transform:uppercase;"/></div>
+      <div class="form-group"><label>Discount Type</label>
+        <select class="form-input" id="pmDiscountType">
+          <option value="fixed">Fixed Amount (RM)</option>
+          <option value="percent">Percentage (%)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Discount Value</label><input type="number" class="form-input" id="pmDiscountValue" min="0.01" step="0.01" placeholder="e.g. 10"/></div>
+      <div class="form-group"><label>Minimum Spend (RM) <small style="color:var(--text-muted);font-weight:400;">0 = no minimum</small></label><input type="number" class="form-input" id="pmMinSpend" min="0" step="0.01" value="0"/></div>
+      <div class="form-group"><label>Max Uses</label><input type="number" class="form-input" id="pmMaxUses" min="1" value="1"/></div>
+      <div class="form-group"><label>Expires On <small style="color:var(--text-muted);font-weight:400;">leave blank = no expiry</small></label><input type="date" class="form-input" id="pmExpiresAt"/></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="submitNewVoucher()">Create Voucher</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <h3 id="uploadModalTitle">Upload New Slider Image</h3>
+      <button onclick="closeModal('uploadModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="umEditId" value="">
+
+      <div class="upload-drop-zone" id="uploadDropZone" onclick="document.getElementById('umFileInput').click()" style="cursor:pointer;">
+        <span style="font-size:40px;">📁</span>
+        <p id="dropZoneText">Drag & drop or click to choose a file</p>
+        <small>PNG, JPG, WebP up to 10 MB</small>
+        <input type="file" id="umFileInput" style="display:none;" accept="image/*" onchange="previewFile(this)"/>
+      </div>
+      <div id="umPreviewWrap" style="display:none;margin-top:10px;text-align:center;">
+        <img id="umPreview" style="max-height:160px;border-radius:8px;object-fit:cover;width:100%;" src="" alt="preview"/>
+      </div>
+
+      <div style="text-align:center;margin:10px 0;font-size:12px;color:var(--text-muted);">— or paste an image URL instead —</div>
+      <div class="form-group">
+        <input type="text" id="umImageUrl" class="form-input" placeholder="https://example.com/photo.jpg" oninput="previewUrl(this.value)"/>
+      </div>
+
+      <div class="form-group"><label>Image Title *</label><input type="text" id="umTitle" class="form-input" placeholder="e.g. Bengal Tiger Display"/></div>
+      <div class="form-group"><label>Alt Text</label><input type="text" id="umAlt" class="form-input" placeholder="Short description for accessibility"/></div>
+      <div class="form-group">
+        <label>Display Order <small style="color:var(--text-muted)">(lower number = shows first)</small></label>
+        <input type="number" id="umOrder" class="form-input" value="0" min="0"/>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="umStatus" class="form-input">
+          <option value="1">Live (show in slider)</option>
+          <option value="0">Draft (hidden from visitors)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="submitUploadModal()">
+        <span id="uploadBtnText">Upload Image</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Attraction Modal -->
+<div class="modal-overlay" id="attractionModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3>Add New Attraction</h3><button onclick="closeModal('attractionModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Attraction Name</label><input type="text" class="form-input" placeholder="e.g. Gorilla Highlands"/></div>
+      <div class="form-group"><label>Category</label><input type="text" class="form-input" placeholder="e.g. Mammals · Highland Zone"/></div>
+      <div class="form-group"><label>Description</label><textarea class="form-input" rows="3" placeholder="Describe the exhibit..."></textarea></div>
+      <div class="form-group"><label>Status</label><select class="form-input"><option>Open</option><option>Under Maintenance</option><option>Closed</option></select></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="closeModal('attractionModal')">Add Attraction</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ===== WILDTRACK ADMIN JS =====
+
+// ---- NAVIGATION ----
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const target = document.getElementById('page-' + pageId);
+  if (target) target.classList.add('active');
+
+  const navItem = document.querySelector(`[data-page="${pageId}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  const titles = {
+    overview: 'Overview', ticketing: 'Ticketing', feedback: 'Feedback & Reviews',
+    media: 'Media Gallery', attractions: 'Attractions', staff: 'Staff',
+    reports: 'Reports', announcements: 'Announcements', settings: 'Settings', profile: 'Profile'
+  };
+  document.getElementById('pageTitle').textContent = titles[pageId] || pageId;
+
+  // Lazy-init charts
+  if (pageId === 'overview') initOverviewCharts();
+  if (pageId === 'reports') initReportsChart();
+
+  // Close notif panel
+  document.getElementById('notifPanel').classList.remove('open');
+}
+
+// Nav click — wrapped in DOMContentLoaded so DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    item.addEventListener('click', e => {
+      e.preventDefault();
+      showPage(item.dataset.page);
+    });
+  });
+  initAdminIdentity();
+  startLiveClock();
+  startAutoRefresh();
+});
+
+// ---- LIVE CLOCK & GREETING ----
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatAdminDate(d) {
+  return d.toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+let _adminDisplayName = 'Admin';
+
+function updateGreeting() {
+  const el = document.getElementById('overviewGreeting');
+  if (el) el.textContent = formatAdminDate(new Date()) + ' \u2014 ' + getGreeting() + ', ' + _adminDisplayName;
+}
+
+function startLiveClock() {
+  updateGreeting();
+  setInterval(updateGreeting, 60000); // refresh every minute
+}
+
+// ---- SESSION / ADMIN IDENTITY ----
+async function initAdminIdentity() {
+  try {
+    const res  = await fetch('api/tickets.php?action=get_session', { credentials: 'include' });
+    const data = await res.json();
+    if (data.success && data.username) {
+      const name = data.username;
+      // Build initials from up to 2 words
+      const initials = name.trim().split(/\s+/).map(w => w[0].toUpperCase()).slice(0, 2).join('');
+
+      _adminDisplayName = name;
+
+      const avatarEl = document.getElementById('sidebarAvatar');
+      const nameEl   = document.getElementById('sidebarUsername');
+      if (avatarEl) avatarEl.textContent = initials;
+      if (nameEl)   nameEl.textContent   = name;
+      updateGreeting(); // re-render with real name immediately
+    }
+  } catch (_) {
+    // Session endpoint not yet available — keep defaults
+  }
+}
+
+// ---- SIDEBAR TOGGLE ----
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ---- NOTIFICATIONS ----
+function toggleNotifications() {
+  document.getElementById('notifPanel').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notifPanel');
+  const btn = document.querySelector('.notif-btn');
+  if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+  }
+});
+function markAllRead() {
+  document.querySelectorAll('.notif-item').forEach(i => i.classList.remove('unread'));
+  document.querySelector('.notif-dot').style.display = 'none';
+  showToast('All notifications marked as read');
+}
+
+// ---- TABS ----
+function switchTab(btn, tabId) {
+  const bar = btn.closest('.tab-bar');
+  bar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+
+  const page = btn.closest('.page');
+  page.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  const target = document.getElementById(tabId);
+  if (target) target.classList.add('active');
+
+  // Lazy-load dynamic tabs
+  if (tabId === 'tab-pricing')    { loadPricingTable(); loadAddonPricingTable(); loadFeedingPricingTable(); }
+  if (tabId === 'tab-promotions') loadVouchersTable();
+}
+
+// ---- TICKET ACTIONS (LIVE — connected to database) ----
+
+let _allPayments = [];
+
+async function loadPendingPayments() {
+  try {
+    const res = await fetch('api/tickets.php?action=get_pending', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) {
+      if (res.status === 401 || res.status === 403) {
+        // Not logged in as admin — silently skip, don't redirect mid-page
+        return;
+      }
+      showToast(data.message || 'Failed to load payments.', 'error');
+      return;
+    }
+    _allPayments = data.payments || [];
+    renderApprovalTable(_allPayments);
+    renderOverviewApprovals(_allPayments.filter(p => p.status === 'pending').slice(0, 4));
+    const pendingCount = _allPayments.filter(p => p.status === 'pending').length;
+    const tabBadge = document.getElementById('tabPendingCount');
+    if (tabBadge) tabBadge.textContent = pendingCount;
+    const navBadge = document.querySelector('.nav-badge');
+    if (navBadge) { navBadge.textContent = pendingCount; navBadge.style.display = pendingCount > 0 ? '' : 'none'; }
+    document.querySelectorAll('.stat-card').forEach(card => {
+      if (card.querySelector('.stat-label')?.textContent === 'Pending Approvals') {
+        const val = card.querySelector('.stat-value');
+        if (val) val.textContent = pendingCount;
+      }
+    });
+  } catch (err) { showToast('Network error loading payments.', 'error'); }
+}
+
+function renderApprovalTable(payments) {
+  const tbody = document.getElementById('approvalTableBody');
+  if (!tbody) return;
+  if (payments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">No payment records found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = payments.map(p => {
+    // Use visitor_name/visitor_email (the actual ticket buyer), fall back to username/email
+    const customerName  = p.visitor_name  || p.username || '—';
+    const customerEmail = p.visitor_email || p.email    || '';
+
+    const proofBtn = p.payment_proof
+      ? `<button class="btn-view-proof" onclick="event.stopPropagation();viewProof('${p.payment_proof}','${p.booking_ref}','${customerName}','${p.visit_date}')">View Screenshot</button>`
+      : '<span style="color:var(--text-muted);font-size:12px;">No file</span>';
+
+    const dateStr    = p.purchase_date ? p.purchase_date.split(' ')[0] : '—';
+    const statusBadge = `<span class="status-badge ${p.status}">${p.status.charAt(0).toUpperCase()+p.status.slice(1)}</span>`;
+
+    // Build ticket summary: prefer ticket_breakdown (array), else ticket_types string
+    // Friendly names for DB ticket_type values
+    const _typeLabels = { Adult: 'Adult Pass', Child: 'Child Pass', Senior: 'Senior Pass', Group: 'Family Bundle' };
+    let ticketSummary = '—';
+    if (p.ticket_breakdown && Array.isArray(p.ticket_breakdown) && p.ticket_breakdown.length) {
+      ticketSummary = p.ticket_breakdown
+        .map(t => `${_typeLabels[t.ticket_type] || t.ticket_type} ×${t.qty}`)
+        .join(', ');
+    } else if (p.ticket_types) {
+      // Strip any leading/trailing commas or spaces (DB concatenation artefact)
+      const cleaned = p.ticket_types.replace(/^[\s,]+|[\s,]+$/g, '');
+      const typeList = cleaned ? cleaned.split(',').map(s => s.trim()).filter(Boolean) : [];
+      if (typeList.length > 0) {
+        const qty = p.ticket_count || typeList.length;
+        ticketSummary = typeList.map(t => _typeLabels[t] || t).join(', ') + ` ×${qty}`;
+      }
+    } else if (p.ticket_type) {
+      ticketSummary = (_typeLabels[p.ticket_type] || p.ticket_type) + ` ×${p.ticket_count || 1}`;
+    }
+
+    // Total: final_total includes addons + voucher discount — most accurate
+    const totalPrice = parseFloat(p.final_total || p.total_price || p.price || 0).toFixed(2);
+
+    const actionCell = p.status === 'pending'
+      ? `<button class="btn-approve" onclick="event.stopPropagation();approveTicket(this,'${p.booking_ref}')">✓ Approve</button>
+         <button class="btn-reject"  onclick="event.stopPropagation();rejectTicket(this,'${p.booking_ref}')">✕ Reject</button>`
+      : statusBadge;
+
+    return `<tr style="cursor:pointer;" onclick="openBookingDetails('${p.booking_ref}')" title="Click to view booking details">
+      <td class="txn-id">${p.booking_ref}</td>
+      <td><strong>${customerName}</strong><br/><small>${customerEmail}</small></td>
+      <td>${ticketSummary}</td>
+      <td><strong>RM${totalPrice}</strong></td>
+      <td>${proofBtn}</td>
+      <td>${dateStr}</td>
+      <td>${statusBadge}</td>
+      <td class="action-cell">${actionCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderOverviewApprovals(payments) {
+  const tbody = document.getElementById('overviewApprovalBody');
+  if (!tbody) return;
+  if (payments.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">No pending approvals.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = payments.map(p => `<tr>
+    <td class="txn-id">${p.booking_ref}</td>
+    <td><strong>${p.username}</strong></td>
+    <td>${p.ticket_types || p.ticket_type || '—'} × ${p.ticket_count || 1}</td>
+    <td><strong>RM${parseFloat(p.total_price || p.price || 0).toFixed(2)}</strong></td>
+    <td class="action-cell">
+      <button class="btn-approve" onclick="approveTicket(this,'${p.booking_ref}')">Approve</button>
+      <button class="btn-reject"  onclick="rejectTicket(this,'${p.booking_ref}')">Reject</button>
+    </td>
+  </tr>`).join('');
+}
+
+function approveTicket(btn, bookingRef) {
+  const row = _allPayments.find(p => p.booking_ref === bookingRef);
+
+  // Use visitor fields (ticket buyer), not session admin fields
+  const customerName  = row?.visitor_name  || row?.username || '';
+  const customerEmail = row?.visitor_email || row?.email    || '';
+
+  document.getElementById('eaBookingRef').value  = bookingRef;
+  document.getElementById('eaRefDisplay').value  = bookingRef;
+  document.getElementById('eaVisitDate').value   = row?.visit_date || '';
+  document.getElementById('eaUsername').value    = customerName;
+  document.getElementById('eaEmail').value       = customerEmail;
+
+  const thumbWrap = document.getElementById('eaProofThumb');
+  const thumbImg  = document.getElementById('eaProofImg');
+  if (row?.payment_proof) {
+    thumbImg.src = 'http://localhost/WildTrack/' + row.payment_proof;
+    thumbWrap.style.display = 'block';
+  } else {
+    thumbWrap.style.display = 'none';
+  }
+
+  openModal('editApproveModal');
+}
+
+async function submitApproval() {
+  const bookingRef = document.getElementById('eaBookingRef').value;
+  const payload = {
+    booking_ref: bookingRef,
+    visit_date:  document.getElementById('eaVisitDate').value.trim(),
+    username:    document.getElementById('eaUsername').value.trim(),
+    email:       document.getElementById('eaEmail').value.trim(),
+  };
+  // Strip empty fields so backend COALESCE keeps original values
+  Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
+
+  const confirmBtn = document.querySelector('#editApproveModal .btn-approve');
+  confirmBtn.disabled = true; confirmBtn.textContent = 'Approving…';
+
+  try {
+    const res  = await fetch('api/tickets.php?action=approve_payment', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('editApproveModal');
+      showToast(`${bookingRef} approved — visitor notified ✓`);
+      await loadPendingPayments();
+    } else {
+      showToast(data.message || 'Approval failed.', 'error');
+    }
+  } catch (err) {
+    showToast('Network error. Try again.', 'error');
+  } finally {
+    confirmBtn.disabled = false; confirmBtn.textContent = '✓ Confirm & Approve';
+  }
+}
+
+async function rejectTicket(btn, bookingRef) {
+  const reason = prompt(`Reason for rejecting ${bookingRef}?`, 'Payment could not be verified.');
+  if (reason === null) return;
+  btn.disabled = true; btn.textContent = 'Rejecting…';
+  try {
+    const res = await fetch('api/tickets.php?action=reject_payment', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_ref: bookingRef, reason: reason || 'Payment could not be verified.' })
+    });
+    const data = await res.json();
+    if (data.success) { showToast(`${bookingRef} rejected — visitor notified.`, 'error'); await loadPendingPayments(); }
+    else { showToast(data.message || 'Rejection failed.', 'error'); btn.disabled = false; btn.textContent = '✕ Reject'; }
+  } catch (err) { showToast('Network error. Try again.', 'error'); btn.disabled = false; btn.textContent = '✕ Reject'; }
+}
+
+// ---- BOOKING DETAILS MODAL (row click) ----
+function openBookingDetails(bookingRef) {
+  const p = _allPayments.find(x => x.booking_ref === bookingRef);
+  if (!p) return;
+
+  const customerName  = p.visitor_name  || p.username || '—';
+  const customerEmail = p.visitor_email || p.email    || '—';
+  const dateStr       = p.purchase_date ? p.purchase_date.split(' ')[0] : '—';
+  const visitDate     = p.visit_date    || '—';
+  // Use final_total (includes addons + voucher) as the authoritative paid amount
+  const totalPrice    = parseFloat(p.final_total || p.total_price || p.price || 0).toFixed(2);
+  const statusClass   = p.status || 'pending';
+  const statusLabel   = p.status ? p.status.charAt(0).toUpperCase() + p.status.slice(1) : 'Pending';
+  // Payment method: stored from Ticketing.php submission; default to TNG since it's the only option
+  const paymentMethod = p.payment_method || "Touch 'n Go eWallet";
+
+  // ── Ticket breakdown ──
+  // Friendly display names for DB ticket_type values
+  const typeLabels = { Adult: 'Adult Pass', Child: 'Child Pass', Senior: 'Senior Pass', Group: 'Family Bundle' };
+  let ticketRows = '';
+  let ticketSubtotal = 0;
+
+  if (p.ticket_breakdown && Array.isArray(p.ticket_breakdown) && p.ticket_breakdown.length) {
+    // Rich breakdown from API (preferred)
+    p.ticket_breakdown.forEach(t => {
+      const label     = typeLabels[t.ticket_type] || t.ticket_type;
+      const lineTotal = parseFloat(t.price_per || 0) * parseInt(t.qty || 1);
+      ticketSubtotal += lineTotal;
+      ticketRows += `<div class="bd-row"><span>${label} ×${t.qty} @ RM${parseFloat(t.price_per||0).toFixed(2)}</span><span>RM${lineTotal.toFixed(2)}</span></div>`;
+    });
+  } else if (p.ticket_types) {
+    // Fallback: comma-separated string like "Adult, Child" with ticket_count
+    // Strip leading/trailing commas & spaces then split
+    const rawTypes = p.ticket_types.replace(/^[\s,]+|[\s,]+$/g, '');
+    const typeList = rawTypes ? rawTypes.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const totalQty = parseInt(p.ticket_count || typeList.length || 1);
+    const qtyEach  = typeList.length > 0 ? Math.round(totalQty / typeList.length) : totalQty;
+    const subtotal = parseFloat(p.total_price || p.price || 0);
+    ticketSubtotal = subtotal;
+    if (typeList.length > 0) {
+      typeList.forEach(t => {
+        const label = typeLabels[t] || t + ' Pass';
+        ticketRows += `<div class="bd-row"><span>${label} ×${qtyEach}</span><span>—</span></div>`;
+      });
+      ticketRows += `<div class="bd-row" style="color:var(--text-muted);font-size:12px;"><span>Tickets subtotal</span><span>RM${subtotal.toFixed(2)}</span></div>`;
+    } else {
+      ticketRows = `<div class="bd-row" style="color:var(--text-muted)">No ticket type details available</div>`;
+    }
+  }
+
+  // ── Add-on breakdown ──
+  let addonRows = '';
+  let addonTotal = 0;
+  if (p.addons && Array.isArray(p.addons) && p.addons.length) {
+    p.addons.forEach(a => {
+      const lineTotal = parseFloat(a.price_per || 0) * parseInt(a.quantity || 1);
+      addonTotal += lineTotal;
+      addonRows += `<div class="bd-row"><span>${a.addon_type} ×${a.quantity} @ RM${parseFloat(a.price_per||0).toFixed(2)}</span><span>RM${lineTotal.toFixed(2)}</span></div>`;
+    });
+  }
+
+  // ── Voucher discount ──
+  let voucherRow = '';
+  const discountAmt = parseFloat(p.discount_amount || p.voucher_discount || 0);
+  const voucherCode  = p.voucher_code || '';
+  if (voucherCode && discountAmt > 0) {
+    voucherRow = `<div class="bd-row" style="color:var(--green-mid);">
+      <span>Voucher (${voucherCode})</span><span>−RM${discountAmt.toFixed(2)}</span>
+    </div>`;
+  }
+
+  // ── Payment proof ──
+  const proofSection = p.payment_proof
+    ? `<div style="margin-bottom:18px;">
+        <p class="bd-section-label">Payment Screenshot</p>
+        <img src="http://localhost/WildTrack/${p.payment_proof}" alt="Payment proof"
+             style="width:100%;max-height:200px;object-fit:contain;border-radius:10px;border:1px solid var(--border);background:var(--green-bg);"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+        <p style="display:none;color:var(--text-muted);font-size:12px;margin-top:6px;">⚠ Screenshot not accessible from this machine.</p>
+       </div>` : '';
+
+  // ── Action buttons ──
+  const actionBtns = p.status === 'pending'
+    ? `<button class="btn-approve" style="flex:1;padding:12px;" onclick="closeModal('bookingDetailsModal');approveTicket(this,'${bookingRef}')">✓ Approve</button>
+       <button class="btn-reject" style="padding:12px 20px;" onclick="closeModal('bookingDetailsModal');rejectTicket(this,'${bookingRef}')">✕ Reject</button>`
+    : `<button class="btn-outline" style="flex:1;padding:12px;" onclick="closeModal('bookingDetailsModal')">Close</button>`;
+
+  document.getElementById('bdContent').innerHTML = `
+    ${proofSection}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div class="bd-info-box"><div class="bd-info-label">Booking Ref</div><div class="bd-info-val">${p.booking_ref}</div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Status</div><div class="bd-info-val"><span class="status-badge ${statusClass}">${statusLabel}</span></div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Customer</div><div class="bd-info-val"><strong>${customerName}</strong><br/><small style="color:var(--text-muted)">${customerEmail}</small></div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Visit Date</div><div class="bd-info-val">${visitDate}</div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Purchase Date</div><div class="bd-info-val">${dateStr}</div></div>
+      <div class="bd-info-box"><div class="bd-info-label">Payment Method</div><div class="bd-info-val">${paymentMethod}</div></div>
+    </div>
+
+    <p class="bd-section-label">Ticket Breakdown</p>
+    <div class="bd-breakdown-box">
+      ${ticketRows || '<div class="bd-row" style="color:var(--text-muted)">No ticket details</div>'}
+      ${addonRows}
+      ${voucherRow}
+      <div class="bd-row bd-total-row"><span>Total Paid</span><span>RM${totalPrice}</span></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;">${actionBtns}</div>
+  `;
+
+  openModal('bookingDetailsModal');
+}
+
+function viewProof(proofPath, bookingRef, username, visitDate) {
+  const img = document.getElementById('proofImage');
+  const errMsg = document.getElementById('proofImageError');
+  const meta = document.getElementById('proofMeta');
+  const refSpan = document.getElementById('proofBookingRef');
+  if (refSpan) refSpan.textContent = bookingRef || '';
+  img.src = 'http://localhost/WildTrack/' + proofPath;
+  img.style.display = 'block';
+  if (errMsg) errMsg.style.display = 'none';
+  img.onerror = () => { img.style.display = 'none'; if (errMsg) errMsg.style.display = 'block'; };
+  if (meta) meta.innerHTML = `<strong>Booking:</strong> ${bookingRef||'—'}<br/><strong>Customer:</strong> ${username||'—'}<br/><strong>Visit Date:</strong> ${visitDate||'—'}`;
+  openModal('proofModal');
+}
+
+function updatePendingCount(delta) { /* handled by loadPendingPayments */ }
+
+async function loadAdminNotifications() {
+  try {
+    const res = await fetch('api/tickets.php?action=check_notifications', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+    const unread = (data.notifications || []).filter(n => !n.is_read);
+    const dot = document.querySelector('.notif-dot');
+    if (dot) dot.style.display = unread.length > 0 ? '' : 'none';
+  } catch (_) {}
+}
+
+async function loadAllStats() {
+  try {
+    const res = await fetch('api/tickets.php?action=stats', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+
+    const s = data;
+
+    // Total tickets
+    const totalEl = document.getElementById('statTotalTickets');
+    if (totalEl) totalEl.textContent = s.total_tickets.toLocaleString();
+    const totalBar = document.getElementById('statTotalTicketsBar');
+    if (totalBar) totalBar.style.width = Math.min(100, (s.total_tickets / 500) * 100) + '%';
+
+    // Total revenue
+    const revEl = document.getElementById('statTotalRevenue');
+    if (revEl) revEl.textContent = 'RM' + parseFloat(s.total_revenue).toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    // Pending count
+    const pendingEl = document.getElementById('statPendingCount');
+    if (pendingEl) pendingEl.textContent = s.pending_count;
+    const pendingBar = document.getElementById('statPendingBar');
+    if (pendingBar) pendingBar.style.width = Math.min(100, (s.pending_count / 20) * 100) + '%';
+    const urgentEl = document.getElementById('statPendingUrgent');
+    if (urgentEl) urgentEl.textContent = s.pending_count > 0 ? 'Urgent' : 'All Clear';
+
+    // Today's tickets
+    const todayEl = document.getElementById('statTodayTickets');
+    if (todayEl) todayEl.textContent = s.today_tickets.toLocaleString();
+    const todayBar = document.getElementById('statTodayBar');
+    if (todayBar) todayBar.style.width = Math.min(100, (s.today_tickets / 100) * 100) + '%';
+
+    // Also sync nav badge and Pending Approvals stat card
+    const navBadge = document.querySelector('.nav-badge');
+    if (navBadge) { navBadge.textContent = s.pending_count; navBadge.style.display = s.pending_count > 0 ? '' : 'none'; }
+
+  } catch (_) {}
+}
+
+function startAutoRefresh() {
+  try { loadAllStats(); } catch(e) {}
+  try { loadPendingPayments(); } catch(e) {}
+  try { loadAdminNotifications(); } catch(e) {}
+  try { loadPricingTable(); } catch(e) {}
+  try { loadAddonPricingTable(); } catch(e) {}
+  try { loadFeedingPricingTable(); } catch(e) {}
+  try { loadVouchersTable(); } catch(e) {}
+  setInterval(() => {
+    try { loadAllStats(); } catch(e) {}
+    try { loadPendingPayments(); } catch(e) {}
+    try { loadAdminNotifications(); } catch(e) {}
+    try { loadVouchersTable(); } catch(e) {}
+  }, 30000);
+}
+
+// ---- PRICE EDIT (dynamic — saves to DB) ----
+
+// DB ticket_type value for each admin key
+const adminTypeMap = {
+  adult: 'Adult', child: 'Child', senior: 'Senior', family: 'Group'
+};
+const ageRangeMap = {
+  adult: '13 – 64 years', child: '4 – 12 years', senior: '65+ years', family: '2 Adults + 1 Child + 1 Senior'
+};
+const descMap = {
+  adult: 'Full access · Best Seller', child: 'Interactive Map Included · Under 4 free',
+  senior: 'Full access', family: 'Priority Entry · Save 15%'
+};
+
+async function loadPricingTable() {
+  try {
+    const res  = await fetch('api/tickets.php?action=get_prices', { credentials: 'include' });
+    const data = await res.json();
+    const tbody = document.getElementById('pricingTableBody');
+    if (!tbody) return;
+    if (!data.success || !data.prices.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">No prices found. Run the SQL file first.</td></tr>';
+      return;
+    }
+    // Map DB type back to admin key
+    const reverseMap = { Adult:'adult', Child:'child', Senior:'senior', Group:'family' };
+    tbody.innerHTML = data.prices.map(row => {
+      const key  = reverseMap[row.ticket_type] || row.ticket_type.toLowerCase();
+      const age  = ageRangeMap[key]  || '—';
+      const desc = descMap[key] || row.description || '—';
+      return `<tr>
+        <td><strong>${row.label}</strong></td>
+        <td>${desc}</td>
+        <td>${age}</td>
+        <td class="price-cell" id="price-${key}"><strong>RM${parseFloat(row.price).toFixed(2)}</strong></td>
+        <td><button class="btn-edit" onclick="editPrice('${key}','${row.ticket_type}','RM${parseFloat(row.price).toFixed(2)}')">Edit Price</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.error('loadPricingTable error', e); }
+}
+
+let currentPriceCategory = '';
+let currentPriceDBType   = '';
+function editPrice(category, dbType, currentPrice) {
+  currentPriceCategory = category;
+  currentPriceDBType   = dbType;
+  document.getElementById('priceTicketType').value = dbType;
+  document.getElementById('priceCategory').value   = dbType === 'Group' ? 'Family Bundle' : dbType + ' Pass';
+  document.getElementById('priceValue').value      = currentPrice.replace('RM','');
+  openModal('priceModal');
+}
+
+async function savePrice() {
+  const val    = parseFloat(document.getElementById('priceValue').value);
+  const dbType = document.getElementById('priceTicketType').value;
+  if (isNaN(val) || val <= 0) { showToast('Please enter a valid price.', 'error'); return; }
+
+  const btn = document.querySelector('#priceModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const res  = await fetch('api/tickets.php?action=save_price', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticket_type: dbType, price: val })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('priceModal');
+      showToast(`${dbType} price updated to RM${val.toFixed(2)} — live on visitor page ✓`);
+      await loadPricingTable();
+    } else {
+      showToast(data.message || 'Failed to save price.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save & Update Live'; }
+}
+
+// ---- ADDON PRICE EDIT (NEW — connects to api/addon_prices.php) ----
+
+const addonDescMap = {
+  safari:  'Safari Shuttle ride through the park',
+  feeding: 'Animal Feeding Pass (weekends & public holidays)'
+};
+
+async function loadAddonPricingTable() {
+  const tbody = document.getElementById('addonPricingTableBody');
+  if (!tbody) return;
+  try {
+    const res  = await fetch('api/addon_prices.php?action=get', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);">Could not load add-on prices.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = Object.entries(data.prices).map(([key, row]) => `<tr>
+      <td><strong>${row.label}</strong></td>
+      <td>${addonDescMap[key] || '—'}</td>
+      <td class="price-cell" id="addon-price-${key}"><strong>RM${parseFloat(row.price).toFixed(2)}</strong></td>
+      <td><button class="btn-edit" onclick="editAddonPrice('${key}','${row.label}','${parseFloat(row.price).toFixed(2)}')">Edit Price</button></td>
+    </tr>`).join('');
+  } catch(e) { console.error('loadAddonPricingTable error', e); }
+}
+
+function editAddonPrice(key, label, currentPrice) {
+  document.getElementById('addonPriceKey').value   = key;
+  document.getElementById('addonPriceLabel').value = label;
+  document.getElementById('addonPriceValue').value = currentPrice;
+  openModal('addonPriceModal');
+}
+
+async function saveAddonPrice() {
+  const key   = document.getElementById('addonPriceKey').value;
+  const val   = parseFloat(document.getElementById('addonPriceValue').value);
+  if (isNaN(val) || val <= 0) { showToast('Please enter a valid price.', 'error'); return; }
+
+  const btn = document.querySelector('#addonPriceModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const res  = await fetch('api/addon_prices.php?action=save', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, price: val })
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Mirror feeding pass price to localStorage so animalFeeding.php stays in sync
+      if (key === 'feeding') {
+        const stored = JSON.parse(localStorage.getItem('wildtrack_feeding_prices') || '{}');
+        stored['feeding_pass'] = val;
+        localStorage.setItem('wildtrack_feeding_prices', JSON.stringify(stored));
+      }
+      closeModal('addonPriceModal');
+      showToast(`Add-on price updated to RM${val.toFixed(2)} — live on visitor page ✓`);
+      await loadAddonPricingTable();
+    } else {
+      showToast(data.message || 'Failed to save add-on price.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save & Update Live'; }
+}
+
+// ---- FEEDING CUP PRICE EDIT (stored in localStorage, shared with visitor page) ----
+
+const feedingAnimals = {
+  feeding_goat:   { label: '🐐 Goat',   time: '11:30am – 12:00pm', default: 3.00 },
+  feeding_sheep:  { label: '🐑 Sheep',  time: '12:00pm – 12:30pm', default: 3.00 },
+  feeding_rabbit: { label: '🐇 Rabbit', time: '12:30pm – 1:00pm',  default: 2.00 },
+};
+
+function getFeedingPrices() {
+  try {
+    const stored = localStorage.getItem('wildtrack_feeding_prices');
+    return stored ? JSON.parse(stored) : {};
+  } catch(e) { return {}; }
+}
+
+function setFeedingPrice(key, val) {
+  const prices = getFeedingPrices();
+  prices[key] = val;
+  localStorage.setItem('wildtrack_feeding_prices', JSON.stringify(prices));
+}
+
+function loadFeedingPricingTable() {
+  const tbody = document.getElementById('feedingPricingTableBody');
+  if (!tbody) return;
+  const stored = getFeedingPrices();
+  tbody.innerHTML = Object.entries(feedingAnimals).map(([key, info]) => {
+    const price = stored[key] ?? info.default;
+    return `<tr>
+      <td><strong>${info.label}</strong></td>
+      <td style="color:var(--text-muted);">🕛 ${info.time}</td>
+      <td class="price-cell" id="price-${key}"><strong>RM${parseFloat(price).toFixed(2)}</strong></td>
+      <td><button class="btn-edit" onclick="editFeedingPrice('${key}','${info.label}','${parseFloat(price).toFixed(2)}')">Edit Price</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function editFeedingPrice(key, label, currentPrice) {
+  document.getElementById('feedingPriceKey').value   = key;
+  document.getElementById('feedingPriceLabel').value = label;
+  document.getElementById('feedingPriceValue').value = currentPrice;
+  openModal('feedingPriceModal');
+}
+
+function saveFeedingPrice() {
+  const key = document.getElementById('feedingPriceKey').value;
+  const val = parseFloat(document.getElementById('feedingPriceValue').value);
+  if (isNaN(val) || val <= 0) { showToast('Please enter a valid price.', 'error'); return; }
+
+  setFeedingPrice(key, val);
+  closeModal('feedingPriceModal');
+  showToast(`Feeding cup price updated to RM${val.toFixed(2)} — live on visitor page ✓`);
+  loadFeedingPricingTable();
+}
+
+async function loadVouchersTable() {
+  try {
+    const res  = await fetch('api/tickets.php?action=get_vouchers', { credentials: 'include' });
+    const data = await res.json();
+
+    // Always update overview widget (pass empty array on failure)
+    renderOverviewPromos(data.success ? (data.vouchers || []) : []);
+
+    const tbody = document.getElementById('vouchersTableBody');
+    if (!tbody) return;
+
+    if (!data.success) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">Failed to load vouchers.</td></tr>';
+      return;
+    }
+    if (!data.vouchers.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">No vouchers yet. Click + Add Voucher to create one.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.vouchers.map(v => {
+      const discountLabel = v.discount_type === 'percent'
+        ? `${v.discount_value}%` : `RM${parseFloat(v.discount_value).toFixed(2)}`;
+      const expiryLabel = v.expires_at ? v.expires_at : 'No expiry';
+      const usesLabel   = `${v.used_count} / ${v.max_uses}`;
+      const activeClass = v.is_active == 1 ? 'approved' : 'rejected';
+      const activeLabel = v.is_active == 1 ? 'Active' : 'Inactive';
+      const toggleLabel = v.is_active == 1 ? 'Deactivate' : 'Activate';
+      return `<tr>
+        <td><strong style="letter-spacing:0.5px;">${v.code}</strong></td>
+        <td>${v.discount_type === 'percent' ? 'Percent' : 'Fixed'}</td>
+        <td><strong style="color:var(--green-dark);">${discountLabel} off</strong></td>
+        <td>${parseFloat(v.min_spend) > 0 ? 'RM' + parseFloat(v.min_spend).toFixed(2) : '—'}</td>
+        <td>${usesLabel}</td>
+        <td>${expiryLabel}</td>
+        <td><span class="status-badge ${activeClass}">${activeLabel}</span></td>
+        <td class="action-cell">
+          <button class="btn-edit" onclick="toggleVoucher(${v.id})">${toggleLabel}</button>
+          <button class="btn-reject" onclick="deleteVoucher(${v.id},'${v.code}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    console.error('loadVouchersTable error', e);
+    renderOverviewPromos([]); // clear loading state even on network error
+  }
+}
+
+function renderOverviewPromos(vouchers) {
+  const list = document.getElementById('overviewPromoList');
+  if (!list) return;
+  const colors = ['green-bg', 'blue-bg', 'amber-bg'];
+  // Only show active vouchers, max 4
+  const active = vouchers.filter(v => v.is_active == 1).slice(0, 4);
+  if (!active.length) {
+    list.innerHTML =
+      '<div class="promo-item" style="color:var(--text-muted);font-size:13px;padding:14px 16px;">No active promotions.</div>' +
+      '<button class="btn-outline-full" onclick="goOverviewTicketing()">+ Create New Promotion</button>';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  list.innerHTML = active.map((v, i) => {
+    const colorClass = colors[i % colors.length];
+    const discountLabel = v.discount_type === 'percent'
+      ? v.discount_value + '% Off'
+      : 'RM' + parseFloat(v.discount_value).toFixed(2) + ' Off';
+    const minLabel = parseFloat(v.min_spend) > 0
+      ? ' (min spend RM' + parseFloat(v.min_spend).toFixed(2) + ')' : '';
+    let expiryLabel = 'Ongoing';
+    if (v.expires_at) {
+      const exp = new Date(v.expires_at); exp.setHours(0,0,0,0);
+      const diff = Math.round((exp - today) / 86400000);
+      expiryLabel = diff < 0 ? 'Expired' : diff === 0 ? 'Expires today' : 'Ends in: ' + diff + ' day' + (diff !== 1 ? 's' : '');
+    }
+    return '<div class="promo-item ' + colorClass + '">' +
+      '<div class="promo-badge">' + v.code + '</div>' +
+      '<div class="promo-title">' + discountLabel + minLabel + '</div>' +
+      '<div class="promo-sub">' + expiryLabel + '</div>' +
+      '</div>';
+  }).join('') +
+  '<button class="btn-outline-full" onclick="goOverviewTicketing()">+ Create New Promotion</button>';
+
+  // Update the Active Promotions count in the stat card
+  document.querySelectorAll('.stat-card').forEach(card => {
+    if (card.querySelector('.stat-label')?.textContent === 'Active Promotions') {
+      const val = card.querySelector('.stat-value');
+      if (val) val.textContent = String(active.length).padStart(2,'0');
+    }
+  });
+}
+
+async function submitNewVoucher() {
+  const code     = document.getElementById('pmCode').value.trim().toUpperCase();
+  const dtype    = document.getElementById('pmDiscountType').value;
+  const dvalue   = parseFloat(document.getElementById('pmDiscountValue').value);
+  const minSpend = parseFloat(document.getElementById('pmMinSpend').value) || 0;
+  const maxUses  = parseInt(document.getElementById('pmMaxUses').value)    || 1;
+  const expires  = document.getElementById('pmExpiresAt').value || null;
+
+  if (!code)             { showToast('Voucher code is required.', 'error'); return; }
+  if (!dvalue || dvalue <= 0) { showToast('Discount value must be > 0.', 'error'); return; }
+
+  const btn = document.querySelector('#promoModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  try {
+    const res  = await fetch('api/tickets.php?action=save_voucher', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, discount_type: dtype, discount_value: dvalue, min_spend: minSpend, max_uses: maxUses, expires_at: expires })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('promoModal');
+      showToast(`Voucher ${code} created ✓`);
+      // Clear form
+      ['pmCode','pmDiscountValue','pmMinSpend','pmExpiresAt'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      document.getElementById('pmMaxUses').value = '1';
+      await loadVouchersTable();
+    } else {
+      showToast(data.message || 'Failed to create voucher.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Create Voucher'; }
+}
+
+async function deleteVoucher(id, code) {
+  if (!confirm(`Delete voucher "${code}"? This cannot be undone.`)) return;
+  try {
+    const res  = await fetch('api/tickets.php?action=delete_voucher', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) { showToast(`Voucher ${code} deleted.`, 'error'); await loadVouchersTable(); }
+    else showToast(data.message || 'Delete failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+async function toggleVoucher(id) {
+  try {
+    const res  = await fetch('api/tickets.php?action=toggle_voucher', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(data.is_active ? 'Voucher activated.' : 'Voucher deactivated.');
+      await loadVouchersTable();
+    } else showToast(data.message || 'Toggle failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+// ---- MEDIA ----
+function escHtml(str) {
+  const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML;
+}
+
+async function loadMediaGallery() {
+  const grid = document.getElementById('mediaGrid');
+  if (!grid) return;
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">Loading…</div>';
+  try {
+    const res  = await fetch('api/media.php?action=list', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) { grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:red;">Failed to load images.</div>'; return; }
+    renderMediaGrid(data.images);
+  } catch(e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:red;">Network error.</div>';
+  }
+}
+
+function renderMediaGrid(images) {
+  const grid  = document.getElementById('mediaGrid');
+  const count = document.getElementById('mediaCount');
+  const pag   = document.getElementById('mediaPagination');
+  if (count) count.textContent = `Showing ${images.length} image${images.length !== 1 ? 's' : ''}`;
+  if (pag)   pag.style.display = images.length ? '' : 'none';
+
+  let html = images.map(img => {
+    const isLive = img.show_in_slider == 1;
+    return `
+    <div class="media-card" data-id="${img.id}">
+      <div class="media-img-wrap">
+        <img src="${escHtml(img.image_url)}" alt="${escHtml(img.alt_text)}"
+             style="width:100%;height:100%;object-fit:cover;"
+             onerror="this.style.display='none'">
+        <span class="media-status ${isLive ? 'live' : 'draft'}">${isLive ? 'LIVE' : 'DRAFT'}</span>
+      </div>
+      <div class="media-info">
+        <div class="media-title-row"><strong>${escHtml(img.title)}</strong><span class="media-id">#${img.id}</span></div>
+        <div class="media-meta">Order: ${img.sort_order}</div>
+        <div class="media-meta">Uploaded: ${img.uploaded_at ? img.uploaded_at.slice(0,10) : '—'}</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn-approve" style="flex:1" onclick="toggleSliderImage(${img.id})">
+            ${isLive ? 'Set Draft' : 'Set Live'}
+          </button>
+          <button class="btn-edit" onclick="editMedia(${img.id})">Edit</button>
+          <button class="btn-reject-sm" onclick="deleteMediaImage(${img.id})">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  html += `<div class="media-card add-media-card" onclick="openUploadModal()">
+    <div class="add-media-inner">
+      <span style="font-size:32px;opacity:0.4;">+</span>
+      <span>Add New Photo</span>
+      <span style="font-size:12px;opacity:0.5;">PNG, JPG up to 10MB</span>
+    </div>
+  </div>`;
+  grid.innerHTML = html;
+}
+
+async function toggleSliderImage(id) {
+  try {
+    const res  = await fetch('api/media.php?action=toggle', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) { showToast(data.show_in_slider ? 'Set to LIVE ✓' : 'Set to DRAFT'); await loadMediaGallery(); }
+    else showToast(data.message || 'Toggle failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+async function deleteMediaImage(id) {
+  if (!confirm('Delete this image? This cannot be undone.')) return;
+  try {
+    const res  = await fetch('api/media.php?action=delete', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Image deleted.', 'error'); await loadMediaGallery(); }
+    else showToast(data.message || 'Delete failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+async function editMedia(id) {
+  try {
+    const res  = await fetch('api/media.php?action=list', { credentials: 'include' });
+    const data = await res.json();
+    const img  = data.images?.find(i => i.id == id);
+    if (!img) { showToast('Image not found.', 'error'); return; }
+    document.getElementById('uploadModalTitle').textContent = 'Edit Slider Image';
+    document.getElementById('uploadBtnText').textContent    = 'Save Changes';
+    document.getElementById('umEditId').value   = img.id;
+    document.getElementById('umTitle').value    = img.title;
+    document.getElementById('umAlt').value      = img.alt_text;
+    document.getElementById('umImageUrl').value = img.image_url;
+    document.getElementById('umOrder').value    = img.sort_order;
+    document.getElementById('umStatus').value   = img.show_in_slider;
+    document.getElementById('umPreview').src    = img.image_url;
+    document.getElementById('umPreviewWrap').style.display = '';
+    openModal('uploadModal');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+function previewFile(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('umPreview').src = e.target.result;
+    document.getElementById('umPreviewWrap').style.display = '';
+    document.getElementById('dropZoneText').textContent = input.files[0].name;
+    document.getElementById('umImageUrl').value = '';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function previewUrl(url) {
+  if (!url) return;
+  document.getElementById('umPreview').src = url;
+  document.getElementById('umPreviewWrap').style.display = '';
+  document.getElementById('umFileInput').value = '';
+}
+
+async function submitUploadModal() {
+  const editId = document.getElementById('umEditId').value;
+  const title  = document.getElementById('umTitle').value.trim();
+  const alt    = document.getElementById('umAlt').value.trim();
+  const url    = document.getElementById('umImageUrl').value.trim();
+  const order  = document.getElementById('umOrder').value;
+  const status = document.getElementById('umStatus').value;
+  const file   = document.getElementById('umFileInput').files[0];
+  const btn    = document.getElementById('uploadBtnText');
+
+  if (!title) { showToast('Title is required.', 'error'); return; }
+  if (!editId && !url && !file) { showToast('Please choose a file or paste an image URL.', 'error'); return; }
+
+  btn.textContent = editId ? 'Saving…' : 'Uploading…';
+  try {
+    if (file) {
+      // File upload via FormData → upload_slider.php
+      const fd = new FormData();
+      fd.append('image', file);
+      fd.append('title', title);
+      fd.append('alt_text', alt);
+      fd.append('sort_order', order);
+      fd.append('show_in_slider', status);
+      if (editId) fd.append('edit_id', editId);
+      const res  = await fetch('upload_slider.php', { method: 'POST', credentials: 'include', body: fd });
+      const data = await res.json();
+      if (data.success) { closeModal('uploadModal'); showToast(editId ? 'Image updated ✓' : 'Image uploaded ✓'); await loadMediaGallery(); }
+      else showToast(data.message || 'Upload failed.', 'error');
+    } else {
+      // URL-only → api/media.php
+      const payload = { title, alt_text: alt, image_url: url, sort_order: parseInt(order), show_in_slider: parseInt(status) };
+      if (editId) payload.id = parseInt(editId);
+      const action = editId ? 'update' : 'upload';
+      const res    = await fetch(`api/media.php?action=${action}`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) { closeModal('uploadModal'); showToast(editId ? 'Image updated ✓' : 'Image added ✓'); await loadMediaGallery(); }
+      else showToast(data.message || 'Failed.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.textContent = editId ? 'Save Changes' : 'Upload Image'; }
+}
+
+// ---- ATTRACTIONS ----
+function filterAttractions(query) {
+  // Could wire up PHP or filter rows
+}
+function editAttraction(id) {
+  openModal('attractionModal');
+  document.querySelector('#attractionModal .modal-header h3').textContent = 'Edit Attraction';
+}
+function removeAttraction(btn) {
+  if (!confirm('Remove this attraction?')) return;
+  btn.closest('tr').remove();
+  showToast('Attraction removed');
+}
+
+// ---- MODALS ----
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function openPromoModal() { openModal('promoModal'); }
+function goOverviewTicketing() { showPage('ticketing'); }
+function goToPromotions() {
+  showPage('ticketing');
+  const btn = document.querySelector('.tab[onclick*="tab-promotions"]');
+  if (btn) switchTab(btn, 'tab-promotions');
+}
+function openUploadModal() { openModal('uploadModal'); }
+function openAttractionModal() { openModal('attractionModal'); }
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeModal(overlay.id);
+  });
+});
+
+// ---- TOAST ----
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = (type === 'error' ? '✕ ' : '✓ ') + message;
+  toast.style.background = type === 'error' ? '#DC2626' : '#2D5A27';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ---- CHARTS ----
+const CHART_COLORS = {
+  labels:  ['Adult', 'Child', 'Family', 'Senior', 'Group'],
+  colors:  ['#2D5A27', '#D4872A', '#C9541E', '#6B52A3', '#2563EB'],
+  dotClass:['green',   'amber',   'orange',  'purple',  'blue'],
+};
+
+let _visitorChart  = null;
+let _ticketChart   = null;
+let _revenueChart  = null;
+let _currentDays   = 7;
+
+// ── Fetch chart data from PHP and refresh all charts ──
+async function loadChartData(days) {
+  days = days || _currentDays;
+  _currentDays = days;
+  try {
+    const res  = await fetch(`api/tickets.php?action=chart_data&days=${days}`, { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+
+    updateVisitorChart(data.visitor_labels, data.visitor_data);
+    updateTicketChart(data.type_labels, data.type_counts);
+    updateRevenueChart(data.revenue_labels, data.revenue_data);
+    updateReportsStatCards(data);
+  } catch(e) { console.error('loadChartData error', e); }
+}
+
+// ── Visitor Trend (line) ──
+function updateVisitorChart(labels, data) {
+  const ctx = document.getElementById('visitorChart')?.getContext('2d');
+  if (!ctx) return;
+  if (_visitorChart) {
+    _visitorChart.data.labels        = labels;
+    _visitorChart.data.datasets[0].data = data;
+    _visitorChart.update();
+    return;
+  }
+  _visitorChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Tickets Sold',
+        data,
+        borderColor: '#3E7A34',
+        backgroundColor: 'rgba(90,158,78,0.1)',
+        borderWidth: 2.5,
+        pointRadius: 5,
+        pointBackgroundColor: '#2D5A27',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#7A9170', font: { size: 12 }, precision: 0 } },
+        x: { grid: { display: false }, ticks: { color: '#7A9170', font: { size: 12 } } }
+      }
+    }
+  });
+}
+
+// ── Ticket Type Donut ──
+function updateTicketChart(labels, counts) {
+  const ctx = document.getElementById('ticketChart')?.getContext('2d');
+  if (!ctx) return;
+
+  // Map types to fixed color slots (Adult→green, Child→amber, etc.)
+  const colorMap = {};
+  CHART_COLORS.labels.forEach((l, i) => { colorMap[l] = { color: CHART_COLORS.colors[i], dot: CHART_COLORS.dotClass[i] }; });
+
+  const bgColors = labels.map(l => colorMap[l]?.color || '#aaa');
+  const total    = counts.reduce((a, b) => a + b, 0);
+
+  if (_ticketChart) {
+    _ticketChart.data.labels            = labels;
+    _ticketChart.data.datasets[0].data  = counts;
+    _ticketChart.data.datasets[0].backgroundColor = bgColors;
+    _ticketChart.update();
+  } else {
+    _ticketChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: counts, backgroundColor: bgColors, borderWidth: 3, borderColor: '#fff' }]
+      },
+      options: { responsive: true, cutout: '65%', plugins: { legend: { display: false } } }
+    });
+  }
+
+  // Update legend
+  const legendEl = document.getElementById('donutLegend');
+  if (legendEl) {
+    legendEl.innerHTML = labels.map((l, i) => {
+      const pct  = total > 0 ? Math.round((counts[i] / total) * 100) : 0;
+      const dot  = colorMap[l]?.dot || 'green';
+      return `<div class="legend-item"><span class="legend-dot ${dot}"></span>${l} — ${pct}%</div>`;
+    }).join('');
+  }
+}
+
+// ── Monthly Revenue Bar ──
+function updateRevenueChart(labels, data) {
+  const ctx = document.getElementById('revenueChart')?.getContext('2d');
+  if (!ctx) return;
+  if (_revenueChart) {
+    _revenueChart.data.labels           = labels;
+    _revenueChart.data.datasets[0].data = data;
+    _revenueChart.update();
+    return;
+  }
+  _revenueChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Revenue (RM)',
+        data,
+        backgroundColor: 'rgba(45,90,39,0.8)',
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#7A9170', font: { size: 12 }, callback: v => 'RM' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v) } },
+        x: { grid: { display: false }, ticks: { color: '#7A9170', font: { size: 12 } } }
+      }
+    }
+  });
+}
+
+// ── Reports stat cards ──
+function updateReportsStatCards(data) {
+  const mv = document.getElementById('reportMonthVisitors');
+  const mr = document.getElementById('reportMonthRevenue');
+  const mt = document.getElementById('reportMonthTickets');
+  if (mv) mv.textContent = (data.month_visitors || 0).toLocaleString();
+  if (mr) mr.textContent = 'RM' + parseFloat(data.month_revenue || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (mt) mt.textContent = (data.month_tickets  || 0).toLocaleString();
+}
+
+// ── Filter button handler ──
+function setVisitorFilter(btn, days) {
+  document.querySelectorAll('.chart-filters .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadChartData(days);
+}
+
+// ── Called when overview page is shown ──
+let overviewChartsInit = false;
+function initOverviewCharts() {
+  if (overviewChartsInit) return;
+  overviewChartsInit = true;
+  loadChartData(7);
+}
+
+// ── Called when reports page is shown ──
+let reportsChartInit = false;
+function initReportsChart() {
+  if (reportsChartInit) return;
+  reportsChartInit = true;
+  // Re-use same data fetch; charts share instances
+  loadChartData(_currentDays);
+}
+
+// ── Auto-load media gallery when that page is shown ──
+const _origShowPage = typeof showPage === 'function' ? showPage : null;
+if (_origShowPage) {
+  window.showPage = function(name) {
+    _origShowPage(name);
+    if (name === 'media') loadMediaGallery();
+  };
+}
+
+// ── Drag-and-drop onto upload drop zone ──
+document.addEventListener('DOMContentLoaded', () => {
+  const dz = document.getElementById('uploadDropZone');
+  if (dz) {
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--green-mid)'; });
+    dz.addEventListener('dragleave', () => { dz.style.borderColor = ''; });
+    dz.addEventListener('drop', e => {
+      e.preventDefault(); dz.style.borderColor = '';
+      const f = e.dataTransfer.files[0];
+      if (f) {
+        const dt = new DataTransfer(); dt.items.add(f);
+        const inp = document.getElementById('umFileInput');
+        inp.files = dt.files;
+        previewFile(inp);
+      }
+    });
+  }
+});
+
+</script>
+</body>
+</html>

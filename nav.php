@@ -122,8 +122,8 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
         </a>
         <div class="dropdown-menu" style="min-width:200px;left:auto;right:0;transform:none;">
           <div class="right-column" style="margin-left:0;">
-            <a href="Ticketing.php?show=qr">🎟️ Check Ticket</a>
-            <a href="Ticketing.php">📅 Booking Area</a>
+            <a href="MyTickets.php">🎟️ Check Ticket</a>
+            <a href="MyBookings.php">📅 Booking Area</a>
             <a href="#" onclick="doLogout();return false;">🚪 Sign Out</a>
           </div>
         </div>
@@ -261,7 +261,7 @@ function doLogout() {
         wtCloseNotifDropdown();
         if (n.type === 'booking_approved') {
           var ids = n.ticket_ids ? (typeof n.ticket_ids === 'string' ? n.ticket_ids : JSON.stringify(n.ticket_ids)) : '';
-          window.location.href = 'Ticketing.php?show=qr&ticket_ids=' + encodeURIComponent(ids);
+          window.location.href = 'MyTickets.php';
         }
       };
       listEl.appendChild(item);

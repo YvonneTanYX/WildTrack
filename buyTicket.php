@@ -70,7 +70,7 @@ $currentPage = 'visit'; ?>
     </div>
     <div class="ticket-card">
       <div class="tc-type">Senior</div>
-      <div class="tc-price" id="btp-child">RM 10</div>
+      <div class="tc-price" id="btp-senior">RM 15</div>
       <div class="tc-note">Age 65 and above</div>
     </div>
     <div class="ticket-card">
@@ -117,7 +117,7 @@ $currentPage = 'visit'; ?>
       const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_prices');
       const data = await res.json();
       if (!data.success) return;
-      const typeMap = { Adult: 'btp-adult', Child: 'btp-child', Group: 'btp-family' };
+      const typeMap = { Adult: 'btp-adult', Child: 'btp-child',Senior: 'btp-senior', Group: 'btp-family' };
       data.prices.forEach(function(row) {
         const elId = typeMap[row.ticket_type];
         if (!elId) return;

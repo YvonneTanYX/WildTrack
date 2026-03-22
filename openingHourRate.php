@@ -96,7 +96,7 @@ $currentPage = 'visit'; ?>
 
       <div class="ticket-grid">
         <span class="t-label">Adult</span>              <span class="t-price" id="ohr-adult">RM 20</span>
-        <span class="t-label">Senior</span>              <span class="t-price" id="ohr-adult">RM 15</span>
+        <span class="t-label">Senior</span>              <span class="t-price" id="ohr-senior">RM 15</span>
         <span class="t-label">Child</span>              <span class="t-price" id="ohr-child">RM 10</span>
         <span class="t-label">Child (Under 4)</span>    <span class="t-price">Free</span>
         <span class="t-label">Family Bundle</span>       <span class="t-price" id="ohr-family">RM 55</span>
@@ -125,7 +125,7 @@ $currentPage = 'visit'; ?>
       const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_prices');
       const data = await res.json();
       if (!data.success) return;
-      const typeMap = { Adult: 'ohr-adult', Child: 'ohr-child', Group: 'ohr-family' };
+      const typeMap = { Adult: 'ohr-adult', Child: 'ohr-child', Senior: 'ohr-senior', Group: 'ohr-family' };
       data.prices.forEach(function(row) {
         const elId = typeMap[row.ticket_type];
         if (!elId) return;

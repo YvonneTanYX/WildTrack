@@ -1,6 +1,22 @@
 <?php
 require_once __DIR__ . '/check_session.php';
-$currentPage = ''; ?>
+require_once __DIR__ . '/config/db.php';
+$currentPage = '';
+
+// ── Fetch live slider images from DB ────────────────────────────────
+$sliderImages = getDB()
+  ->query("SELECT image_url, alt_text FROM slider_images WHERE show_in_slider = 1 ORDER BY sort_order ASC, uploaded_at DESC")
+  ->fetchAll(PDO::FETCH_ASSOC);
+
+// Fallback to default images if DB is empty
+if (empty($sliderImages)) {
+  $sliderImages = [
+    ['image_url' => 'https://images.unsplash.com/photo-1695272016860-c3d5eaa6c660?q=80&w=1740&auto=format&fit=crop', 'alt_text' => 'Zoo wildlife'],
+    ['image_url' => 'https://images.unsplash.com/photo-1684262406822-e8c8629d3831?q=80&w=1548&auto=format&fit=crop', 'alt_text' => 'Zoo animals'],
+    ['image_url' => 'https://images.unsplash.com/photo-1678067574187-3d81952c7199?q=80&w=2070&auto=format&fit=crop', 'alt_text' => 'Zoo experience'],
+  ];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,17 +29,14 @@ $currentPage = ''; ?>
 
 <?php include 'nav.php'; ?>
 
-<!-- Hero Slider -->
+<!-- Hero Slider — dynamically populated from DB -->
 <div class="slider">
-  <div class="slide active">
-    <img src="https://images.unsplash.com/photo-1695272016860-c3d5eaa6c660?q=80&w=1740&auto=format&fit=crop" alt="Zoo wildlife">
+  <?php foreach ($sliderImages as $index => $img): ?>
+  <div class="slide<?= $index === 0 ? ' active' : '' ?>">
+    <img src="<?= htmlspecialchars($img['image_url']) ?>"
+         alt="<?= htmlspecialchars($img['alt_text']) ?>">
   </div>
-  <div class="slide">
-    <img src="https://images.unsplash.com/photo-1684262406822-e8c8629d3831?q=80&w=1548&auto=format&fit=crop" alt="Zoo animals">
-  </div>
-  <div class="slide">
-    <img src="https://images.unsplash.com/photo-1678067574187-3d81952c7199?q=80&w=2070&auto=format&fit=crop" alt="Zoo experience">
-  </div>
+  <?php endforeach; ?>
   <div class="slider-overlay"></div>
   <div class="slider-caption">
     <h1>Welcome to<br>WildTrack Zoo</h1>
@@ -31,10 +44,12 @@ $currentPage = ''; ?>
   </div>
 </div>
 
+<!-- Slider nav dots — generated to match image count -->
 <div class="slider-nav">
-  <button class="slider-dot active" aria-label="Slide 1"></button>
-  <button class="slider-dot" aria-label="Slide 2"></button>
-  <button class="slider-dot" aria-label="Slide 3"></button>
+  <?php foreach ($sliderImages as $index => $img): ?>
+  <button class="slider-dot<?= $index === 0 ? ' active' : '' ?>"
+          aria-label="Slide <?= $index + 1 ?>"></button>
+  <?php endforeach; ?>
 </div>
 
 <!-- Quick links section -->

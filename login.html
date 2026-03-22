@@ -691,7 +691,7 @@ async function handleStaffLogin() {
             const role = data.user.role;
             if (role === 'admin') {
                 showToast('Welcome, Admin! Redirecting... 🛡️');
-                setTimeout(() => { window.location.href = 'admin.html'; }, 1200);
+                setTimeout(() => { window.location.href = 'admin.php'; }, 1200);
             } else if (role === 'worker') {
                 showToast('Welcome! Redirecting to staff portal... 🐾');
                 setTimeout(() => { window.location.href = 'mainpageworker.html'; }, 1200);

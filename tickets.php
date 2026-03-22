@@ -382,7 +382,7 @@ switch ($action) {
                 // legacy flat fields
                 'ticket_types'     => $ticketTypes,
                 'ticket_count'     => (int) $row['ticket_count'],
-                // NEW: rich breakdown arrays consumed by admin.html
+                // NEW: rich breakdown arrays consumed by admin.php
                 'ticket_breakdown' => $ticketBreakdown,
                 'addons'           => $addons,
             ];
@@ -784,7 +784,7 @@ switch ($action) {
 
     // ─────────────────────────────────────────────────────
     //  get_session — return the logged-in admin's identity
-    //  Used by admin.html to populate name, avatar & greeting
+    //  Used by admin.php to populate name, avatar & greeting
     // ─────────────────────────────────────────────────────
     case 'get_session': {
         $admin = requireRole('admin');
