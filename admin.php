@@ -2736,29 +2736,12 @@ textarea.form-input {
   <!-- PAGE: ANNOUNCEMENTS -->
   <section class="page" id="page-announcements">
     <div class="page-header">
-      <div><h1>Announcements</h1><p>Send notices to visitors and staff</p></div>
-      <button class="btn btn-primary">+ New Announcement</button>
+      <div><h1>Announcements</h1><p>Publish notices that appear live on the visitor page</p></div>
+      <button class="btn btn-primary" onclick="openNewAnnouncementModal()">+ New Announcement</button>
     </div>
     <div class="card">
-      <div class="announce-list">
-        <div class="announce-item">
-          <div class="announce-icon orange">📢</div>
-          <div class="announce-body">
-            <strong>Reptile House Temporary Closure</strong>
-            <p>The Reptile House will be under maintenance from March 17–20. We apologize for the inconvenience.</p>
-            <small>Posted: 15 Mar 2026 · Visible to: All Visitors</small>
-          </div>
-          <div style="display:flex;gap:8px;"><button class="btn-edit">Edit</button><button class="btn-reject-sm">Delete</button></div>
-        </div>
-        <div class="announce-item">
-          <div class="announce-icon green">🌿</div>
-          <div class="announce-body">
-            <strong>Night Safari — This Saturday!</strong>
-            <p>Join us for an exclusive night safari experience starting 7PM. Limited slots — book your tickets today!</p>
-            <small>Posted: 14 Mar 2026 · Visible to: All Visitors</small>
-          </div>
-          <div style="display:flex;gap:8px;"><button class="btn-edit">Edit</button><button class="btn-reject-sm">Delete</button></div>
-        </div>
+      <div class="announce-list" id="announceList">
+        <div style="text-align:center;padding:32px;color:var(--text-muted);">Loading…</div>
       </div>
     </div>
   </section>
@@ -2767,13 +2750,37 @@ textarea.form-input {
   <section class="page" id="page-settings">
     <div class="page-header"><div><h1>Settings</h1><p>System configuration and preferences</p></div></div>
     <div class="settings-grid">
+ 
+      <!-- Zoo Opening Hours (dynamic) -->
       <div class="card settings-section">
-        <h3>Zoo Information</h3>
-        <div class="form-group"><label>Zoo Name</label><input type="text" class="form-input" value="WildTrack Zoo"/></div>
-        <div class="form-group"><label>Contact Email</label><input type="email" class="form-input" value="info@wildtrack.com"/></div>
-        <div class="form-group"><label>Operating Hours</label><input type="text" class="form-input" value="9:00 AM – 6:00 PM (Daily)"/></div>
-        <button class="btn btn-primary" style="margin-top:8px;">Save Changes</button>
+        <h3>🕘 Opening Hours</h3>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+          Changes are reflected immediately on the visitor page.</p>
+ 
+        <div class="form-group">
+          <label>Opening Time</label>
+          <input type="time" class="form-input" id="settingOpenTime" value="09:00"/>
+        </div>
+        <div class="form-group">
+          <label>Closing Time</label>
+          <input type="time" class="form-input" id="settingCloseTime" value="18:00"/>
+        </div>
+        <div class="form-group">
+          <label>Last Entry (minutes before closing)</label>
+          <input type="number" class="form-input" id="settingLastEntry" value="60" min="0" max="360" step="5"/>
+          <small style="color:var(--text-muted);">e.g. 60 = last entry 1 hour before closing</small>
+        </div>
+        <div class="form-group">
+          <label>Last Online Purchase (minutes before closing)</label>
+          <input type="number" class="form-input" id="settingOnlinePurchase" value="180" min="0" max="360" step="5"/>
+          <small style="color:var(--text-muted);">e.g. 180 = purchases close 3 hours before closing</small>
+        </div>
+        <button class="btn btn-primary" style="margin-top:10px;" onclick="saveZooSettings()">
+          💾 Save Opening Hours
+        </button>
       </div>
+ 
+      <!-- Notification Preferences (unchanged) -->
       <div class="card settings-section">
         <h3>Notification Preferences</h3>
         <div class="toggle-row"><span>Email alerts for pending approvals</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
@@ -2781,8 +2788,10 @@ textarea.form-input {
         <div class="toggle-row"><span>Weekly summary report</span><label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label></div>
         <div class="toggle-row"><span>Staff login alerts</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
       </div>
+ 
     </div>
   </section>
+ 
 
   <!-- PAGE: PROFILE -->
   <section class="page" id="page-profile">
@@ -2807,6 +2816,66 @@ textarea.form-input {
       </div>
     </div>
   </section>
+
+  <!-- Announcement Modal (create / edit) -->
+<div class="modal-overlay" id="announcementModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h3 id="announcementModalTitle">New Announcement</h3>
+      <button onclick="closeModal('announcementModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="amId" value=""/>
+ 
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>Icon (emoji)</label>
+          <input type="text" class="form-input" id="amIcon" value="📢" maxlength="4"
+                 style="font-size:20px;text-align:center;"/>
+        </div>
+        <div class="form-group">
+          <label>Icon Colour</label>
+          <select class="form-input" id="amColor">
+            <option value="orange">🟠 Orange (warning)</option>
+            <option value="green">🟢 Green (info)</option>
+            <option value="blue">🔵 Blue (notice)</option>
+            <option value="purple">🟣 Purple (event)</option>
+          </select>
+        </div>
+      </div>
+ 
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" class="form-input" id="amTitle" placeholder="e.g. Reptile House Closure"/>
+      </div>
+      <div class="form-group">
+        <label>Message *</label>
+        <textarea class="form-input" id="amBody" rows="3"
+                  placeholder="Describe the announcement…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Audience</label>
+        <select class="form-input" id="amAudience">
+          <option>All Visitors</option>
+          <option>Members Only</option>
+          <option>Staff Only</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select class="form-input" id="amActive">
+          <option value="1">✅ Active (visible to visitors)</option>
+          <option value="0">⏸ Draft (hidden)</option>
+        </select>
+      </div>
+ 
+      <button class="btn btn-primary" style="width:100%;margin-top:8px;"
+              onclick="submitAnnouncementModal()">
+        <span id="amBtnText">Publish Announcement</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 </main>
 
@@ -4296,6 +4365,217 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+});
+
+async function loadAnnouncements() {
+  try {
+    const res  = await fetch('api/announcements.php?action=get_all_announcements', { credentials: 'include' });
+    const data = await res.json();
+    const list = document.getElementById('announceList');
+    if (!list) return;
+ 
+    if (!data.success || !data.announcements.length) {
+      list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">No announcements yet. Click "+ New Announcement" to add one.</div>';
+      return;
+    }
+ 
+    const colorHex = { orange:'#f59e0b', green:'#22c55e', blue:'#3b82f6', purple:'#a855f7' };
+ 
+    list.innerHTML = data.announcements.map(a => {
+      const date   = new Date(a.created_at).toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' });
+      const active = parseInt(a.is_active);
+      const dot    = colorHex[a.icon_color] || colorHex.orange;
+      return `
+        <div class="announce-item" id="ann-row-${a.id}">
+          <div class="announce-icon ${a.icon_color}" style="font-size:20px;line-height:1;padding-top:4px;">${escA(a.icon)}</div>
+          <div class="announce-body" style="flex:1;">
+            <strong>${escA(a.title)}</strong>
+            <p>${escA(a.body)}</p>
+            <small>Posted: ${date} · ${escA(a.audience)} ·
+              <span style="color:${active ? '#22c55e' : '#aaa'};font-weight:600;">
+                ${active ? '● Live' : '○ Draft'}
+              </span>
+            </small>
+          </div>
+          <div style="display:flex;gap:8px;flex-shrink:0;">
+            <button class="btn-edit" onclick="openEditAnnouncementModal(${a.id})">Edit</button>
+            <button class="btn-edit" style="background:${active ? '#fef3c7' : 'var(--green-pale)'};"
+                    onclick="toggleAnnouncement(${a.id})">
+              ${active ? 'Set Draft' : 'Set Live'}
+            </button>
+            <button class="btn-reject-sm" onclick="deleteAnnouncement(${a.id})">Delete</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) { console.error('loadAnnouncements', e); }
+}
+ 
+function escA(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+ 
+/* Open modal for NEW announcement */
+function openNewAnnouncementModal() {
+  document.getElementById('amId').value       = '';
+  document.getElementById('amIcon').value     = '📢';
+  document.getElementById('amColor').value    = 'orange';
+  document.getElementById('amTitle').value    = '';
+  document.getElementById('amBody').value     = '';
+  document.getElementById('amAudience').value = 'All Visitors';
+  document.getElementById('amActive').value   = '1';
+  document.getElementById('announcementModalTitle').textContent = 'New Announcement';
+  document.getElementById('amBtnText').textContent = 'Publish Announcement';
+  openModal('announcementModal');
+}
+ 
+/* Open modal for EDIT */
+async function openEditAnnouncementModal(id) {
+  try {
+    const res  = await fetch('api/announcements.php?action=get_all_announcements', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+    const a = data.announcements.find(x => parseInt(x.id) === id);
+    if (!a) return;
+ 
+    document.getElementById('amId').value       = a.id;
+    document.getElementById('amIcon').value     = a.icon;
+    document.getElementById('amColor').value    = a.icon_color;
+    document.getElementById('amTitle').value    = a.title;
+    document.getElementById('amBody').value     = a.body;
+    document.getElementById('amAudience').value = a.audience;
+    document.getElementById('amActive').value   = a.is_active;
+    document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+    document.getElementById('amBtnText').textContent = 'Save Changes';
+    openModal('announcementModal');
+  } catch(e) { showToast('Failed to load announcement', 'error'); }
+}
+ 
+/* Submit create / update */
+async function submitAnnouncementModal() {
+  const id    = document.getElementById('amId').value;
+  const title = document.getElementById('amTitle').value.trim();
+  const body  = document.getElementById('amBody').value.trim();
+  if (!title || !body) { showToast('Title and message are required.', 'error'); return; }
+ 
+  const action  = id ? 'update_announcement' : 'create_announcement';
+  const payload = {
+    id:         id ? parseInt(id) : undefined,
+    icon:       document.getElementById('amIcon').value,
+    icon_color: document.getElementById('amColor').value,
+    title,
+    body,
+    audience:   document.getElementById('amAudience').value,
+    is_active:  parseInt(document.getElementById('amActive').value),
+  };
+ 
+  const btn = document.getElementById('amBtnText');
+  btn.textContent = 'Saving…';
+  try {
+    const res  = await fetch(`api/announcements.php?action=${action}`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('announcementModal');
+      showToast(id ? 'Announcement updated ✓' : 'Announcement published ✓');
+      loadAnnouncements();
+    } else {
+      showToast(data.message || 'Save failed.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.textContent = id ? 'Save Changes' : 'Publish Announcement'; }
+}
+ 
+async function toggleAnnouncement(id) {
+  try {
+    const res  = await fetch('api/announcements.php?action=toggle_announcement', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Status updated ✓'); loadAnnouncements(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+ 
+async function deleteAnnouncement(id) {
+  if (!confirm('Delete this announcement? This cannot be undone.')) return;
+  try {
+    const res  = await fetch('api/announcements.php?action=delete_announcement', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Announcement deleted'); loadAnnouncements(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+ 
+/* ════════════════════════════════════════════════════════════════
+   ZOO SETTINGS (opening hours)  –  admin-side JS
+════════════════════════════════════════════════════════════════ */
+ 
+async function loadZooSettings() {
+  try {
+    const res  = await fetch('api/announcements.php?action=get_settings', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+    const s = data.settings;
+    const ot = document.getElementById('settingOpenTime');
+    const ct = document.getElementById('settingCloseTime');
+    const le = document.getElementById('settingLastEntry');
+    const op = document.getElementById('settingOnlinePurchase');
+    if (ot) ot.value = s.open_time                  || '09:00';
+    if (ct) ct.value = s.close_time                 || '18:00';
+    if (le) le.value = s.last_entry_mins             || '60';
+    if (op) op.value = s.last_online_purchase_mins   || '180';
+  } catch(e) { console.error('loadZooSettings', e); }
+}
+ 
+async function saveZooSettings() {
+  const payload = {
+    settings: {
+      open_time:                 document.getElementById('settingOpenTime').value,
+      close_time:                document.getElementById('settingCloseTime').value,
+      last_entry_mins:           document.getElementById('settingLastEntry').value,
+      last_online_purchase_mins: document.getElementById('settingOnlinePurchase').value,
+    }
+  };
+  try {
+    const res  = await fetch('api/announcements.php?action=save_settings', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success) showToast('Opening hours saved ✓');
+    else showToast(data.message || 'Save failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+ 
+/* ── Auto-load when these pages become visible ─────────────────── */
+// Patch into the existing showPage function
+(function() {
+  const _orig = window.showPage;
+  window.showPage = function(name) {
+    if (typeof _orig === 'function') _orig(name);
+    if (name === 'announcements') loadAnnouncements();
+    if (name === 'settings')      loadZooSettings();
+  };
+})();
+ 
+// Also load on DOMContentLoaded if these pages are already active
+document.addEventListener('DOMContentLoaded', function() {
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  if (activePage.id === 'page-announcements') loadAnnouncements();
+  if (activePage.id === 'page-settings')      loadZooSettings();
 });
 
 </script>

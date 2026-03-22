@@ -9,29 +9,7 @@ $currentPage = 'visit'; ?>
   <link rel="stylesheet" href="shared.css">
   <title>Opening Hours &amp; Rates — WildTrack Zoo</title>
   <style>
-    .hours-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 20px 0 36px;
-      max-width: 600px;
-    }
-    .hours-row {
-      display: contents;
-    }
-    .hours-row .period {
-      font-weight: bold;
-      font-size: 16px;
-      color: #2a5a2e;
-      padding: 10px 0;
-      border-bottom: 1px solid #dde8dd;
-    }
-    .hours-row .time {
-      font-size: 16px;
-      color: #3a3a3a;
-      padding: 10px 0;
-      border-bottom: 1px solid #dde8dd;
-    }
+    /* ── Ticket grid ── */
     .ticket-grid {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -68,23 +46,37 @@ $currentPage = 'visit'; ?>
 <img src="https://images.rzss.org.uk/media/Highland_Wildlife_Park/HWP_animals/Amur_tiger/amur_tiger_2.jpg"
      class="page-img" alt="Highland Wildlife Park">
 
+<?php include 'announcement-banner.php'; ?>
+
 <div class="content-section">
 
   <h1>Opening Hours &amp; Rates</h1>
 
-  <!-- Opening hours -->
+
+
+  <!-- ── Opening Hours ── -->
   <h2>Opening Hours</h2>
   <p>WildTrack Zoo is open every day of the year apart from Christmas Day (25 December),
-     subject to weather conditions. Last entry is <strong>one hour before closing time</strong>.</p>
+     subject to weather conditions.</p>
 
-  <div class="hours-grid">
-    <div class="hours-row"><span class="period">January – February</span><span class="time">10:00am – 4:00pm</span></div>
-    <div class="hours-row"><span class="period">March – October</span>   <span class="time">10:00am – 5:00pm</span></div>
-    <div class="hours-row"><span class="period">November – December</span><span class="time">10:00am – 4:00pm</span></div>
-    <div class="hours-row"><span class="period">Christmas Day</span>      <span class="time">Closed</span></div>
+  <div class="hours-rules" id="hoursRules">
+    <!-- populated by JS -->
+    <div class="rule-chip">⏱ Last entry: <span id="ruleLastEntry">loading…</span></div>
+    <div class="rule-chip">🛒 Last online purchase: <span id="ruleOnlinePurchase">loading…</span></div>
   </div>
 
-  <!-- Ticket prices -->
+  <div class="hours-grid">
+    <div class="hours-row">
+      <span class="period">Every day</span>
+      <span class="time" id="hoursDisplay">loading…</span>
+    </div>
+    <div class="hours-row">
+      <span class="period">Christmas Day</span>
+      <span class="time">Closed</span>
+    </div>
+  </div>
+
+  <!-- ── Ticket Prices ── -->
   <div class="two-col">
     <div class="col-img">
       <img src="https://images.rzss.org.uk/media/Highland_Wildlife_Park/HWP_animals/Japanese_macaque/japanese_macaque_3.jpg"
@@ -95,12 +87,12 @@ $currentPage = 'visit'; ?>
       <p>Save by booking online! Group rates also available.</p>
 
       <div class="ticket-grid">
-        <span class="t-label">Adult</span>              <span class="t-price" id="ohr-adult">RM 20</span>
-        <span class="t-label">Senior</span>              <span class="t-price" id="ohr-senior">RM 15</span>
-        <span class="t-label">Child</span>              <span class="t-price" id="ohr-child">RM 10</span>
-        <span class="t-label">Child (Under 4)</span>    <span class="t-price">Free</span>
-        <span class="t-label">Family Bundle</span>       <span class="t-price" id="ohr-family">RM 55</span>
-        <span class="t-note">Family Bundle: 2 Adults + 1 Children + 1 Senior — save 15%</span>
+        <span class="t-label">Adult</span>           <span class="t-price" id="ohr-adult">RM 20</span>
+        <span class="t-label">Senior</span>          <span class="t-price" id="ohr-senior">RM 15</span>
+        <span class="t-label">Child</span>           <span class="t-price" id="ohr-child">RM 10</span>
+        <span class="t-label">Child (Under 4)</span> <span class="t-price">Free</span>
+        <span class="t-label">Family Bundle</span>   <span class="t-price" id="ohr-family">RM 55</span>
+        <span class="t-note">Family Bundle: 2 Adults + 1 Child + 1 Senior — save 15%</span>
       </div>
 
       <a href="Ticketing.php" class="btn-cta">Book Tickets Now →</a>
@@ -119,21 +111,74 @@ $currentPage = 'visit'; ?>
 </script>
 <script src="FinalProject.js"></script>
 <script>
-  // ── Dynamically load ticket prices from admin-controlled DB ──────────────
-  (async function loadTicketPrices() {
-    try {
-      const res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=get_prices');
-      const data = await res.json();
-      if (!data.success) return;
-      const typeMap = { Adult: 'ohr-adult', Child: 'ohr-child', Senior: 'ohr-senior', Group: 'ohr-family' };
-      data.prices.forEach(function(row) {
-        const elId = typeMap[row.ticket_type];
-        if (!elId) return;
-        const el = document.getElementById(elId);
-        if (el) el.textContent = 'RM ' + parseFloat(row.price).toFixed(0);
-      });
-    } catch(e) { /* silently keep defaults */ }
-  })();
+/* ── Utility: convert "HH:MM" → "H:MM AM/PM" ───────────────────── */
+function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12  = h % 12 || 12;
+  return h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+}
+
+/* ── Utility: mins → human label ───────────────────────────────── */
+function fmtMins(mins) {
+  mins = parseInt(mins, 10);
+  if (mins >= 60) {
+    const h = mins / 60;
+    return h === Math.floor(h) ? h + ' hour' + (h > 1 ? 's' : '') : (mins / 60).toFixed(1) + ' hours';
+  }
+  return mins + ' minute' + (mins !== 1 ? 's' : '');
+}
+
+/* ── 1. Load opening hours from zoo_settings ───────────────────── */
+(async function loadOpeningHours() {
+  try {
+    const res  = await fetch('api/announcements.php?action=get_settings');
+    const data = await res.json();
+    if (!data.success) return;
+
+    const s = data.settings;
+    const open  = fmtTime(s.open_time  || '09:00');
+    const close = fmtTime(s.close_time || '18:00');
+
+    // Update hours display
+    const hoursEl = document.getElementById('hoursDisplay');
+    if (hoursEl) hoursEl.textContent = open + ' – ' + close;
+
+    // Update rule chips
+    const lastEntryEl = document.getElementById('ruleLastEntry');
+    const onlineEl    = document.getElementById('ruleOnlinePurchase');
+    if (lastEntryEl)
+      lastEntryEl.textContent = fmtMins(s.last_entry_mins || 60) + ' before closing';
+    if (onlineEl)
+      onlineEl.textContent = fmtMins(s.last_online_purchase_mins || 180) + ' before closing';
+
+  } catch(e) {
+    // silently keep defaults
+    const hoursEl = document.getElementById('hoursDisplay');
+    if (hoursEl) hoursEl.textContent = '9:00 AM – 6:00 PM';
+    const lastEntryEl = document.getElementById('ruleLastEntry');
+    if (lastEntryEl) lastEntryEl.textContent = '1 hour before closing';
+    const onlineEl = document.getElementById('ruleOnlinePurchase');
+    if (onlineEl) onlineEl.textContent = '3 hours before closing';
+  }
+})();
+
+/* ── 3. Dynamically load ticket prices from admin-controlled DB ── */
+(async function loadTicketPrices() {
+  try {
+    const res  = await fetch('api/tickets.php?action=get_prices');
+    const data = await res.json();
+    if (!data.success) return;
+    const typeMap = { Adult: 'ohr-adult', Child: 'ohr-child', Senior: 'ohr-senior', Group: 'ohr-family' };
+    data.prices.forEach(function(row) {
+      const elId = typeMap[row.ticket_type];
+      if (!elId) return;
+      const el = document.getElementById(elId);
+      if (el) el.textContent = 'RM ' + parseFloat(row.price).toFixed(0);
+    });
+  } catch(e) { /* silently keep defaults */ }
+})();
 </script>
 </body>
 </html>
