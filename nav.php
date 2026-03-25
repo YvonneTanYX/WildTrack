@@ -51,6 +51,8 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
           </div>
           <div class="right-column">
             <a href="event.php">Events &amp; Talk Times</a>
+            <a href="learning.php">Learning</a>
+            <a href="birthdayParties.php">Birthday Parties</a>
           </div>
         </div>
       </li>
@@ -111,7 +113,9 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
               <a href="getInTouch.php"><img src="https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0" alt="Get in Touch"></a>
             </div>
           </div>
-          <div class="right-column"></div>
+          <div class="right-column">
+            <a href="getInTouch.php#general">Enquiries & Feedback</a>
+          </div>
         </div>
       </li>
 
@@ -123,7 +127,7 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
         <div class="dropdown-menu" style="min-width:200px;left:auto;right:0;transform:none;">
           <div class="right-column" style="margin-left:0;">
             <a href="MyTickets.php">🎟️ Check Ticket</a>
-            <a href="MyBookings.php">📅 Booking Area</a>
+            <a href="MyBookings.php">📅 Booking Status</a>
             <a href="#" onclick="doLogout();return false;">🚪 Sign Out</a>
           </div>
         </div>

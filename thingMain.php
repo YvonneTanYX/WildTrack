@@ -82,6 +82,24 @@ $currentPage = 'things'; ?>
       </div>
     </a>
 
+    <a href="learning.php" class="activity-card">
+      <img src="https://sunwaylagoon.com/wp-content/uploads/2025/04/Asset-29.png" alt="Learning">
+      <div class="ac-body">
+        <h3>🎓 Learning</h3>
+        <p>Join our Explorer Ranger program — outdoor educational classes curated by zoologists
+           for Junior Rangers (5–12) and Master Rangers (13–17).</p>
+      </div>
+    </a>
+
+    <a href="birthdayParties.php" class="activity-card">
+      <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=800&auto=format&fit=crop" alt="Birthday Parties">
+      <div class="ac-body">
+        <h3>🎉 Birthday Parties</h3>
+        <p>Celebrate your child's big day at the Zoo! Wild Party Packages available on weekends
+           from RM 30 per child, including venue hire, catering, and Zoo entry.</p>
+      </div>
+    </a>
+
   </div>
 
 </div>

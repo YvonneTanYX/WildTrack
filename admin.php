@@ -2184,11 +2184,11 @@ textarea.form-input {
       </span>
       <span class="nav-label">Media Gallery</span>
     </a>
-    <a href="#" class="nav-item" data-page="attractions">
+    <a href="#" class="nav-item" data-page="events">
       <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       </span>
-      <span class="nav-label">Attractions</span>
+      <span class="nav-label">Events</span>
     </a>
 
     <div class="nav-section-label" style="margin-top:16px;">Management</div>
@@ -2610,80 +2610,67 @@ textarea.form-input {
     </div>
   </section>
 
-  <!-- PAGE: ATTRACTIONS -->
-  <section class="page" id="page-attractions">
+  <!-- PAGE: EVENTS MANAGEMENT -->
+  <section class="page" id="page-events">
     <div class="page-header">
       <div>
-        <h1>Attractions Management</h1>
-        <p>Manage exhibits, habitats, and status updates for zoo visitors</p>
+        <h1>Events &amp; Talk Times Management</h1>
+        <p>Add, edit, or remove animal talks. Changes appear live on the visitor schedule page.</p>
       </div>
-      <button class="btn btn-primary" onclick="openAttractionModal()">+ Add New Attraction</button>
+      <button class="btn btn-primary" onclick="openEventModal()">+ Add New Event</button>
+    </div>
+
+    <!-- Summary chips -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="background:var(--green-pale);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;">
+        <strong id="evtCountTotal">–</strong> <span style="color:var(--text-muted);">Total Events</span>
+      </div>
+      <div style="background:var(--green-pale);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;">
+        <strong id="evtCountActive">–</strong> <span style="color:var(--text-muted);">Active</span>
+      </div>
+      <div style="background:var(--amber-light);border:1px solid #f5d79e;border-radius:10px;padding:10px 18px;font-size:13px;">
+        <strong id="evtCountSpecific">–</strong> <span style="color:var(--text-muted);">Specific-Date</span>
+      </div>
     </div>
 
     <div class="card">
+      <!-- Filters -->
       <div class="filters-row">
         <div class="search-bar" style="flex:1;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search by name or category..." oninput="filterAttractions(this.value)" />
+          <input type="text" id="evtSearch" placeholder="Search by name or venue…" oninput="filterEventsTable()" />
         </div>
-        <select class="filter-select" onchange="filterAttractions()"><option>All Statuses</option><option>Open</option><option>Under Maintenance</option><option>Closed</option></select>
-        <select class="filter-select"><option>Sort By: Newest</option><option>A–Z</option><option>Z–A</option></select>
+        <select class="filter-select" id="evtSessionFilter" onchange="filterEventsTable()">
+          <option value="">All Sessions</option>
+          <option value="morning">Morning</option>
+          <option value="afternoon">Afternoon</option>
+        </select>
+        <select class="filter-select" id="evtStatusFilter" onchange="filterEventsTable()">
+          <option value="">All Statuses</option>
+          <option value="1">Active</option>
+          <option value="0">Inactive</option>
+        </select>
       </div>
 
-      <table class="data-table" id="attractionsTable">
+      <table class="data-table" id="eventsTable">
         <thead>
-          <tr><th>Exhibit Info</th><th>Description</th><th>Status</th><th>Actions</th></tr>
+          <tr>
+            <th>Event Name</th>
+            <th>Session</th>
+            <th>Time</th>
+            <th>Venue</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:12px;">
-                <div class="exhibit-thumb" style="background:#8B4513;">🦁</div>
-                <div><strong>Lion Habitat</strong><br/><small>Mammals · Savanna Zone</small></div>
-              </div>
-            </td>
-            <td>Home to our pride of African Lions. Features natural rock formations and a large viewing...</td>
-            <td><span class="status-badge approved">Open</span></td>
-            <td><button class="btn-edit" onclick="editAttraction('lion-habitat')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
-          </tr>
-          <tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:12px;">
-                <div class="exhibit-thumb" style="background:#4A7C59;">🦎</div>
-                <div><strong>Reptile House</strong><br/><small>Reptiles · Indoor Facility</small></div>
-              </div>
-            </td>
-            <td>Climate-controlled indoor facility showcasing rare snakes, lizards, and tortoises...</td>
-            <td><span class="status-badge maintenance">Under Maintenance</span></td>
-            <td><button class="btn-edit" onclick="editAttraction('reptile-house')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
-          </tr>
-          <tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:12px;">
-                <div class="exhibit-thumb" style="background:#1565C0;">🐧</div>
-                <div><strong>Penguin Coast</strong><br/><small>Birds · Aquatic Zone</small></div>
-              </div>
-            </td>
-            <td>Outdoor pool and rockery for our colony of Humboldt penguins. Includes underwater viewing...</td>
-            <td><span class="status-badge approved">Open</span></td>
-            <td><button class="btn-edit" onclick="editAttraction('penguin-coast')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
-          </tr>
-          <tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:12px;">
-                <div class="exhibit-thumb" style="background:#2E7D32;">🦜</div>
-                <div><strong>Tropical Aviary</strong><br/><small>Birds · Jungle Dome</small></div>
-              </div>
-            </td>
-            <td>Walk-through aviary with lush vegetation and free-flying exotic birds from the Amazon.</td>
-            <td><span class="status-badge approved">Open</span></td>
-            <td><button class="btn-edit" onclick="editAttraction('tropical-aviary')">Edit Details</button> <button class="btn-reject-sm" onclick="removeAttraction(this)">Remove</button></td>
-          </tr>
+        <tbody id="eventsTableBody">
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Loading events…</td></tr>
         </tbody>
       </table>
-      <div class="pagination">
-        <span>Showing 1 to 4 of 4 exhibits</span>
-        <div><button class="btn-page" disabled>Previous</button><button class="btn-page" disabled>Next</button></div>
+
+      <div class="pagination" id="evtPagination" style="display:none;">
+        <span id="evtPaginationInfo"></span>
       </div>
     </div>
   </section>
@@ -3068,16 +3055,65 @@ textarea.form-input {
   </div>
 </div>
 
-<!-- Attraction Modal -->
-<div class="modal-overlay" id="attractionModal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header"><h3>Add New Attraction</h3><button onclick="closeModal('attractionModal')">✕</button></div>
+<!-- Event Modal (Add / Edit) -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h3 id="eventModalTitle">Add New Event</h3>
+      <button onclick="closeModal('eventModal')">✕</button>
+    </div>
     <div class="modal-body">
-      <div class="form-group"><label>Attraction Name</label><input type="text" class="form-input" placeholder="e.g. Gorilla Highlands"/></div>
-      <div class="form-group"><label>Category</label><input type="text" class="form-input" placeholder="e.g. Mammals · Highland Zone"/></div>
-      <div class="form-group"><label>Description</label><textarea class="form-input" rows="3" placeholder="Describe the exhibit..."></textarea></div>
-      <div class="form-group"><label>Status</label><select class="form-input"><option>Open</option><option>Under Maintenance</option><option>Closed</option></select></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="closeModal('attractionModal')">Add Attraction</button>
+      <input type="hidden" id="emId" />
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Event Name</label>
+          <input type="text" id="emName" class="form-input" placeholder="e.g. Penguin Talk" />
+        </div>
+        <div class="form-group">
+          <label>Session</label>
+          <select id="emSession" class="form-input">
+            <option value="morning">🌅 Morning</option>
+            <option value="afternoon">☀️ Afternoon</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Time</label>
+          <input type="time" id="emTime" class="form-input" />
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Venue</label>
+          <input type="text" id="emVenue" class="form-input" placeholder="e.g. Penguin Coast" />
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>
+            Date
+            <small style="font-weight:400;color:var(--text-muted);margin-left:6px;">
+              — leave blank to show every day automatically
+            </small>
+          </label>
+          <input type="date" id="emDate" class="form-input" />
+          <small style="color:var(--text-muted);margin-top:4px;display:block;">
+            📅 If a specific date is set, the event only shows on that day on the visitor page.
+            Clear the date to make it a recurring daily event.
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="emActive" class="form-input">
+            <option value="1">● Active</option>
+            <option value="0">○ Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sort Order</label>
+          <input type="number" id="emOrder" class="form-input" value="0" min="0" />
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="submitEventModal()">
+        <span id="emBtnText">Add Event</span>
+      </button>
     </div>
   </div>
 </div>
@@ -3101,7 +3137,7 @@ function showPage(pageId) {
 
   const titles = {
     overview: 'Overview', ticketing: 'Ticketing', feedback: 'Feedback & Reviews',
-    media: 'Media Gallery', attractions: 'Attractions', staff: 'Staff',
+    media: 'Media Gallery', events: 'Events Management', staff: 'Staff',
     reports: 'Reports', announcements: 'Announcements', settings: 'Settings', profile: 'Profile'
   };
   document.getElementById('pageTitle').textContent = titles[pageId] || pageId;
@@ -4118,19 +4154,188 @@ async function submitUploadModal() {
   finally { btn.textContent = editId ? 'Save Changes' : 'Upload Image'; }
 }
 
-// ---- ATTRACTIONS ----
-function filterAttractions(query) {
-  // Could wire up PHP or filter rows
+// ---- EVENTS MANAGEMENT ----
+
+let _allEvents = [];
+
+async function loadEvents() {
+  try {
+    const res  = await fetch('api/events.php?action=get_events', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) throw new Error();
+    _allEvents = data.events;
+    renderEventsTable(_allEvents);
+    updateEventsChips(_allEvents);
+  } catch(e) {
+    const tb = document.getElementById('eventsTableBody');
+    if (tb) tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">Failed to load events.</td></tr>';
+  }
 }
-function editAttraction(id) {
-  openModal('attractionModal');
-  document.querySelector('#attractionModal .modal-header h3').textContent = 'Edit Attraction';
+
+function updateEventsChips(events) {
+  const total    = document.getElementById('evtCountTotal');
+  const active   = document.getElementById('evtCountActive');
+  const specific = document.getElementById('evtCountSpecific');
+  if (total)    total.textContent    = events.length;
+  if (active)   active.textContent   = events.filter(e => parseInt(e.is_active)).length;
+  if (specific) specific.textContent = events.filter(e => e.event_date).length;
 }
-function removeAttraction(btn) {
-  if (!confirm('Remove this attraction?')) return;
-  btn.closest('tr').remove();
-  showToast('Attraction removed');
+
+function filterEventsTable() {
+  const q       = (document.getElementById('evtSearch')?.value || '').toLowerCase();
+  const session = document.getElementById('evtSessionFilter')?.value || '';
+  const status  = document.getElementById('evtStatusFilter')?.value;
+
+  const filtered = _allEvents.filter(e => {
+    const matchQ = !q || e.event_name.toLowerCase().includes(q) || e.venue.toLowerCase().includes(q);
+    const matchS = !session || e.session === session;
+    const matchSt = status === '' || status === undefined || String(e.is_active) === status;
+    return matchQ && matchS && matchSt;
+  });
+  renderEventsTable(filtered);
 }
+
+function renderEventsTable(events) {
+  const tb = document.getElementById('eventsTableBody');
+  if (!tb) return;
+
+  if (!events.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);">No events match your filters.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = events.map(e => {
+    const active     = parseInt(e.is_active);
+    const sessionLbl = e.session === 'morning' ? '🌅 Morning' : '☀️ Afternoon';
+    const dateLbl    = e.event_date
+      ? `<span style="background:#fff3e0;color:#c0620a;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">${escE(e.event_date)}</span>`
+      : `<span style="background:var(--green-pale);color:var(--green-dark);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">Every day</span>`;
+
+    return `<tr>
+      <td><strong>${escE(e.event_name)}</strong></td>
+      <td>${sessionLbl}</td>
+      <td style="font-weight:700;color:var(--green-dark);">${escE(e.event_time_fmt)}</td>
+      <td>${escE(e.venue)}</td>
+      <td>${dateLbl}</td>
+      <td><span class="status-badge ${active ? 'approved' : 'rejected'}">${active ? 'Active' : 'Inactive'}</span></td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn-edit" onclick="openEditEventModal(${e.id})">Edit</button>
+        <button class="btn-edit" style="background:${active ? '#fef3c7' : 'var(--green-pale)'};"
+                onclick="toggleEvent(${e.id})">${active ? 'Deactivate' : 'Activate'}</button>
+        <button class="btn-reject-sm" onclick="deleteEvent(${e.id})">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function escE(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Open modal for NEW event ── */
+function openEventModal() {
+  document.getElementById('emId').value      = '';
+  document.getElementById('emName').value    = '';
+  document.getElementById('emSession').value = 'morning';
+  document.getElementById('emTime').value    = '';
+  document.getElementById('emVenue').value   = '';
+  document.getElementById('emDate').value    = '';
+  document.getElementById('emActive').value  = '1';
+  document.getElementById('emOrder').value   = '0';
+  document.getElementById('eventModalTitle').textContent = 'Add New Event';
+  document.getElementById('emBtnText').textContent       = 'Add Event';
+  openModal('eventModal');
+}
+
+/* ── Open modal for EDIT ── */
+function openEditEventModal(id) {
+  const e = _allEvents.find(x => parseInt(x.id) === id);
+  if (!e) return;
+  document.getElementById('emId').value      = e.id;
+  document.getElementById('emName').value    = e.event_name;
+  document.getElementById('emSession').value = e.session;
+  // time comes back as "HH:MM:SS" — input[type=time] needs "HH:MM"
+  document.getElementById('emTime').value    = (e.event_time || '').substring(0,5);
+  document.getElementById('emVenue').value   = e.venue;
+  document.getElementById('emDate').value    = e.event_date || '';
+  document.getElementById('emActive').value  = String(e.is_active);
+  document.getElementById('emOrder').value   = e.sort_order;
+  document.getElementById('eventModalTitle').textContent = 'Edit Event';
+  document.getElementById('emBtnText').textContent       = 'Save Changes';
+  openModal('eventModal');
+}
+
+/* ── Submit create / update ── */
+async function submitEventModal() {
+  const id    = document.getElementById('emId').value;
+  const name  = document.getElementById('emName').value.trim();
+  const time  = document.getElementById('emTime').value;
+  if (!name || !time) { showToast('Event name and time are required.', 'error'); return; }
+
+  const action  = id ? 'update_event' : 'create_event';
+  const payload = {
+    id:         id ? parseInt(id) : undefined,
+    event_name: name,
+    session:    document.getElementById('emSession').value,
+    event_time: time,
+    venue:      document.getElementById('emVenue').value.trim(),
+    event_date: document.getElementById('emDate').value || null,
+    is_active:  parseInt(document.getElementById('emActive').value),
+    sort_order: parseInt(document.getElementById('emOrder').value) || 0,
+  };
+
+  const btn = document.getElementById('emBtnText');
+  btn.textContent = 'Saving…';
+  try {
+    const res  = await fetch(`api/events.php?action=${action}`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('eventModal');
+      showToast(id ? 'Event updated ✓' : 'Event added ✓');
+      loadEvents();
+    } else {
+      showToast(data.message || 'Save failed.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.textContent = id ? 'Save Changes' : 'Add Event'; }
+}
+
+async function toggleEvent(id) {
+  try {
+    const res  = await fetch('api/events.php?action=toggle_event', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Status updated ✓'); loadEvents(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Delete this event? This cannot be undone.')) return;
+  try {
+    const res  = await fetch('api/events.php?action=delete_event', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Event deleted'); loadEvents(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+
+// ---- ATTRACTIONS (kept as stubs to avoid JS errors if referenced elsewhere) ----
+function filterAttractions() {}
+function editAttraction(id) {}
+function removeAttraction(btn) {}
+function openAttractionModal() { openEventModal(); }
 
 // ---- MODALS ----
 function openModal(id) {
@@ -4149,7 +4354,6 @@ function goToPromotions() {
   if (btn) switchTab(btn, 'tab-promotions');
 }
 function openUploadModal() { openModal('uploadModal'); }
-function openAttractionModal() { openModal('attractionModal'); }
 
 // Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -4567,6 +4771,7 @@ async function saveZooSettings() {
     if (typeof _orig === 'function') _orig(name);
     if (name === 'announcements') loadAnnouncements();
     if (name === 'settings')      loadZooSettings();
+    if (name === 'events')        loadEvents();
   };
 })();
  
@@ -4576,6 +4781,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!activePage) return;
   if (activePage.id === 'page-announcements') loadAnnouncements();
   if (activePage.id === 'page-settings')      loadZooSettings();
+  if (activePage.id === 'page-events')        loadEvents();
 });
 
 </script>

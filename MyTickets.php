@@ -331,7 +331,7 @@
   function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';}
   async function poll(){
     try{
-      var res=await fetch('http://localhost/WildTrack/api/tickets.php?action=check_notifications',{credentials:'include'});
+      var res=await fetch('api/tickets.php?action=check_notifications',{credentials:'include'});
       var data=await res.json(); if(!data.success)return;
       var notifs=data.notifications||[], unread=notifs.filter(function(n){return !n.is_read;});
       var badge=document.getElementById('wt-notif-badge');
@@ -361,16 +361,16 @@ var allTickets = [];
 
 async function loadTickets() {
     try {
-        const res  = await fetch('http://localhost/WildTrack/api/my_bookings.php?action=tickets', { credentials: 'include' });
+        const res  = await fetch('api/my_bookings.php?action=tickets', { credentials: 'include' });
         const data = await res.json();
         document.getElementById('loading-main').style.display = 'none';
-        if (!data.success) { showError(data.message || 'Failed to load tickets.'); return; }
+        if (!data.success) { showError((data.message || 'Failed to load tickets.') + ' (server)'); return; }
         // helpers.php respond() may nest data inside data.data or spread at top level
         allTickets = data.tickets ?? data.data?.tickets ?? [];
         renderTickets();
     } catch (e) {
         document.getElementById('loading-main').style.display = 'none';
-        showError('Could not connect to server. Please try again.');
+        showError('Could not connect to server: ' + e.message);
     }
 }
 

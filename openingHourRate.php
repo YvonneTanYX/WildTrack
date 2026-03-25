@@ -56,7 +56,7 @@ $currentPage = 'visit'; ?>
 
   <!-- ── Opening Hours ── -->
   <h2>Opening Hours</h2>
-  <p>WildTrack Zoo is open every day of the year apart from Christmas Day (25 December),
+  <p>WildTrack Zoo is open every day of the year,
      subject to weather conditions.</p>
 
   <div class="hours-rules" id="hoursRules">
@@ -69,10 +69,6 @@ $currentPage = 'visit'; ?>
     <div class="hours-row">
       <span class="period">Every day</span>
       <span class="time" id="hoursDisplay">loading…</span>
-    </div>
-    <div class="hours-row">
-      <span class="period">Christmas Day</span>
-      <span class="time">Closed</span>
     </div>
   </div>
 

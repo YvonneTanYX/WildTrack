@@ -9,9 +9,46 @@ $currentPage = 'things'; ?>
   <link rel="stylesheet" href="shared.css">
   <title>Events &amp; Talk Times — WildTrack Zoo</title>
   <style>
-    .talk-section {
-      margin: 32px 0;
+    /* ── Live clock bar ── */
+    .live-date-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      background: #2a5a2e;
+      color: #fff;
+      border-radius: 12px;
+      padding: 14px 22px;
+      margin-bottom: 28px;
     }
+    .live-date-bar .ldb-date {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .live-date-bar .ldb-time {
+      font-size: 22px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+    }
+    .live-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #7ee87a;
+      margin-right: 7px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.5; transform:scale(1.3); }
+    }
+
+    /* ── Session sections ── */
+    .talk-section { margin: 32px 0; }
     .talk-label {
       display: inline-block;
       background: #2a5a2e;
@@ -27,28 +64,61 @@ $currentPage = 'things'; ?>
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-width: 560px;
+      max-width: 620px;
     }
+
+    /* ── Event row ── */
     .talk-row {
-      display: flex;
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
       background: #fff;
       border-radius: 10px;
       padding: 14px 20px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
       transition: transform 0.15s;
     }
     .talk-row:hover { transform: translateX(4px); }
+    .talk-row.inactive {
+      opacity: 0.45;
+      filter: grayscale(0.5);
+    }
     .talk-time {
-      min-width: 80px;
       font-weight: bold;
       color: #2a5a2e;
       font-size: 15px;
+      white-space: nowrap;
     }
-    .talk-name {
-      font-size: 16px;
-      color: #3a3a3a;
+    .talk-info .talk-name  { font-size: 16px; color: #3a3a3a; font-weight: 600; }
+    .talk-info .talk-venue {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .talk-date-pill {
+      font-size: 11px;
+      font-weight: 700;
+      background: #eaf1e8;
+      color: #2a5a2e;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+    .talk-date-pill.specific {
+      background: #fff3e0;
+      color: #c0620a;
+    }
+
+    /* ── Empty/loading states ── */
+    .schedule-loading, .schedule-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+      font-size: 15px;
     }
   </style>
 </head>
@@ -65,31 +135,18 @@ $currentPage = 'things'; ?>
   <p>Join our keepers for daily animal talks — included free with your Zoo entry!
      Check the schedule below and plan your visit around your favourite animals.</p>
 
-  <!-- Morning talks -->
-  <div class="talk-section">
-    <div class="talk-label">🌅 Morning Sessions</div>
-    <div class="talk-grid">
-      <div class="talk-row"><span class="talk-time">10:00am</span><span class="talk-name">Penguin Talk</span></div>
-      <div class="talk-row"><span class="talk-time">10:30am</span><span class="talk-name">Tiger Talk</span></div>
-      <div class="talk-row"><span class="talk-time">11:00am</span><span class="talk-name">Snow Leopard Talk</span></div>
-      <div class="talk-row"><span class="talk-time">11:15am</span><span class="talk-name">Vets in The Nest</span></div>
-      <div class="talk-row"><span class="talk-time">11:45am</span><span class="talk-name">Cool Creatures at Hero HQ</span></div>
-    </div>
+  <!-- Live date & clock bar -->
+  <div class="live-date-bar">
+    <span class="ldb-date" id="liveDate">—</span>
+    <span class="ldb-time"><span class="live-dot"></span><span id="liveClock">--:--:--</span></span>
   </div>
 
-  <!-- Afternoon talks -->
-  <div class="talk-section">
-    <div class="talk-label">☀️ Afternoon Sessions</div>
-    <div class="talk-grid">
-      <div class="talk-row"><span class="talk-time">12:45pm</span><span class="talk-name">Chimpanzee Talk</span></div>
-      <div class="talk-row"><span class="talk-time">1:15pm</span> <span class="talk-name">Giraffe Talk</span></div>
-      <div class="talk-row"><span class="talk-time">2:00pm</span> <span class="talk-name">Sun Bear Talk</span></div>
-      <div class="talk-row"><span class="talk-time">2:30pm</span> <span class="talk-name">Ring-tailed Lemur Talk</span></div>
-      <div class="talk-row"><span class="talk-time">3:30pm</span> <span class="talk-name">Red Panda Talk</span></div>
-    </div>
+  <!-- Schedule renders here -->
+  <div id="scheduleWrap">
+    <div class="schedule-loading">⏳ Loading today's schedule…</div>
   </div>
 
-  <p style="font-size:14px; color:#888; margin-top:8px;">
+  <p style="font-size:14px; color:#888; margin-top:24px;">
     ⚠️ Talk times are subject to change. Check with staff at the Zoo on the day of your visit.
   </p>
 
@@ -100,9 +157,114 @@ $currentPage = 'things'; ?>
 <script>
   window.breadcrumb = [
     { label: 'Things to Do', href: 'thingMain.php' },
-    { label: 'Events &amp; Talk Times' }
+    { label: 'Events & Talk Times' }
   ];
 </script>
 <script src="FinalProject.js"></script>
+
+<script>
+/* ════════════════════════════════════════
+   LIVE CLOCK
+════════════════════════════════════════ */
+function tickClock() {
+  const now  = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const mons = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+  document.getElementById('liveDate').textContent =
+    `${days[now.getDay()]}, ${now.getDate()} ${mons[now.getMonth()]} ${now.getFullYear()}`;
+
+  const h  = String(now.getHours()).padStart(2,'0');
+  const m  = String(now.getMinutes()).padStart(2,'0');
+  const s  = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('liveClock').textContent = `${h}:${m}:${s}`;
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+/* ════════════════════════════════════════
+   FETCH & RENDER SCHEDULE
+════════════════════════════════════════ */
+async function loadSchedule() {
+  try {
+    const res  = await fetch('api/events.php?action=get_events');
+    const data = await res.json();
+    if (!data.success) throw new Error('API error');
+    renderSchedule(data.events);
+  } catch(e) {
+    document.getElementById('scheduleWrap').innerHTML =
+      '<div class="schedule-empty">⚠️ Unable to load schedule. Please check with Zoo staff.</div>';
+  }
+}
+
+function formatDisplayDate(dateStr) {
+  const d    = new Date(dateStr + 'T00:00:00');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]} ${d.getDate()} ${mons[d.getMonth()]}`;
+}
+
+function renderSchedule(events) {
+  const active = events.filter(e => parseInt(e.is_active));
+
+  const morning   = active.filter(e => e.session === 'morning');
+  const afternoon = active.filter(e => e.session === 'afternoon');
+
+  if (!active.length) {
+    document.getElementById('scheduleWrap').innerHTML =
+      '<div class="schedule-empty">No talks scheduled today. Please check back later.</div>';
+    return;
+  }
+
+  let html = '';
+
+  if (morning.length) {
+    html += `<div class="talk-section">
+      <div class="talk-label">🌅 Morning Sessions</div>
+      <div class="talk-grid">${morning.map(eventRow).join('')}</div>
+    </div>`;
+  }
+
+  if (afternoon.length) {
+    html += `<div class="talk-section">
+      <div class="talk-label">☀️ Afternoon Sessions</div>
+      <div class="talk-grid">${afternoon.map(eventRow).join('')}</div>
+    </div>`;
+  }
+
+  document.getElementById('scheduleWrap').innerHTML = html;
+}
+
+function eventRow(e) {
+  /* If event_date is set in DB, it's a specific day (show orange pill).
+     If NULL, the API sends today's date as display_date (show green "Today" pill). */
+  const hasSpecificDate = e.event_date && e.event_date !== '';
+  const pillClass = hasSpecificDate ? 'talk-date-pill specific' : 'talk-date-pill';
+  const pillText  = hasSpecificDate ? formatDisplayDate(e.event_date) : 'Today';
+
+  return `
+    <div class="talk-row">
+      <span class="talk-time">${esc(e.event_time_fmt)}</span>
+      <div class="talk-info">
+        <div class="talk-name">${esc(e.event_name)}</div>
+        <div class="talk-venue">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          ${esc(e.venue)}
+        </div>
+      </div>
+      <span class="${pillClass}">${pillText}</span>
+    </div>`;
+}
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadSchedule();
+</script>
 </body>
 </html>

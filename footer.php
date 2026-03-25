@@ -20,6 +20,8 @@
     <div class="footer-col">
       <h3><a href="thingMain.php">Things to Do</a></h3>
       <a href="event.php">Events &amp; Talk Times</a>
+      <a href="learning.php">Learning</a>
+      <a href="birthdayParties.php">Birthday Parties</a>
     </div>
 
     <div class="footer-col">
@@ -39,6 +41,7 @@
 
     <div class="footer-col">
       <h3><a href="getInTouch.php">Get in Touch</a></h3>
+      <a href="getInTouch.php#general">Enquiries & Feedback</a>
     </div>
 
   </div>

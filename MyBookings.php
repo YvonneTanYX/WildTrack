@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Bookings — WildTrack</title>
+    <title>Booking Status — WildTrack</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="iconify.min.js"></script>
     <style>
@@ -222,7 +222,7 @@
         </a>
         <div class="nav-brand">
             <span class="iconify" data-icon="lucide:calendar-check" style="font-size:24px;color:#2D5A27;"></span>
-            Booking Area
+            Booking Status
         </div>
     </div>
     <div id="wt-bell-btn" onclick="wtToggleNotifDropdown()" title="Notifications" style="width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #e4e9e0;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
@@ -235,8 +235,8 @@
 
     <!-- Hero -->
     <div class="hero-card">
-        <h1>My <span>Bookings</span></h1>
-        <p>Track your booking status and manage your visits to WildTrack Safari Park</p>
+        <h1>Booking <span>Status</span></h1>
+        <p>Track your booking status and view your visit summary to WildTrack Safari Park</p>
     </div>
 
     <!-- Tab Bar -->
@@ -355,7 +355,7 @@
   function wtEscHtml(s){ return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''; }
   async function wtPollNotifications() {
     try {
-      var res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=check_notifications', { credentials:'include' });
+      var res  = await fetch('api/tickets.php?action=check_notifications', { credentials:'include' });
       var data = await res.json();
       if (!data.success) return;
       var notifications = data.notifications || [];
@@ -395,7 +395,7 @@ var currentTab   = 'pending';
 // ════════════════════════════════════════════════
 async function loadBookings() {
     try {
-        const res  = await fetch('http://localhost/WildTrack/api/my_bookings.php?action=list', { credentials: 'include' });
+        const res  = await fetch('api/my_bookings.php?action=list', { credentials: 'include' });
         const data = await res.json();
         // helpers.php respond() may nest data inside data.data or spread it at top level
         const bookings = data.bookings ?? data.data?.bookings ?? [];
@@ -553,10 +553,7 @@ function closeProofModal(e) {
 }
 
 function viewTickets(ticketIdsJson) {
-    var ids = ticketIdsJson;
-    if (typeof ids === 'string') { try { ids = JSON.parse(ids); } catch(e) {} }
-    var param = encodeURIComponent(JSON.stringify(ids));
-    window.location.href = 'Ticketing.php?show=qr&ticket_ids=' + param;
+    window.location.href = 'MyTickets.php';
 }
 
 // ════════════════════════════════════════════════
