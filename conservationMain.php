@@ -1,168 +1,67 @@
 <?php
 require_once __DIR__ . '/check_session.php';
-$currentPage = 'conservation'; // ✅ Fixed typo (was 'conserveation')
+$currentPage = 'conservation';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="mainPage.css">
+  <link rel="stylesheet" href="shared.css">
   <title>Conservation – WildTrack Zoo</title>
 
 <style>
-/* ── Hero Image ── */
-.hero-container {
-  position: relative;
-  width: 100%;
-  max-height: 520px;
-  overflow: hidden;
-}
-.hero-container img {
-  width: 100%;
-  height: 520px;
-  object-fit: cover;
-  display: block;
-  filter: brightness(0.65);
-}
-.hero-text {
-  position: absolute;
-  bottom: 38%;
-  left: 50%;
-  transform: translate(-50%, 50%);
-  color: #fff;
-  font-size: clamp(48px, 7vw, 100px);
-  font-weight: bold;
-  letter-spacing: 4px;
-  text-shadow: 0 4px 24px rgba(0,0,0,0.55);
-  margin: 0;
-  white-space: nowrap;
-}
 
-/* ── Buy Tickets bar (like Image 2) ── */
-.ticket-bar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  background: #1a1a1a;
-  padding: 10px 40px;
-}
-.btn-buy-ticket {
-  background: #e87722;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  padding: 10px 24px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.2s, transform 0.15s;
-  letter-spacing: 0.5px;
-}
-.btn-buy-ticket:hover {
-  background: #cf6210;
-  transform: translateY(-1px);
-  color: #fff;
-  text-decoration: none;
-}
-.btn-donate {
-  background: #f0b429;
-  color: #1a1a1a;
-  font-size: 15px;
-  font-weight: 700;
-  padding: 10px 24px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background 0.2s, transform 0.15s;
-}
-.btn-donate:hover {
-  background: #d49c18;
-  transform: translateY(-1px);
-  color: #1a1a1a;
-  text-decoration: none;
-}
-
-/* ── Conservation cards ── */
-.conservation-container {
-  width: 100%;
-}
-.conservation-container h2 {
-  font-size: 32px;
-  margin: 0 0 12px;
-  letter-spacing: 1px;
-}
-.conservation-container p {
-  font-size: 16px;
-  margin: 0 0 20px;
-  line-height: 1.6;
-  max-width: 600px;
-}
-.conservation-container a.card-link {
+.card-link {
   display: inline-block;
-  color: #fff;
-  text-decoration: none;
+  color: #fff !important;
+  text-decoration: none !important;
   font-weight: 700;
   font-size: 15px;
-  border: 2px solid #fff;
-  padding: 10px 22px;
+  border: 2px solid rgba(255,255,255,0.8);
+  padding: 10px 24px;
   border-radius: 4px;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s;
 }
-.conservation-container a.card-link:hover {
-  background: rgba(255,255,255,0.2);
+.card-link:hover {
+  background: rgba(255,255,255,0.18);
 }
 
 .card-savingWildlife {
-  padding: 80px 60px 80px 280px;
-  background-color: #0056b3;
+  padding: 80px 60px 80px 15%;
+  background-color: #3f8bdb;
   color: #fff;
 }
 .card-greenZoo {
-  padding: 80px 60px 80px 280px;
-  background-color: #3a7d44;
+  padding: 80px 60px 80px 15%;
+  background-color: #59bf4b;
   color: #fff;
 }
 .card-safeCat {
-  padding: 80px 60px 80px 280px;
-  background-color: #c0392b;
+  padding: 80px 60px 80px 15%;
+  background-color: #ff604f;
   color: #fff;
 }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
-  .hero-text { font-size: 40px; left: 50%; }
+  .hero-text { font-size: 40px; }
   .card-savingWildlife,
   .card-greenZoo,
   .card-safeCat { padding: 50px 28px; }
-  .ticket-bar { padding: 10px 20px; }
 }
 </style>
 </head>
 <body>
 
-<?php include 'nav.php'; /* ✅ Use shared nav — removes old inline nav */ ?>
+<?php include 'nav.php'; ?>
 
-<!-- ── Buy Ticket bar (matches Image 2 style) ── -->
-<div class="ticket-bar">
-  <a href="Ticketing.php" class="btn-buy-ticket">🎟 Buy Tickets</a>
-  <a href="donate.php"    class="btn-donate">♥ Donate</a>
-</div>
-
-<!-- ── Hero ── -->
-<div class="hero-container">
-  <h2 class="hero-text">CONSERVATION</h2>
-  <img
-    src="https://media.istockphoto.com/id/477317714/photo/african-lions-paw.jpg?s=612x612&w=0&k=20&c=q_qbmrjRBABc6lAyBO3rEe84ICgRBIE3Nq9dyRBg_zI="
-    alt="Conservation – African lion paw">
-</div>
+  <img src="https://media.istockphoto.com/id/477317714/photo/african-lions-paw.jpg?s=612x612&w=0&k=20&c=q_qbmrjRBABc6lAyBO3rEe84ICgRBIE3Nq9dyRBg_zI="
+         class="page-img" alt="Conservation – WildTrack Zoo">
 
 <!-- ── Content cards ── -->
-<div class="conservation-container">
+<div class="content-section">
 
+  <h1>Conservation</h1>
   <div class="card-savingWildlife">
     <h2>SAVING ANIMALS IN THE WILD</h2>
     <p>See what WildTrack Zoo is doing to help animals in the wild. Every effort counts in preserving our planet's biodiversity.</p>
@@ -183,6 +82,13 @@ $currentPage = 'conservation'; // ✅ Fixed typo (was 'conserveation')
 
 </div>
 
-<script src="mainPage.js"></script>
+<?php include 'footer.php'; ?>
+
+<script>
+  window.breadcrumb = [
+    { label: 'Conservation' }
+  ];
+</script>
+<script src="FinalProject.js"></script>
 </body>
 </html>

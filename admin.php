@@ -2679,27 +2679,22 @@ textarea.form-input {
   <section class="page" id="page-staff">
     <div class="page-header">
       <div><h1>Staff Management</h1><p>Manage zoo staff accounts and roles</p></div>
-      <button class="btn btn-primary">+ Add Staff Member</button>
+      <button class="btn btn-primary" onclick="openAddStaffModal()">+ Add Staff Member</button>
     </div>
     <div class="card">
       <table class="data-table">
-        <thead><tr><th>Staff</th><th>Role</th><th>Department</th><th>Status</th><th>Last Active</th><th>Actions</th></tr></thead>
-        <tbody>
+        <thead>
           <tr>
-            <td><div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:var(--green-dark);">AR</div><div><strong>Admin Ranger</strong><br/><small><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="08696c656166487f61646c7c7a696b63266b6765">[email&#160;protected]</a></small></div></div></td>
-            <td>System Admin</td><td>Management</td><td><span class="status-badge approved">Active</span></td><td>Just now</td>
-            <td><button class="btn-edit">Edit</button></td>
+            <th>Staff</th>
+            <th>Role</th>
+            <th>Position</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th>Actions</th>
           </tr>
-          <tr>
-            <td><div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:#5B8A6B;">JR</div><div><strong>John Ranger</strong><br/><small><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e48e8b8c8aa4938d8880909685878fca878b89">[email&#160;protected]</a></small></div></div></td>
-            <td>Zoo Keeper</td><td>Animal Care</td><td><span class="status-badge approved">Active</span></td><td>2 hours ago</td>
-            <td><button class="btn-edit">Edit</button></td>
-          </tr>
-          <tr>
-            <td><div style="display:flex;align-items:center;gap:10px;"><div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:#7B6FA0;">ML</div><div><strong>Maya Lee</strong><br/><small><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5b363a223a1b2c32373f2f293a383075383436">[email&#160;protected]</a></small></div></div></td>
-            <td>Ticket Officer</td><td>Operations</td><td><span class="status-badge approved">Active</span></td><td>Yesterday</td>
-            <td><button class="btn-edit">Edit</button></td>
-          </tr>
+        </thead>
+        <tbody id="staffTableBody">
+          <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -2732,6 +2727,90 @@ textarea.form-input {
       </div>
     </div>
   </section>
+
+  <!-- Add / Edit Staff Modal -->
+  <div class="modal-overlay" id="staffModal">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 id="staffModalTitle">Add Staff Member</h3>
+        <button onclick="closeModal('staffModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="smUserId" value=""/>
+ 
+        <div class="form-group">
+          <label>Full Name <span style="color:var(--red)">*</span></label>
+          <input type="text" class="form-input" id="smName" placeholder="e.g. Ahmad Faris"/>
+        </div>
+ 
+        <div class="form-group">
+          <label>Email Address <span style="color:var(--red)">*</span></label>
+          <input type="email" class="form-input" id="smEmail" placeholder="staff@wildtrack.com"/>
+        </div>
+ 
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Role <span style="color:var(--red)">*</span></label>
+            <select class="form-input" id="smRole">
+              <option value="worker">Worker</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Position / Department</label>
+            <input type="text" class="form-input" id="smPosition" placeholder="e.g. Zoo Keeper"/>
+          </div>
+        </div>
+ 
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" class="form-input" id="smPhone" placeholder="+60 12-345 6789"/>
+        </div>
+ 
+        <!-- Only shown when creating, hidden when editing -->
+        <div class="form-group" id="smPwGroup">
+          <label>Temporary Password <span style="color:var(--red)">*</span></label>
+          <input type="text" class="form-input" id="smTempPw" placeholder="Min. 6 characters"/>
+          <small style="color:var(--text-muted);margin-top:4px;display:block;">
+            Staff will be required to change this on their first login.
+          </small>
+        </div>
+ 
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid var(--border);">
+        <button class="btn btn-outline" onclick="closeModal('staffModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitStaffModal()">
+          <span id="smBtnText">Create Account</span>
+        </button>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- Reset Password Modal -->
+  <div class="modal-overlay" id="resetPwModal">
+    <div class="modal" style="max-width:380px;">
+      <div class="modal-header">
+        <h3>Reset Password</h3>
+        <button onclick="closeModal('resetPwModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="rpUserId"/>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+          Set a new temporary password for <strong id="rpStaffName"></strong>.
+          They will be forced to change it on next login.
+        </p>
+        <div class="form-group">
+          <label>New Temporary Password</label>
+          <input type="text" class="form-input" id="rpTempPw" placeholder="Min. 6 characters"/>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid var(--border);">
+        <button class="btn btn-outline" onclick="closeModal('resetPwModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitResetPassword()">Reset Password</button>
+      </div>
+    </div>
+  </div>
+ 
 
   <!-- PAGE: SETTINGS -->
   <section class="page" id="page-settings">
@@ -4782,6 +4861,196 @@ document.addEventListener('DOMContentLoaded', function() {
   if (activePage.id === 'page-announcements') loadAnnouncements();
   if (activePage.id === 'page-settings')      loadZooSettings();
   if (activePage.id === 'page-events')        loadEvents();
+});
+
+/* ── Staff Management ──────────────────────────────────────────── */
+ 
+async function loadStaff() {
+  try {
+    const res  = await fetch('api/staff.php?action=get_staff', { credentials: 'include' });
+    const data = await res.json();
+    const tbody = document.getElementById('staffTableBody');
+    if (!data.success || !data.staff.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">No staff accounts yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.staff.map(s => {
+      const initials = (s.username || s.full_name || '??').split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+      const active   = parseInt(s.is_active);
+      const pending  = parseInt(s.must_change_pw);
+      const joined   = s.created_at ? new Date(s.created_at).toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' }) : '—';
+      const roleLabel = s.role === 'admin' ? 'Admin' : 'Worker';
+      const roleBg    = s.role === 'admin' ? 'var(--purple-light)' : 'var(--green-pale)';
+      const roleColor = s.role === 'admin' ? 'var(--purple)' : 'var(--green-dark)';
+      return `
+        <tr id="staff-row-${s.user_id}">
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:var(--green-dark);">${initials}</div>
+              <div>
+                <strong>${escA(s.username || s.full_name)}</strong>
+                ${pending ? '<span style="font-size:10px;background:#FEF3C7;color:#92400E;padding:1px 6px;border-radius:4px;margin-left:4px;">Temp PW</span>' : ''}
+                <br/><small style="color:var(--text-muted)">${escA(s.email)}</small>
+              </div>
+            </div>
+          </td>
+          <td><span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:${roleBg};color:${roleColor};">${roleLabel}</span></td>
+          <td>${escA(s.position || '—')}</td>
+          <td><span class="status-badge ${active ? 'approved' : 'rejected'}">${active ? 'Active' : 'Inactive'}</span></td>
+          <td>${joined}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn-edit" onclick="openEditStaffModal(${s.user_id})">Edit</button>
+              <button class="btn-edit" onclick="openResetPwModal(${s.user_id}, '${escA(s.username || s.full_name)}')">Reset PW</button>
+              <button class="btn-edit" style="background:${active ? '#fef3c7' : 'var(--green-pale)'};"
+                      onclick="toggleStaffStatus(${s.user_id})">${active ? 'Deactivate' : 'Activate'}</button>
+              <button class="btn-reject-sm" onclick="deleteStaff(${s.user_id})">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch(e) { console.error('loadStaff', e); }
+}
+ 
+function openAddStaffModal() {
+  document.getElementById('smUserId').value   = '';
+  document.getElementById('smName').value     = '';
+  document.getElementById('smEmail').value    = '';
+  document.getElementById('smRole').value     = 'worker';
+  document.getElementById('smPosition').value = '';
+  document.getElementById('smPhone').value    = '';
+  document.getElementById('smTempPw').value   = '';
+  document.getElementById('smEmail').disabled = false;
+  document.getElementById('smPwGroup').style.display = '';
+  document.getElementById('staffModalTitle').textContent = 'Add Staff Member';
+  document.getElementById('smBtnText').textContent = 'Create Account';
+  openModal('staffModal');
+}
+ 
+async function openEditStaffModal(userId) {
+  try {
+    const res  = await fetch('api/staff.php?action=get_staff', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+    const s = data.staff.find(x => parseInt(x.user_id) === userId);
+    if (!s) return;
+ 
+    document.getElementById('smUserId').value   = s.user_id;
+    document.getElementById('smName').value     = s.username || s.full_name || '';
+    document.getElementById('smEmail').value    = s.email || '';
+    document.getElementById('smEmail').disabled = true; // don't change email on edit
+    document.getElementById('smRole').value     = s.role;
+    document.getElementById('smPosition').value = s.position || '';
+    document.getElementById('smPhone').value    = s.phone || '';
+    document.getElementById('smPwGroup').style.display = 'none'; // no pw field on edit
+    document.getElementById('staffModalTitle').textContent = 'Edit Staff Member';
+    document.getElementById('smBtnText').textContent = 'Save Changes';
+    openModal('staffModal');
+  } catch(e) { showToast('Failed to load staff data.', 'error'); }
+}
+ 
+async function submitStaffModal() {
+  const userId  = document.getElementById('smUserId').value;
+  const isEdit  = !!userId;
+  const name    = document.getElementById('smName').value.trim();
+  const email   = document.getElementById('smEmail').value.trim();
+  const role    = document.getElementById('smRole').value;
+  const position= document.getElementById('smPosition').value.trim();
+  const phone   = document.getElementById('smPhone').value.trim();
+  const tempPw  = document.getElementById('smTempPw').value;
+ 
+  if (!name) { showToast('Full name is required.', 'error'); return; }
+  if (!isEdit && !email) { showToast('Email is required.', 'error'); return; }
+  if (!isEdit && tempPw.length < 6) { showToast('Temporary password must be at least 6 characters.', 'error'); return; }
+ 
+  const btn = document.getElementById('smBtnText');
+  btn.textContent = 'Saving…';
+ 
+  try {
+    const action  = isEdit ? 'update_staff' : 'create_staff';
+    const payload = isEdit
+      ? { user_id: parseInt(userId), name, role, position, phone }
+      : { name, email, role, position, phone, temp_password: tempPw };
+ 
+    const res  = await fetch(`api/staff.php?action=${action}`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('staffModal');
+      showToast(isEdit ? 'Staff updated ✓' : 'Staff account created ✓');
+      loadStaff();
+    } else {
+      showToast(data.message || 'Failed.', 'error');
+    }
+  } catch(e) { showToast('Network error.', 'error'); }
+  finally { btn.textContent = isEdit ? 'Save Changes' : 'Create Account'; }
+}
+ 
+function openResetPwModal(userId, name) {
+  document.getElementById('rpUserId').value    = userId;
+  document.getElementById('rpStaffName').textContent = name;
+  document.getElementById('rpTempPw').value    = '';
+  openModal('resetPwModal');
+}
+ 
+async function submitResetPassword() {
+  const userId = document.getElementById('rpUserId').value;
+  const tempPw = document.getElementById('rpTempPw').value;
+  if (tempPw.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
+  try {
+    const res  = await fetch('api/staff.php?action=reset_password', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: parseInt(userId), temp_password: tempPw }),
+    });
+    const data = await res.json();
+    if (data.success) { closeModal('resetPwModal'); showToast('Password reset ✓'); loadStaff(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+ 
+async function toggleStaffStatus(userId) {
+  try {
+    const res  = await fetch('api/staff.php?action=toggle_status', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId }),
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Status updated ✓'); loadStaff(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+ 
+async function deleteStaff(userId) {
+  if (!confirm('Delete this staff account? This cannot be undone.')) return;
+  try {
+    const res  = await fetch('api/staff.php?action=delete_staff', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId }),
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Staff deleted'); loadStaff(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch(e) { showToast('Network error.', 'error'); }
+}
+ 
+/* ── Patch showPage to auto-load staff list ─────────────────────── */
+(function() {
+  const _orig = window.showPage;
+  window.showPage = function(name) {
+    if (typeof _orig === 'function') _orig(name);
+    if (name === 'staff') loadStaff();
+  };
+})();
+ 
+document.addEventListener('DOMContentLoaded', function() {
+  const activePage = document.querySelector('.page.active');
+  if (activePage && activePage.id === 'page-staff') loadStaff();
 });
 
 </script>

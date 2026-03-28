@@ -1,16 +1,21 @@
 <?php
 
-require_once '../check_session.php'; 
+require_once __DIR__ . '/../config/helpers.php';
 header('Content-Type: application/json');
 
-require_once '../config/db.php';  
-$pdo = getDB();   if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+$pdo = getDB();
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     exit;
 }
 
-$body = json_decode(file_get_contents('php://input'), true);
+// ── Must be logged in (same auth as payment_proof.php) ────────────────
+$user   = requireLogin();   // returns user array or exits with 401 automatically
+$userId = (int) $user['user_id'];
+
+$body  = json_decode(file_get_contents('php://input'), true);
 $code  = strtoupper(trim($body['code']  ?? ''));
 $total = floatval($body['total'] ?? 0);
 
@@ -19,7 +24,7 @@ if ($code === '') {
     exit;
 }
 
-// ── Look up voucher ──
+// ── Look up voucher ────────────────────────────────────────────────────
 $stmt = $pdo->prepare("
     SELECT * FROM vouchers
     WHERE code = ?
@@ -36,7 +41,19 @@ if (!$voucher) {
     exit;
 }
 
-// ── Check minimum spend ──
+// ── FIX: Check if THIS user has already used this voucher ──────────────
+$stmtUsage = $pdo->prepare("
+    SELECT id FROM voucher_usage
+    WHERE voucher_id = ? AND user_id = ?
+    LIMIT 1
+");
+$stmtUsage->execute([$voucher['id'], $userId]);
+if ($stmtUsage->fetch()) {
+    echo json_encode(['success' => false, 'message' => 'You have already used this voucher.']);
+    exit;
+}
+
+// ── Check minimum spend ────────────────────────────────────────────────
 if ($total < floatval($voucher['min_spend'])) {
     echo json_encode([
         'success' => false,
@@ -45,7 +62,7 @@ if ($total < floatval($voucher['min_spend'])) {
     exit;
 }
 
-// ── Calculate discount ──
+// ── Calculate discount ─────────────────────────────────────────────────
 if ($voucher['discount_type'] === 'percent') {
     $discount = round($total * ($voucher['discount_value'] / 100), 2);
 } else {
@@ -57,12 +74,12 @@ $discount   = min($discount, $total - 0.01);
 $finalTotal = round($total - $discount, 2);
 
 echo json_encode([
-    'success'        => true,
-    'voucher_id'     => $voucher['id'],
-    'code'           => $voucher['code'],
-    'discount_type'  => $voucher['discount_type'],
-    'discount_value' => $voucher['discount_value'],
-    'discount_amount'=> $discount,
-    'final_total'    => $finalTotal,
-    'message'        => 'Voucher applied! You save RM' . number_format($discount, 2) . '.'
+    'success'         => true,
+    'voucher_id'      => $voucher['id'],
+    'code'            => $voucher['code'],
+    'discount_type'   => $voucher['discount_type'],
+    'discount_value'  => $voucher['discount_value'],
+    'discount_amount' => $discount,
+    'final_total'     => $finalTotal,
+    'message'         => 'Voucher applied! You save RM' . number_format($discount, 2) . '.'
 ]);

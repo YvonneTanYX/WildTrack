@@ -46,7 +46,6 @@ if (!in_array($mimeType, $allowed)) {
 }
 
 // ── Determine storage path ──────────────────────────────────────────────
-// Stored at: /WildTrack/uploads/payment_proofs/YYYY-MM/filename.ext
 $uploadBase = __DIR__ . '/../uploads/payment_proofs';
 $yearMonth  = date('Y-m');
 $uploadDir  = $uploadBase . '/' . $yearMonth;
@@ -70,15 +69,15 @@ if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
 }
 
 // ── Parse form fields ───────────────────────────────────────────────────
-$visitDate       = clean($_POST['visit_date']       ?? '');
-$bookingRef      = clean($_POST['booking_ref']      ?? '');
-$finalTotal      = floatval($_POST['final_total']   ?? 0);
-$voucherId       = intval($_POST['voucher_id']      ?? 0);
-$voucherCode     = clean($_POST['voucher_code']     ?? '');
+$visitDate       = clean($_POST['visit_date']          ?? '');
+$bookingRef      = clean($_POST['booking_ref']         ?? '');
+$finalTotal      = floatval($_POST['final_total']      ?? 0);
+$voucherId       = intval($_POST['voucher_id']         ?? 0);
+$voucherCode     = clean($_POST['voucher_code']        ?? '');
 $voucherDiscount = floatval($_POST['voucher_discount'] ?? 0);
-$paymentMethod   = clean($_POST['payment_method']   ?? "Touch 'n Go eWallet");
-$tickets         = json_decode($_POST['tickets']    ?? '[]', true) ?: [];
-$addons          = json_decode($_POST['addons']     ?? '[]', true) ?: [];
+$paymentMethod   = clean($_POST['payment_method']      ?? "Touch 'n Go eWallet");
+$tickets         = json_decode($_POST['tickets']       ?? '[]', true) ?: [];
+$addons          = json_decode($_POST['addons']        ?? '[]', true) ?: [];
 
 if (!$visitDate) {
     @unlink($fullPath);
@@ -93,20 +92,34 @@ if (empty($tickets)) {
     respond(false, 'No tickets provided.');
 }
 
-// ── Insert tickets with status = 'pending', no QR yet ──────────────────
+// ── FIX: Re-validate voucher per-user before committing ────────────────
+// Prevents a race condition where the user applies the voucher in the
+// validate step, then submits payment before another tab's booking commits.
 $pdo = getDB();
-$insertedIds = [];
-$firstTicketId = null;
+if ($voucherId > 0) {
+    $stmtCheck = $pdo->prepare("
+        SELECT id FROM voucher_usage
+        WHERE voucher_id = ? AND user_id = ?
+        LIMIT 1
+    ");
+    $stmtCheck->execute([$voucherId, $user['user_id']]);
+    if ($stmtCheck->fetch()) {
+        @unlink($fullPath);
+        respond(false, 'You have already used this voucher. Please remove it and resubmit.');
+    }
+}
 
-// Add optional columns if your tickets table has them
-// (payment_method, voucher_code, discount_amount on the first row)
-// We store these on all tickets of the booking so any lookup finds them.
-$hasExtraColumns = true; // set false if your tickets table lacks these columns
+// ── Detect optional ticket columns ─────────────────────────────────────
+$hasExtraColumns = true;
 try {
     $pdo->query("SELECT payment_method FROM tickets LIMIT 1");
 } catch (PDOException $e) {
     $hasExtraColumns = false;
 }
+
+// ── Insert tickets & addons ─────────────────────────────────────────────
+$insertedIds   = [];
+$firstTicketId = null;
 
 try {
     $pdo->beginTransaction();
@@ -169,7 +182,6 @@ try {
     }
 
     // Insert add-ons linked to the FIRST ticket of this booking
-    // (get_pending fetches addons via MIN(ticket_id) per booking_ref)
     foreach ($addons as $a) {
         $addonType = clean($a['addon_type']  ?? '');
         $qty       = intval($a['quantity']   ?? 0);
@@ -180,15 +192,29 @@ try {
         }
     }
 
-    // Store voucher link if applied (for approval step to increment used_count)
+    // ── Store voucher booking link ──────────────────────────────────────
     if ($voucherId > 0 && !empty($insertedIds)) {
-        // We store it on the booking_ref so approve_payment can find it
         $pdo->prepare(
             "INSERT IGNORE INTO ticket_vouchers (booking_ref, voucher_id) VALUES (?, ?)"
         )->execute([$bookingRef, $voucherId]);
     }
 
-    // Create a notification for ADMIN (so admin panel knows there's a new pending payment)
+    // ── FIX: Record per-user voucher usage immediately on submission ────
+    // This locks the voucher to this account so no other booking from
+    // the same user can apply it again, even before admin approval.
+    if ($voucherId > 0) {
+        $pdo->prepare("
+            INSERT IGNORE INTO voucher_usage (voucher_id, user_id, booking_ref)
+            VALUES (?, ?, ?)
+        ")->execute([$voucherId, $user['user_id'], $bookingRef]);
+
+        // Increment global used_count so admin panel reflects usage live
+        $pdo->prepare("
+            UPDATE vouchers SET used_count = used_count + 1 WHERE id = ?
+        ")->execute([$voucherId]);
+    }
+
+    // ── Notify admin of new pending payment ─────────────────────────────
     $pdo->prepare(
         "INSERT INTO notifications
             (user_id, type, title, body, ticket_ids, booking_ref)
@@ -215,6 +241,6 @@ try {
 
 } catch (PDOException $e) {
     $pdo->rollBack();
-    @unlink($fullPath); // Remove saved file if DB failed
+    @unlink($fullPath);
     respond(false, 'Could not save booking: ' . $e->getMessage());
 }

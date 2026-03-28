@@ -487,8 +487,7 @@
     <div class="back-row"><button class="back-btn" onclick="goBack()">← Back</button></div>
     <div class="portal-badge staff">🐯 Staff Portal</div>
     <div class="tabs">
-      <button class="tab-btn active" id="stab-login"  onclick="switchStaffTab('login')">Sign In</button>
-      <button class="tab-btn"        id="stab-signup" onclick="switchStaffTab('signup')">Create Account</button>
+      <button class="tab-btn active" id="stab-login">Sign In</button>
     </div>
 
     <!-- Staff Login -->
@@ -512,73 +511,37 @@
       <button class="btn-submit green" id="btn-slogin" onclick="handleStaffLogin()">
         <span class="btn-label">Sign In</span><div class="spinner"></div>
       </button>
-      <div class="divider">or</div>
-      <div style="text-align:center;font-size:.78rem;color:var(--text-sub);">
-        New staff member? <a href="#" onclick="switchStaffTab('signup');return false;" style="color:var(--fern);font-weight:600;text-decoration:none;">Create account</a>
-      </div>
     </div>
 
-    <!-- Staff Sign Up -->
-    <div id="spanel-signup" style="display:none;">
-      <div class="section-title">Create staff account</div>
-      <div class="section-sub">Join the WildTrack operations team.</div>
-      <div class="row2">
-        <div class="field" style="margin-bottom:.6rem;">
-          <label for="ss-first">First Name</label>
-          <input type="text" id="ss-first" placeholder="Jane"/>
-          <div class="err-msg" id="err-ss-first">Required.</div>
-        </div>
-        <div class="field" style="margin-bottom:.6rem;">
-          <label for="ss-last">Last Name</label>
-          <input type="text" id="ss-last" placeholder="Doe"/>
-          <div class="err-msg" id="err-ss-last">Required.</div>
-        </div>
-      </div>
-      <div class="field">
-        <label for="ss-email">Work Email</label>
-        <input type="email" id="ss-email" placeholder="you@wildtrack.org"/>
-        <div class="err-msg" id="err-ss-email">Please enter a valid email.</div>
-      </div>
-      <div class="field">
-        <label for="ss-pw">Password</label>
-        <div class="pw-wrap">
-          <input type="password" id="ss-pw" placeholder="Min. 8 characters"/>
-          <button class="pw-toggle" type="button" onclick="togglePw('ss-pw',this)">👁</button>
-        </div>
-        <div class="err-msg" id="err-ss-pw">Min. 8 characters required.</div>
-      </div>
-      <div class="field">
-        <label for="ss-pw2">Confirm Password</label>
-        <div class="pw-wrap">
-          <input type="password" id="ss-pw2" placeholder="Repeat password"/>
-          <button class="pw-toggle" type="button" onclick="togglePw('ss-pw2',this)">👁</button>
-        </div>
-        <div class="err-msg" id="err-ss-pw2">Passwords do not match.</div>
-      </div>
-      <span class="role-label">Select Your Role</span>
-      <div class="role-grid">
-        <label class="role-card">
-          <input type="radio" name="srole" value="caretaker" checked/>
-          <div class="role-card-inner">
-            <span class="role-icon">🌿</span>
-            <div><div class="role-name">Caretaker</div><div class="role-desc">Animal care &amp; tracking</div></div>
-          </div>
-        </label>
-        <label class="role-card">
-          <input type="radio" name="srole" value="admin"/>
-          <div class="role-card-inner">
-            <span class="role-icon">🛡️</span>
-            <div><div class="role-name">Admin</div><div class="role-desc">System management</div></div>
-          </div>
-        </label>
+  </div>
 
-      </div>
-      <div class="err-msg" id="err-srole">Please select a role.</div>
-      <button class="btn-submit green" id="btn-ssignup" onclick="handleStaffSignup()">
-        <span class="btn-label">Create Account</span><div class="spinner"></div>
-      </button>
-      <p class="terms-note">By creating an account you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.</p>
+  <!-- ══ STEP 2: First-login password change ══ -->
+  <div class="step" id="step-changepassword">
+    <div class="back-row"><button class="back-btn" onclick="goBack()">← Back</button></div>
+    <div style="text-align:center;margin-bottom:1.4rem;">
+      <div style="font-size:2rem;margin-bottom:.5rem;">🔐</div>
+      <div class="section-title">Set Your Password</div>
+      <div class="section-sub">Your account was created by an administrator.<br/>Please set your own password before continuing.</div>
     </div>
+    <div class="field">
+      <label for="cp-pw">New Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="cp-pw" placeholder="At least 8 characters"/>
+        <button class="pw-toggle" type="button" onclick="togglePw('cp-pw',this)">👁</button>
+      </div>
+      <div class="err-msg" id="err-cp-pw">Password must be at least 8 characters.</div>
+    </div>
+    <div class="field">
+      <label for="cp-pw2">Confirm New Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="cp-pw2" placeholder="Repeat password"/>
+        <button class="pw-toggle" type="button" onclick="togglePw('cp-pw2',this)">👁</button>
+      </div>
+      <div class="err-msg" id="err-cp-pw2">Passwords do not match.</div>
+    </div>
+    <button class="btn-submit green" id="btn-changepw" onclick="handleChangePassword()">
+      <span class="btn-label">Set Password &amp; Continue</span><div class="spinner"></div>
+    </button>
   </div>
 
 </div><!-- /card -->
@@ -595,13 +558,7 @@
     document.getElementById('vpanel-signup').style.display=t==='signup'?'':'none';
     clearErrors();
   }
-  function switchStaffTab(t){
-    document.getElementById('stab-login').className='tab-btn'+(t==='login'?' active':'');
-    document.getElementById('stab-signup').className='tab-btn'+(t==='signup'?' active':'');
-    document.getElementById('spanel-login').style.display=t==='login'?'':'none';
-    document.getElementById('spanel-signup').style.display=t==='signup'?'':'none';
-    clearErrors();
-  }
+
   function togglePw(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.textContent=i.type==='password'?'👁':'🙈';}
   function showErr(id,v){const e=document.getElementById(id);if(e)e.classList.toggle('show',v);}
   function markField(id,v){const e=document.getElementById(id);if(e)e.classList.toggle('error-field',v);}
@@ -609,7 +566,8 @@
   function isEmail(v){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);}
   function setLoading(id,v){document.getElementById(id).classList.toggle('loading',v);}
   function showToast(msg,icon='✅'){document.getElementById('toast-msg').textContent=msg;document.getElementById('toast-icon').textContent=icon;const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
- async function handleVisitorLogin() {
+ 
+  async function handleVisitorLogin() {
     clearErrors(); let ok = true;
     const email = document.getElementById('vl-email').value.trim();
     const pw    = document.getElementById('vl-pw').value;
@@ -628,11 +586,11 @@
             showToast('Welcome back! Redirecting... 🧭');
             setTimeout(() => { window.location.href = 'mainPage.php'; }, 1200);
         } else {
-            showToast('❌ ' + data.message, '❌');
+            showToast(data.message, '❌');
             setLoading('btn-vlogin', false);
         }
     } catch (e) {
-        showToast('❌ Cannot connect to server.', '❌');
+        showToast('Cannot connect to server.', '❌');
         setLoading('btn-vlogin', false);
     }
 }
@@ -662,11 +620,11 @@ async function handleVisitorSignup() {
             showToast(`Account created! Welcome, ${first} 🌿`);
             setTimeout(() => { switchVisitorTab('login'); document.getElementById('vl-email').value = email; }, 1500);
         } else {
-            showToast('❌ ' + data.message, '❌');
+            showToast(data.message, '❌');
             setLoading('btn-vsignup', false);
         }
     } catch (e) {
-        showToast('❌ Cannot connect to server.', '❌');
+        showToast('Cannot connect to server.', '❌');
         setLoading('btn-vsignup', false);
     }
 }
@@ -688,61 +646,68 @@ async function handleStaffLogin() {
         const data = await res.json();
         if (data.success) {
             const role = data.user.role;
+            if (role !== 'admin' && role !== 'worker') {
+                showToast('This account is not a staff account.', '❌');
+                setLoading('btn-slogin', false);
+                return;
+            }
+            if (data.must_change_pw) {
+                document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+                document.getElementById('step-portal').style.display = 'none';
+                document.getElementById('step-changepassword').classList.add('active');
+                setLoading('btn-slogin', false);
+                return;
+            }
             if (role === 'admin') {
                 showToast('Welcome, Admin! Redirecting... 🛡️');
                 setTimeout(() => { window.location.href = 'admin.php'; }, 1200);
-            } else if (role === 'worker') {
+            } else {
                 showToast('Welcome! Redirecting to staff portal... 🐾');
                 setTimeout(() => { window.location.href = 'mainpageworker.html'; }, 1200);
-            } else {
-                showToast('❌ This account is not a staff account.', '❌');
-                setLoading('btn-slogin', false);
             }
         } else {
-            showToast('❌ ' + data.message, '❌');
+            showToast(data.message, '❌');
             setLoading('btn-slogin', false);
         }
     } catch (e) {
-        showToast('❌ Cannot connect to server.', '❌');
+        showToast('Cannot connect to server.', '❌');
         setLoading('btn-slogin', false);
     }
 }
 
-async function handleStaffSignup() {
+async function handleChangePassword() {
     clearErrors(); let ok = true;
-    const first       = document.getElementById('ss-first').value.trim();
-    const last        = document.getElementById('ss-last').value.trim();
-    const email       = document.getElementById('ss-email').value.trim();
-    const pw          = document.getElementById('ss-pw').value;
-    const pw2         = document.getElementById('ss-pw2').value;
-    const selectedRole = document.querySelector('input[name="srole"]:checked')?.value;
-    // Map form values to DB roles: caretaker → worker, admin → admin
-    const dbRole = selectedRole === 'admin' ? 'admin' : 'worker';
-    if (!first)          { showErr('err-ss-first', true); markField('ss-first', true); ok = false; }
-    if (!last)           { showErr('err-ss-last', true);  markField('ss-last', true);  ok = false; }
-    if (!isEmail(email)) { showErr('err-ss-email', true); markField('ss-email', true); ok = false; }
-    if (pw.length < 8)   { showErr('err-ss-pw', true);   markField('ss-pw', true);    ok = false; }
-    if (pw !== pw2)      { showErr('err-ss-pw2', true);  markField('ss-pw2', true);   ok = false; }
-    if (!selectedRole)   { showErr('err-srole', true);    ok = false; }
+    const pw  = document.getElementById('cp-pw').value;
+    const pw2 = document.getElementById('cp-pw2').value;
+    if (pw.length < 8) { showErr('err-cp-pw', true);  ok = false; }
+    if (pw !== pw2)    { showErr('err-cp-pw2', true); ok = false; }
     if (!ok) return;
-    setLoading('btn-ssignup', true);
+    setLoading('btn-changepw', true);
     try {
-        const res  = await fetch('http://localhost/WildTrack/api/auth.php?action=register', {
+        const res  = await fetch('http://localhost/WildTrack/api/auth.php?action=change_password', {
             method: 'POST', credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ firstName: first, lastName: last, email: email, password: pw, role: dbRole })
+            body: JSON.stringify({ new_password: pw, confirm_password: pw2 })
         });
         const data = await res.json();
         if (data.success) {
-            showToast(`Account created! Welcome, ${first} 🐾`);
-            setTimeout(() => { switchStaffTab('login'); document.getElementById('sl-email').value = email; }, 1500);
+            showToast('Password set! Redirecting... 🐾');
+            const meRes  = await fetch('http://localhost/WildTrack/api/auth.php?action=me', { credentials: 'include' });
+            const meData = await meRes.json();
+            setTimeout(() => {
+                if (meData.user?.role === 'admin') {
+                    window.location.href = 'admin.php';
+                } else {
+                    window.location.href = 'mainpageworker.html';
+                }
+            }, 1200);
         } else {
-            showToast('❌ ' + data.message, '❌');
-            setLoading('btn-ssignup', false);
+            showToast(data.message, '❌');
+            setLoading('btn-changepw', false);
         }
-    } catch (e) {
-        showToast('❌ Cannot connect to server.', '❌');
-        setLoading('btn-ssignup', false);
+    } catch(e) {
+        showToast('Cannot connect to server.', '❌');
+        setLoading('btn-changepw', false);
     }
 }
   function openModal(){document.getElementById('forgotModal').classList.add('open');}

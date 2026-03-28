@@ -1,92 +1,118 @@
 <?php
 /**
  * api/my_bookings.php
- * GET ?action=list    — all bookings (grouped by booking_ref) for this visitor
- * GET ?action=tickets — all approved QR tickets for this visitor
- *
- * Schema (from payment_proof.php):
- *   tickets: ticket_id, user_id, ticket_type, price, visit_date,
- *            booking_ref, status, payment_proof, qr_code,
- *            payment_method, voucher_code, discount_amount
- *   ticket_addons: ticket_id, addon_type, quantity, price_per_pax, subtotal
+ * GET ?action=list    — all bookings grouped by booking_ref
+ * GET ?action=tickets — all approved QR tickets
+ * GET ?action=debug   — shows real column names (remove after fixing)
  */
 
-require_once __DIR__ . '/../config/helpers.php';
-session_start();
+// Buffer ALL output so any stray PHP warnings don't corrupt the JSON response
+ob_start();
 
+require_once __DIR__ . '/../config/helpers.php';
+
+// Only start session if not already started (helpers.php may have started it)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Discard any output that happened before this point (warnings, notices, etc.)
+ob_clean();
 header('Content-Type: application/json');
 
-$user = requireLogin();
+$user   = requireLogin();
 $userId = (int)($user['user_id'] ?? $user['id'] ?? 0);
 
 $pdo    = getDB();
 $action = $_GET['action'] ?? 'list';
 
 // ══════════════════════════════════════════════════════════════
-//  ACTION: list  —  bookings grouped by booking_ref
+//  DEBUG — visit ?action=debug to see your real column names
+// ══════════════════════════════════════════════════════════════
+if ($action === 'debug') {
+    $cols = $pdo->query("SHOW COLUMNS FROM tickets")->fetchAll(PDO::FETCH_ASSOC);
+    echo json_encode(['columns' => array_column($cols, 'Field')]);
+    exit;
+}
+
+// Timestamp column in your tickets table is: purchase_date
+$tsSelect  = "MIN(purchase_date)";
+$tsOrderBy = "MIN(purchase_date)";
+
+// ══════════════════════════════════════════════════════════════
+//  ACTION: list
 // ══════════════════════════════════════════════════════════════
 if ($action === 'list') {
 
-    // Get one row per booking_ref (representative ticket carries the booking info)
     $stmt = $pdo->prepare(
         "SELECT booking_ref,
                 visit_date,
                 status,
-                payment_proof                          AS proof_image_url,
+                payment_proof                                AS proof_image_url,
                 payment_method,
                 MAX(CASE WHEN discount_amount > 0 THEN discount_amount ELSE 0 END) AS voucher_discount,
-                SUM(price)                             AS total_amount,
-                MIN(created_at)                        AS created_at,
-                GROUP_CONCAT(ticket_id)                AS ticket_ids_raw,
+                SUM(price)                                   AS total_amount,
+                $tsSelect                                    AS created_at,
+                GROUP_CONCAT(ticket_id)                      AS ticket_ids_raw,
                 GROUP_CONCAT(ticket_type ORDER BY ticket_id) AS ticket_types_raw,
-                COUNT(*)                               AS ticket_count
+                COUNT(*)                                     AS ticket_count
          FROM   tickets
          WHERE  user_id = :uid
          GROUP  BY booking_ref, visit_date, status, payment_proof, payment_method
-         ORDER  BY MIN(created_at) DESC"
+         ORDER  BY $tsOrderBy DESC"
     );
     $stmt->execute([':uid' => $userId]);
     $rows = $stmt->fetchAll();
 
     if (empty($rows)) {
         respond(true, 'OK', ['bookings' => []]);
+        exit;
     }
 
-    // Fetch add-ons for all these booking_refs
-    $refs   = array_column($rows, 'booking_ref');
-    $inList = implode(',', array_fill(0, count($refs), '?'));
-
-    $addonRows = [];
+    // Add-ons
+    $refs    = array_column($rows, 'booking_ref');
+    $inList  = implode(',', array_fill(0, count($refs), '?'));
+    $addonsByRef = [];
     try {
-        $stmt = $pdo->prepare(
+        $stmt2 = $pdo->prepare(
             "SELECT t.booking_ref, ta.addon_type, ta.quantity
              FROM   ticket_addons ta
              JOIN   tickets t ON t.ticket_id = ta.ticket_id
              WHERE  t.booking_ref IN ($inList)
              GROUP  BY t.booking_ref, ta.addon_type"
         );
-        $stmt->execute($refs);
-        $addonRows = $stmt->fetchAll();
-    } catch (PDOException $e) { /* ticket_addons may be empty */ }
+        $stmt2->execute($refs);
+        foreach ($stmt2->fetchAll() as $a) {
+            $addonsByRef[$a['booking_ref']][] = [
+                'addon_type' => $a['addon_type'],
+                'quantity'   => $a['quantity'],
+            ];
+        }
+    } catch (PDOException $e) {}
 
-    $addonsByRef = [];
-    foreach ($addonRows as $a) {
-        $addonsByRef[$a['booking_ref']][] = [
-            'addon_type' => $a['addon_type'],
-            'quantity'   => $a['quantity'],
-        ];
-    }
+    // Dynamic base URL — no hardcoded localhost
+    $scheme      = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host        = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $scriptDir   = str_replace('\\', '/', dirname($_SERVER['SCRIPT_FILENAME']));
+    $docRoot     = str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT']));
+    $subPath     = str_replace($docRoot, '', $scriptDir);
+    $projectPath = preg_replace('#/api$#i', '', $subPath);
+    $baseUrl     = $scheme . '://' . $host . $projectPath;
 
-    // Build clean booking objects
     $bookings = [];
     foreach ($rows as $r) {
-        $ref        = $r['booking_ref'];
-        $ticketIds  = array_map('intval', explode(',', $r['ticket_ids_raw']));
-        $typesList  = array_count_values(explode(',', $r['ticket_types_raw']));
-
-        $tickets = [];
+        $ref       = $r['booking_ref'];
+        $ticketIds = array_map('intval', explode(',', $r['ticket_ids_raw']));
+        $typesList = array_count_values(explode(',', $r['ticket_types_raw']));
+        $tickets   = [];
         foreach ($typesList as $type => $qty) {
             $tickets[] = ['ticket_type' => $type, 'quantity' => $qty];
+        }
+
+        $proofUrl = null;
+        if ($r['proof_image_url']) {
+            $proof    = ltrim(str_replace('\\', '/', $r['proof_image_url']), '/');
+            $proofUrl = (strpos($proof, 'http') === 0) ? $proof : $baseUrl . '/' . $proof;
         }
 
         $bookings[] = [
@@ -95,11 +121,9 @@ if ($action === 'list') {
             'status'           => $r['status'],
             'total_amount'     => $r['total_amount'],
             'payment_method'   => $r['payment_method'],
-            'proof_image_url'  => $r['proof_image_url']
-                                  ? 'http://localhost/WildTrack/' . ltrim($r['proof_image_url'], '/')
-                                  : null,
-            'rejection_reason' => null,   // add column to tickets table if needed
-            'created_at'       => $r['created_at'],
+            'proof_image_url'  => $proofUrl,
+            'rejection_reason' => null,
+            'created_at'       => $r['created_at'],  // null → frontend shows "—"
             'tickets'          => $tickets,
             'addons'           => $addonsByRef[$ref] ?? [],
             'ticket_ids'       => $ticketIds,
@@ -107,17 +131,17 @@ if ($action === 'list') {
     }
 
     respond(true, 'OK', ['bookings' => $bookings]);
+    exit;
 }
 
 // ══════════════════════════════════════════════════════════════
-//  ACTION: tickets  —  approved tickets with QR codes
+//  ACTION: tickets — approved QR tickets
 // ══════════════════════════════════════════════════════════════
 if ($action === 'tickets') {
-
     $stmt = $pdo->prepare(
         "SELECT ticket_id, ticket_type, qr_code,
                 visit_date, booking_ref, price,
-                COALESCE(is_used, 0) AS is_used
+                0 AS is_used
          FROM   tickets
          WHERE  user_id = :uid
            AND  status  = 'approved'
@@ -127,6 +151,7 @@ if ($action === 'tickets') {
     $tickets = $stmt->fetchAll();
 
     respond(true, 'OK', ['tickets' => $tickets]);
+    exit;
 }
 
 http_response_code(400);

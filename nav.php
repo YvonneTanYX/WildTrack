@@ -119,8 +119,13 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
         </div>
       </li>
 
+      <!-- BUY TICKETS button -->
+      <li style="list-style:none; display:flex; align-items:center; margin-left:auto; padding-right:6px;">
+        <a href="Ticketing.php" class="wt-nav-buy-btn">🎟 Buy Tickets</a>
+      </li>
+
       <!-- USER MENU (right side) -->
-      <li class="dropdown" aria-expanded="false" style="margin-left:auto;">
+      <li class="dropdown" aria-expanded="false" style="margin-left:0;">
         <a href="#" class="dropbutton" style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:18px;">👤</span> <?php echo $displayName; ?> ▾
         </a>
@@ -173,6 +178,31 @@ function doLogout() {
 <div class="wt-toast" id="wt-toast"></div>
 
 <style>
+/* ── Buy Tickets nav button ── */
+.wt-nav-buy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #b59f75;          /* warm gold — complements the green nav */
+  color: #a0ff94 !important;    /* dark green text for contrast */
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 20px;
+  text-decoration: none !important;
+  letter-spacing: 0.4px;
+  border: 2px solid #ffffff;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.wt-nav-buy-btn:hover {
+  background: #b8924e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+  color: #1a3d18 !important;
+  text-decoration: none !important;
+}
 .wt-nav-bell {
   width: 40px; height: 40px; border-radius: 50%;
   background: #fff; border: 1px solid #e4e9e0;
