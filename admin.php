@@ -2226,8 +2226,10 @@ textarea.form-input {
         <span class="user-role">System Administrator</span>
       </div>
     </div>
-    <a href="login.html" class="logout-btn" title="Logout">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    <a href="javascript:void(0)" class="logout-btn" title="Logout" onclick="doLogout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+      </svg>
     </a>
   </div>
 </aside>
@@ -2515,70 +2517,177 @@ textarea.form-input {
   <section class="page" id="page-feedback">
     <div class="page-header">
       <div>
-        <h1>Visitor Feedback & Reviews</h1>
-        <p>Guest satisfaction overview and sentiment analysis</p>
+        <h1>Visitor Feedback &amp; Reviews</h1>
+        <p>Real-time guest feedback submitted via the Get in Touch page</p>
       </div>
-      <button class="btn btn-outline">Export PDF</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-outline" onclick="loadFeedback()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          Refresh
+        </button>
+      </div>
     </div>
+
+    <!-- Stats row -->
     <div class="feedback-top">
       <div class="card rating-card">
         <div class="rating-label">AVERAGE RATING</div>
-        <div class="rating-big">4.8</div>
-        <div class="stars">★★★★★</div>
-        <div class="rating-sub">Based on 1,248 reviews this month</div>
+        <div class="rating-big" id="fbAvgRating">—</div>
+        <div class="stars" id="fbAvgStars">☆☆☆☆☆</div>
+        <div class="rating-sub" id="fbTotalLabel">Loading…</div>
       </div>
       <div class="card satisfaction-card">
         <h3>Satisfaction Breakdown</h3>
-        <div class="bar-row"><span>5 Star</span><div class="bar-track"><div class="bar-fill green" style="width:75%"></div></div><span>75%</span></div>
-        <div class="bar-row"><span>4 Star</span><div class="bar-track"><div class="bar-fill green-light" style="width:15%"></div></div><span>15%</span></div>
-        <div class="bar-row"><span>3 Star</span><div class="bar-track"><div class="bar-fill amber-fill" style="width:6%"></div></div><span>6%</span></div>
-        <div class="bar-row"><span>2 Star</span><div class="bar-track"><div class="bar-fill orange-fill" style="width:3%"></div></div><span>3%</span></div>
-        <div class="bar-row"><span>1 Star</span><div class="bar-track"><div class="bar-fill red-fill" style="width:1%"></div></div><span>1%</span></div>
+        <div class="bar-row"><span>5 ★</span><div class="bar-track"><div class="bar-fill green"       id="fbBar5" style="width:0%"></div></div><span id="fbPct5">0%</span></div>
+        <div class="bar-row"><span>4 ★</span><div class="bar-track"><div class="bar-fill green-light"  id="fbBar4" style="width:0%"></div></div><span id="fbPct4">0%</span></div>
+        <div class="bar-row"><span>3 ★</span><div class="bar-track"><div class="bar-fill amber-fill"  id="fbBar3" style="width:0%"></div></div><span id="fbPct3">0%</span></div>
+        <div class="bar-row"><span>2 ★</span><div class="bar-track"><div class="bar-fill orange-fill" id="fbBar2" style="width:0%"></div></div><span id="fbPct2">0%</span></div>
+        <div class="bar-row"><span>1 ★</span><div class="bar-track"><div class="bar-fill red-fill"    id="fbBar1" style="width:0%"></div></div><span id="fbPct1">0%</span></div>
+      </div>
+      <!-- Summary chips -->
+      <div class="card" style="min-width:160px;display:flex;flex-direction:column;gap:14px;justify-content:center;padding:22px 26px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:4px;">Unread</div>
+          <div style="font-size:28px;font-weight:700;color:var(--orange);" id="fbUnreadCount">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:4px;">Awaiting Reply</div>
+          <div style="font-size:28px;font-weight:700;color:var(--green-dark);" id="fbPendingCount">—</div>
+        </div>
       </div>
     </div>
 
-    <div class="card" style="margin-top:20px;">
-      <div class="review-filters">
-        <div class="search-bar" style="flex:1;">
+    <!-- Filters -->
+    <div class="card" style="margin-top:16px;">
+      <div class="review-filters" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border);">
+        <div class="search-bar" style="flex:1;min-width:200px;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" placeholder="Search keywords..." />
+          <input type="text" id="fbSearch" placeholder="Search name, email, message…" oninput="debounceFbSearch()" />
         </div>
-        <select class="filter-select"><option>All Ratings</option><option>5 Star</option><option>4 Star</option><option>3 Star</option><option>1-2 Star</option></select>
-        <select class="filter-select"><option>Newest First</option><option>Oldest First</option><option>Highest Rated</option><option>Lowest Rated</option></select>
+        <select class="filter-select" id="fbRatingFilter" onchange="loadFeedback()">
+          <option value="">All Ratings</option>
+          <option value="5">5 ★ Excellent</option>
+          <option value="4">4 ★ Good</option>
+          <option value="3">3 ★ Okay</option>
+          <option value="2">2 ★ Poor</option>
+          <option value="1">1 ★ Very Poor</option>
+        </select>
+        <select class="filter-select" id="fbStatusFilter" onchange="loadFeedback()">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="replied">Replied</option>
+          <option value="flagged">Flagged</option>
+        </select>
+      </div>
+
+      <!-- Reviews list -->
+      <div class="reviews-list" id="fbList">
+        <div style="text-align:center;padding:40px;color:var(--text-muted);">Loading feedback…</div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="fbPagination" style="display:none;">
+        <span id="fbPaginationInfo" style="color:var(--text-muted);font-size:13px;"></span>
+        <div>
+          <button class="btn-page" id="fbPrevBtn" onclick="changeFbPage(-1)">← Prev</button>
+          <button class="btn-page" id="fbNextBtn" onclick="changeFbPage(1)">Next →</button>
+        </div>
       </div>
     </div>
 
-    <div class="reviews-list">
-      <div class="review-card">
-        <div class="review-top">
-          <div class="reviewer-avatar">JS</div>
-          <div>
-            <div class="reviewer-name">John Stevenson <span class="verified-badge">Verified Visitor</span></div>
-            <div class="review-stars">★★★★★ <span>Oct 12, 2023</span></div>
-          </div>
-          <div style="margin-left:auto;display:flex;gap:8px;">
-            <button class="btn-approve">↩ Reply</button>
-            <button class="btn-reject">⚑ Flag</button>
-          </div>
+    <!-- Contact Info section -->
+    <div style="margin-top:24px;">
+      <div class="page-header" style="margin-bottom:12px;">
+        <div>
+          <h1>Contact Info Cards</h1>
+          <p>These cards appear on the visitor "Get in Touch" page</p>
         </div>
-        <p class="review-text">"Absolutely loved the new lion habitat! The view was incredible and the educational talks were very engaging. My kids didn't want to leave. Highly recommend for a family day out."</p>
+        <button class="btn btn-primary" onclick="openContactModal()">+ Add Contact Card</button>
       </div>
-      <div class="review-card">
-        <div class="review-top">
-          <div class="reviewer-avatar green-avatar">AM</div>
-          <div>
-            <div class="reviewer-name">Aishah Malik <span class="verified-badge">Verified Visitor</span></div>
-            <div class="review-stars">★★★★☆ <span>Oct 10, 2023</span></div>
-          </div>
-          <div style="margin-left:auto;display:flex;gap:8px;">
-            <button class="btn-approve">↩ Reply</button>
-            <button class="btn-reject">⚑ Flag</button>
-          </div>
-        </div>
-        <p class="review-text">"Great place for the whole family. The penguin exhibit was a highlight. Slightly crowded on weekends but overall a wonderful experience."</p>
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Icon</th>
+              <th>Department</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="contactInfoBody">
+            <tr><td colspan="6" style="text-align:center;padding:28px;color:var(--text-muted);">Loading…</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </section>
+
+  <!-- Reply Modal -->
+  <div class="modal-overlay" id="fbReplyModal">
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-header">
+        <h3>↩ Reply to Feedback</h3>
+        <button onclick="closeModal('fbReplyModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="fbReplyId" />
+        <!-- Original message preview -->
+        <div style="background:var(--green-bg);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;" id="fbOriginalPreview"></div>
+        <div class="form-group">
+          <label>Your Reply <span style="color:var(--red)">*</span></label>
+          <textarea class="form-input" id="fbReplyText" rows="5" placeholder="Type your reply to the visitor…" style="resize:vertical;min-height:110px;"></textarea>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);">
+          💡 If the visitor has an account, they will receive an in-app notification with your reply.
+        </p>
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid var(--border);">
+        <button class="btn btn-outline" onclick="closeModal('fbReplyModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitFbReply()">Send Reply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Info Modal -->
+  <div class="modal-overlay" id="contactModal">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-header">
+        <h3 id="contactModalTitle">Add Contact Card</h3>
+        <button onclick="closeModal('contactModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cmId" value=""/>
+        <div style="display:grid;grid-template-columns:80px 1fr;gap:12px;">
+          <div class="form-group">
+            <label>Icon</label>
+            <input type="text" class="form-input" id="cmIcon" placeholder="🦁" maxlength="4"/>
+          </div>
+          <div class="form-group">
+            <label>Department / Name <span style="color:var(--red)">*</span></label>
+            <input type="text" class="form-input" id="cmDept" placeholder="e.g. Ranger Program"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" class="form-input" id="cmPhone" placeholder="+6012-345 6789"/>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" class="form-input" id="cmEmail" placeholder="dept@wildtrackzoo.my"/>
+        </div>
+        <div class="form-group">
+          <label>Sort Order <small style="color:var(--text-muted);font-weight:400;">(lower = first)</small></label>
+          <input type="number" class="form-input" id="cmSort" value="0" min="0" max="99"/>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;padding:16px 20px;border-top:1px solid var(--border);">
+        <button class="btn btn-outline" onclick="closeModal('contactModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitContactModal()"><span id="cmBtnText">Create Card</span></button>
+      </div>
+    </div>
+  </div>
 
   <!-- PAGE: MEDIA GALLERY -->
   <section class="page" id="page-media">
@@ -3202,6 +3311,18 @@ textarea.form-input {
 
 <script>
   // ===== WILDTRACK ADMIN JS =====
+
+async function doLogout() {
+    const confirmed = confirm('Are you sure you want to logout?');
+    if (!confirmed) return;
+    try {
+        await fetch('api/auth.php?action=logout', {method: 'POST', credentials: 'include'});
+    } catch (error) {
+        console.error("Logout request failed:", error);
+    } finally {
+        window.location.href = 'login.html';
+    }
+}
 
 // ---- NAVIGATION ----
 function showPage(pageId) {
@@ -5052,6 +5173,365 @@ document.addEventListener('DOMContentLoaded', function() {
   const activePage = document.querySelector('.page.active');
   if (activePage && activePage.id === 'page-staff') loadStaff();
 });
+
+/* ── Feedback state ─────────────────────────────────────────── */
+let fbPage = 1;
+let fbTotalPages = 1;
+let fbSearchTimer = null;
+
+function debounceFbSearch() {
+  clearTimeout(fbSearchTimer);
+  fbSearchTimer = setTimeout(() => { fbPage = 1; loadFeedback(); }, 350);
+}
+function changeFbPage(dir) {
+  fbPage = Math.max(1, Math.min(fbTotalPages, fbPage + dir));
+  loadFeedback();
+}
+
+/* ── Load stats ─────────────────────────────────────────────── */
+async function loadFeedbackStats() {
+  try {
+    const res  = await fetch('api/feedback.php?action=stats', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+
+    document.getElementById('fbAvgRating').textContent = data.avg || '—';
+    const full = Math.round(data.avg || 0);
+    document.getElementById('fbAvgStars').textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
+    document.getElementById('fbTotalLabel').textContent =
+      'Based on ' + data.total + ' review' + (data.total !== 1 ? 's' : '');
+    document.getElementById('fbUnreadCount').textContent  = data.unread;
+    document.getElementById('fbPendingCount').textContent = data.pending;
+
+    const bd = data.breakdown || {};
+    for (let r = 1; r <= 5; r++) {
+      const pct = data.total ? Math.round(((bd[r] || 0) / data.total) * 100) : 0;
+      const bar = document.getElementById('fbBar' + r);
+      const lbl = document.getElementById('fbPct' + r);
+      if (bar) bar.style.width = pct + '%';
+      if (lbl) lbl.textContent = pct + '%';
+    }
+  } catch (e) { console.error('loadFeedbackStats', e); }
+}
+
+/* ── Load list ──────────────────────────────────────────────── */
+async function loadFeedback() {
+  await loadFeedbackStats();
+
+  const search = (document.getElementById('fbSearch') || {}).value || '';
+  const rating = (document.getElementById('fbRatingFilter') || {}).value || '';
+  const status = (document.getElementById('fbStatusFilter') || {}).value || '';
+
+  const params = new URLSearchParams({ action: 'list', page: fbPage });
+  if (search.trim()) params.set('search', search.trim());
+  if (rating) params.set('rating', rating);
+  if (status) params.set('status', status);
+
+  const list = document.getElementById('fbList');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">Loading…</div>';
+
+  try {
+    const res  = await fetch('api/feedback.php?' + params, { credentials: 'include' });
+    const data = await res.json();
+
+    if (!data.success) {
+      list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">Failed to load feedback.</div>';
+      return;
+    }
+
+    fbTotalPages = data.total_pages || 1;
+    const rows   = data.feedback || [];
+
+    if (!rows.length) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">No feedback found.</div>';
+      document.getElementById('fbPagination').style.display = 'none';
+      loadContactInfoTable();
+      return;
+    }
+
+    // Mark unread as read silently
+    const unreadIds = rows.filter(r => !r.is_read).map(r => r.id);
+    if (unreadIds.length) {
+      fetch('api/feedback.php?action=mark_read', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: unreadIds }),
+      });
+    }
+
+    list.innerHTML = rows.map(fb => {
+      const initials = (fb.name || '??').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const stars    = '★'.repeat(fb.rating) + '☆'.repeat(5 - fb.rating);
+      const date     = new Date(fb.created_at).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+      const dot      = !fb.is_read
+        ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--orange);display:inline-block;margin-left:6px;vertical-align:middle;"></span>'
+        : '';
+      const badge = {
+        pending: '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;">Pending</span>',
+        replied: '<span style="background:var(--green-pale);color:var(--green-dark);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;">Replied</span>',
+        flagged: '<span style="background:#FEE2E2;color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;">Flagged</span>',
+      }[fb.status] || '';
+
+      const replySection = fb.admin_reply
+        ? `<div style="margin-top:12px;background:#f0f7ef;border-left:3px solid var(--green-light);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
+             <strong style="color:var(--green-dark);">Admin Reply</strong>
+             <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${new Date(fb.replied_at).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})}</span>
+             <p style="margin:6px 0 0;color:var(--text-mid);">${escA(fb.admin_reply)}</p>
+           </div>`
+        : '';
+
+      return `
+        <div class="review-card" id="fb-row-${fb.id}" style="${!fb.is_read ? 'border-left:3px solid var(--orange);' : ''}">
+          <div class="review-top">
+            <div class="reviewer-avatar">${initials}</div>
+            <div>
+              <div class="reviewer-name">${escA(fb.name)}${dot}${badge}</div>
+              <div style="font-size:12px;color:var(--text-muted);">${escA(fb.email)}</div>
+              <div class="review-stars" style="margin-top:4px;">${stars} <span>${date}</span></div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
+              ${fb.status !== 'replied' ? `<button class="btn-approve" onclick="openFbReply(${fb.id})">&#x21A9; Reply</button>` : ''}
+              ${fb.status !== 'flagged'
+                ? `<button class="btn-reject" onclick="flagFeedback(${fb.id})">&#x2691; Flag</button>`
+                : `<button class="btn-edit"   onclick="unflagFeedback(${fb.id})">&#x21BA; Unflag</button>`}
+              <button class="btn-reject-sm" onclick="deleteFeedback(${fb.id})">&#x1F5D1;</button>
+            </div>
+          </div>
+          <p class="review-text">${escA(fb.message)}</p>
+          ${replySection}
+        </div>`;
+    }).join('');
+
+    // Pagination
+    const pag = document.getElementById('fbPagination');
+    if (pag) {
+      pag.style.display = 'flex';
+      const info = document.getElementById('fbPaginationInfo');
+      if (info) info.textContent = 'Page ' + fbPage + ' of ' + fbTotalPages + '  (' + data.total + ' total)';
+      const prev = document.getElementById('fbPrevBtn');
+      const next = document.getElementById('fbNextBtn');
+      if (prev) prev.disabled = fbPage <= 1;
+      if (next) next.disabled = fbPage >= fbTotalPages;
+    }
+
+    loadContactInfoTable();
+
+  } catch (e) { console.error('loadFeedback', e); }
+}
+
+/* ── Reply ─────────────────────────────────────────────────── */
+function openFbReply(id) {
+  document.getElementById('fbReplyId').value   = id;
+  document.getElementById('fbReplyText').value = '';
+
+  const row     = document.getElementById('fb-row-' + id);
+  const preview = document.getElementById('fbOriginalPreview');
+  if (row && preview) {
+    const name  = (row.querySelector('.reviewer-name') || {}).textContent || '';
+    const stars = (row.querySelector('.review-stars')  || {}).textContent || '';
+    const msg   = (row.querySelector('.review-text')   || {}).textContent || '';
+    preview.innerHTML =
+      '<strong style="font-size:13px;color:var(--text-dark);">' + escA(name.trim()) + '</strong>' +
+      '<span style="font-size:12px;color:var(--text-muted);margin-left:8px;">' + escA(stars.trim()) + '</span>' +
+      '<p style="margin:8px 0 0;font-size:13px;color:var(--text-mid);line-height:1.6;">' + escA(msg.trim()) + '</p>';
+  }
+  openModal('fbReplyModal');
+}
+
+async function submitFbReply() {
+  const id    = parseInt(document.getElementById('fbReplyId').value);
+  const reply = document.getElementById('fbReplyText').value.trim();
+  if (!reply) { showToast('Reply cannot be empty.', 'error'); return; }
+  try {
+    const res  = await fetch('api/feedback.php?action=reply', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, reply }),
+    });
+    const data = await res.json();
+    if (data.success) { closeModal('fbReplyModal'); showToast('Reply sent ✓'); loadFeedback(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch (e) { showToast('Network error.', 'error'); }
+}
+
+/* ── Flag / Unflag / Delete ─────────────────────────────────── */
+async function flagFeedback(id) {
+  const res  = await fetch('api/feedback.php?action=flag', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  const data = await res.json();
+  if (data.success) { showToast('Flagged'); loadFeedback(); }
+  else showToast(data.message || 'Failed.', 'error');
+}
+
+async function unflagFeedback(id) {
+  const res  = await fetch('api/feedback.php?action=unflag', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  const data = await res.json();
+  if (data.success) { showToast('Unflagged'); loadFeedback(); }
+  else showToast(data.message || 'Failed.', 'error');
+}
+
+async function deleteFeedback(id) {
+  if (!confirm('Delete this feedback? This cannot be undone.')) return;
+  const res  = await fetch('api/feedback.php?action=delete', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  const data = await res.json();
+  if (data.success) { showToast('Deleted'); loadFeedback(); }
+  else showToast(data.message || 'Failed.', 'error');
+}
+
+/* ── Contact Info table ─────────────────────────────────────── */
+async function loadContactInfoTable() {
+  const tbody = document.getElementById('contactInfoBody');
+  if (!tbody) return;
+  try {
+    const res  = await fetch('api/contact_info.php?action=list', { credentials: 'include' });
+    const data = await res.json();
+    const rows = data.contacts || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">No contact cards yet. Click "+ Add Contact Card" to create one.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(c => `
+      <tr>
+        <td style="font-size:22px;">${c.icon}</td>
+        <td><strong>${escA(c.department)}</strong></td>
+        <td>${c.phone ? escA(c.phone) : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td>${c.email ? '<a href="mailto:' + escA(c.email) + '" style="color:var(--green-dark);">' + escA(c.email) + '</a>' : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td><span class="status-badge ${parseInt(c.is_active) ? 'approved' : 'rejected'}">${parseInt(c.is_active) ? 'Visible' : 'Hidden'}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn-edit"      onclick="openEditContactModal(${c.id})">Edit</button>
+            <button class="btn-edit"      onclick="toggleContact(${c.id})">${parseInt(c.is_active) ? 'Hide' : 'Show'}</button>
+            <button class="btn-reject-sm" onclick="deleteContact(${c.id})">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  } catch (e) { console.error('loadContactInfoTable', e); }
+}
+
+function openContactModal() {
+  document.getElementById('cmId').value    = '';
+  document.getElementById('cmIcon').value  = '📞';
+  document.getElementById('cmDept').value  = '';
+  document.getElementById('cmPhone').value = '';
+  document.getElementById('cmEmail').value = '';
+  document.getElementById('cmSort').value  = '0';
+  document.getElementById('contactModalTitle').textContent = 'Add Contact Card';
+  document.getElementById('cmBtnText').textContent         = 'Create Card';
+  openModal('contactModal');
+}
+
+async function openEditContactModal(id) {
+  try {
+    const res  = await fetch('api/contact_info.php?action=list', { credentials: 'include' });
+    const data = await res.json();
+    const c    = (data.contacts || []).find(x => parseInt(x.id) === id);
+    if (!c) return;
+    document.getElementById('cmId').value    = c.id;
+    document.getElementById('cmIcon').value  = c.icon;
+    document.getElementById('cmDept').value  = c.department;
+    document.getElementById('cmPhone').value = c.phone || '';
+    document.getElementById('cmEmail').value = c.email || '';
+    document.getElementById('cmSort').value  = c.sort_order;
+    document.getElementById('contactModalTitle').textContent = 'Edit Contact Card';
+    document.getElementById('cmBtnText').textContent         = 'Save Changes';
+    openModal('contactModal');
+  } catch (e) { showToast('Failed to load.', 'error'); }
+}
+
+async function submitContactModal() {
+  const id   = document.getElementById('cmId').value;
+  const dept = document.getElementById('cmDept').value.trim();
+  if (!dept) { showToast('Department name is required.', 'error'); return; }
+  const payload = {
+    icon:       document.getElementById('cmIcon').value.trim()  || '📞',
+    department: dept,
+    phone:      document.getElementById('cmPhone').value.trim(),
+    email:      document.getElementById('cmEmail').value.trim(),
+    sort_order: parseInt(document.getElementById('cmSort').value) || 0,
+  };
+  if (id) payload.id = parseInt(id);
+  const action = id ? 'update' : 'create';
+  try {
+    const res  = await fetch('api/contact_info.php?action=' + action, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (data.success) { closeModal('contactModal'); showToast(id ? 'Updated ✓' : 'Created ✓'); loadContactInfoTable(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch (e) { showToast('Network error.', 'error'); }
+}
+
+async function toggleContact(id) {
+  const res  = await fetch('api/contact_info.php?action=toggle', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  const data = await res.json();
+  if (data.success) { showToast('Visibility updated ✓'); loadContactInfoTable(); }
+  else showToast(data.message || 'Failed.', 'error');
+}
+
+async function deleteContact(id) {
+  if (!confirm('Delete this contact card?')) return;
+  const res  = await fetch('api/contact_info.php?action=delete', {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  const data = await res.json();
+  if (data.success) { showToast('Deleted'); loadContactInfoTable(); }
+  else showToast(data.message || 'Failed.', 'error');
+}
+
+/* ── Patch showPage ─────────────────────────────────────────── */
+(function() {
+  const _orig = window.showPage;
+  window.showPage = function(name) {
+    if (typeof _orig === 'function') _orig(name);
+    if (name === 'feedback') { fbPage = 1; loadFeedback(); }
+  };
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+  const active = document.querySelector('.page.active');
+  if (active && active.id === 'page-feedback') { fbPage = 1; loadFeedback(); }
+});
+
+/* ── Sidebar badge: poll for unread feedback ────────────────── */
+async function refreshFeedbackBadge() {
+  try {
+    const res  = await fetch('api/feedback.php?action=stats', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success) return;
+    const unread  = data.unread || 0;
+    const navItem = document.querySelector('.nav-item[data-page="feedback"]');
+    if (!navItem) return;
+    let badge = navItem.querySelector('.nav-badge');
+    if (unread > 0) {
+      if (!badge) { badge = document.createElement('span'); badge.className = 'nav-badge'; navItem.appendChild(badge); }
+      badge.textContent = unread;
+    } else if (badge) {
+      badge.remove();
+    }
+  } catch (e) {}
+}
+refreshFeedbackBadge();
+setInterval(refreshFeedbackBadge, 30000);
 
 </script>
 </body>

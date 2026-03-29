@@ -160,9 +160,15 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
 </nav>
 
 <script>
-function doLogout() {
-  fetch('api/auth.php?action=logout', { credentials: 'include' })
-    .finally(function() { window.location.href = 'login.html'; });
+async function doLogout() {
+    if (!confirm('Are you sure you want to sign out?')) return;
+    try {
+        await fetch('api/auth.php?action=logout', {method: 'POST', credentials: 'include'});
+    } catch (e) {
+        console.error("Logout failed:", e);
+    } finally {
+        window.location.href = 'login.html';
+    }
 }
 </script>
 

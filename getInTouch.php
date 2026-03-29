@@ -68,6 +68,21 @@ $currentPage = 'contact'; ?>
     }
     .contact-card a:hover { text-decoration: underline; }
 
+    /* Skeleton loader for contact cards */
+    .contact-skeleton {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 24px 26px;
+      margin-bottom: 18px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .skel-circle { width:46px;height:46px;border-radius:50%;background:#e8f5e9;flex-shrink:0;animation:skel 1.2s ease infinite; }
+    .skel-line   { height:14px;border-radius:6px;background:#e8f5e9;margin-bottom:8px;animation:skel 1.2s ease infinite; }
+    @keyframes skel { 0%,100%{opacity:.5} 50%{opacity:1} }
+
     /* ── Feedback form ── */
     .feedback-card {
       background: #fff;
@@ -183,8 +198,10 @@ $currentPage = 'contact'; ?>
       cursor: pointer;
       transition: background 0.2s, transform 0.15s;
       margin-top: 6px;
+      position: relative;
     }
-    .btn-submit:hover { background: #1e4222; transform: translateY(-1px); }
+    .btn-submit:hover:not(:disabled) { background: #1e4222; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: .7; cursor: not-allowed; }
 
     /* Success box */
     .success-box {
@@ -195,6 +212,19 @@ $currentPage = 'contact'; ?>
     .success-box .success-icon { font-size: 64px; margin-bottom: 16px; }
     .success-box h2 { color: #2a5a2e; font-size: 26px; margin-bottom: 10px; }
     .success-box p  { color: #666; font-size: 16px; }
+
+    /* Error box */
+    .submit-error {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      border-radius: 9px;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .submit-error.show { display: block; }
   </style>
 </head>
 <body>
@@ -215,45 +245,19 @@ $currentPage = 'contact'; ?>
 
   <div class="git-layout">
 
-    <!-- LEFT: Contact cards -->
-    <div class="git-left">
-
-      <div class="contact-card">
-        <div class="contact-card-icon">🦁</div>
-        <div>
-          <h3>WildTrack Zoo</h3>
-          <p>📞 03-4108 3422</p>
-          <a href="mailto:hello@wildtrackzoo.my">hello@wildtrackzoo.my</a>
+    <!-- LEFT: Contact cards (loaded dynamically) -->
+    <div class="git-left" id="contactCardsContainer">
+      <!-- Skeletons while loading -->
+      <?php for ($i = 0; $i < 4; $i++): ?>
+      <div class="contact-skeleton">
+        <div class="skel-circle"></div>
+        <div style="flex:1;">
+          <div class="skel-line" style="width:60%;"></div>
+          <div class="skel-line" style="width:80%;"></div>
+          <div class="skel-line" style="width:50%;"></div>
         </div>
       </div>
-
-      <div class="contact-card">
-        <div class="contact-card-icon">🎫</div>
-        <div>
-          <h3>Membership Department</h3>
-          <p>📞 +6011-3195 7075</p>
-          <a href="mailto:membership@wildtrackzoo.my">membership@wildtrackzoo.my</a>
-        </div>
-      </div>
-
-      <div class="contact-card">
-        <div class="contact-card-icon">🎂</div>
-        <div>
-          <h3>Birthday Parties &amp; Corporate Bookings</h3>
-          <p>📞 +6012-2925 1251</p>
-          <a href="mailto:events@wildtrackzoo.my">events@wildtrackzoo.my</a>
-        </div>
-      </div>
-
-      <div class="contact-card">
-        <div class="contact-card-icon">🌳</div>
-        <div>
-          <h3>Ranger Program</h3>
-          <p>📞 +6012-4765 2658</p>
-          <a href="mailto:events@wildtrackzoo.my">ranger@wildtrackzoo.my</a>
-        </div>
-      </div>
-
+      <?php endfor; ?>
     </div>
 
     <!-- RIGHT: Feedback form -->
@@ -262,6 +266,8 @@ $currentPage = 'contact'; ?>
 
         <div id="formBox">
           <h2>💬 Customer Feedback</h2>
+
+          <div class="submit-error" id="submitError"></div>
 
           <!-- Name -->
           <div class="form-group">
@@ -319,10 +325,43 @@ $currentPage = 'contact'; ?>
 <script>
   window.breadcrumb = [{ label: 'Get in Touch' }];
 
-  function submitFeedback() {
+  /* ── Load contact cards dynamically ─────────────────────── */
+  async function loadContactCards() {
+    try {
+      const res  = await fetch('api/contact_info.php?action=get_public');
+      const data = await res.json();
+      const container = document.getElementById('contactCardsContainer');
+      if (!data.success || !data.contacts.length) {
+        container.innerHTML = '<p style="color:#888;font-size:14px;">No contact information available.</p>';
+        return;
+      }
+      container.innerHTML = data.contacts.map(c => `
+        <div class="contact-card">
+          <div class="contact-card-icon">${c.icon}</div>
+          <div>
+            <h3>${esc(c.department)}</h3>
+            ${c.phone ? `<p>📞 ${esc(c.phone)}</p>` : ''}
+            ${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ''}
+          </div>
+        </div>
+      `).join('');
+    } catch (e) {
+      console.error('Failed to load contact cards', e);
+    }
+  }
+
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  loadContactCards();
+
+  /* ── Submit feedback to API ──────────────────────────────── */
+  async function submitFeedback() {
     var valid = true;
 
-    // Helper: clear then optionally show error
     function validate(inputId, errorId, condition) {
       var inp = document.getElementById(inputId);
       var err = document.getElementById(errorId);
@@ -339,15 +378,14 @@ $currentPage = 'contact'; ?>
     var name    = document.getElementById('username').value.trim();
     var email   = document.getElementById('email').value.trim();
     var message = document.getElementById('experience').value.trim();
-    var rating  = document.querySelector('input[name="rating"]:checked');
+    var ratingEl= document.querySelector('input[name="rating"]:checked');
 
     validate('username',   'err-name',    name === '');
     validate('email',      'err-email',   email === '' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
     validate('experience', 'err-message', message === '');
 
-    // Rating error
     var ratingErr = document.getElementById('err-rating');
-    if (!rating) {
+    if (!ratingEl) {
       ratingErr.classList.add('show');
       valid = false;
     } else {
@@ -356,9 +394,42 @@ $currentPage = 'contact'; ?>
 
     if (!valid) return;
 
-    // All good — show success
-    document.getElementById('formBox').style.display   = 'none';
-    document.getElementById('successBox').style.display = 'block';
+    // Disable button while submitting
+    var btn = document.getElementById('submitBtn');
+    btn.disabled   = true;
+    btn.textContent = 'Submitting…';
+    document.getElementById('submitError').classList.remove('show');
+
+    try {
+      var res  = await fetch('api/feedback.php?action=submit', {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:    name,
+          email:   email,
+          rating:  parseInt(ratingEl.value),
+          message: message,
+        }),
+      });
+      var data = await res.json();
+      if (data.success) {
+        document.getElementById('formBox').style.display    = 'none';
+        document.getElementById('successBox').style.display = 'block';
+      } else {
+        var errBox = document.getElementById('submitError');
+        errBox.textContent = data.message || 'Submission failed. Please try again.';
+        errBox.classList.add('show');
+        btn.disabled    = false;
+        btn.textContent = 'Submit Feedback';
+      }
+    } catch (e) {
+      var errBox = document.getElementById('submitError');
+      errBox.textContent = 'Network error. Please check your connection and try again.';
+      errBox.classList.add('show');
+      btn.disabled    = false;
+      btn.textContent = 'Submit Feedback';
+    }
   }
 
   // Live clear errors on input

@@ -1,8 +1,9 @@
 <?php
 /**
- * api/get_notifications.php
+ * api/notifications.php
  * Visitor-side endpoint — returns unread notifications for the logged-in visitor.
- * Called by Ticketing.php on a 15-second poll to detect booking_approved / booking_rejected.
+ * Called by Ticketing.php on a 15-second poll to detect booking_approved /
+ * booking_rejected / feedback_reply.
  *
  * GET  (no params needed — uses session user)
  * POST ?action=mark_read   body: { ids: [1,2,3] }
@@ -22,7 +23,7 @@ if ($action === 'mark_read') {
 
     if (empty($ids)) respond(false, 'No ids provided.');
 
-    $pdo         = getDB();
+    $pdo          = getDB();
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
     // Only mark read if the notification belongs to this user
@@ -43,7 +44,7 @@ $stmt = $pdo->prepare(
             n.is_read, n.created_at
      FROM notifications n
      WHERE n.user_id = ?
-       AND n.type IN ('booking_approved','booking_rejected')
+       AND n.type IN ('booking_approved','booking_rejected','feedback_reply')
      ORDER BY n.created_at DESC
      LIMIT 20"
 );
