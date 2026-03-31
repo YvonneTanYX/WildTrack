@@ -2,17 +2,19 @@
 /**
  * api/feedback.php
  *
- * Visitor:
- *   POST ?action=submit   { name, email, rating, message }
+ * Visitor (no login needed):
+ *   POST ?action=submit         { name, email, rating, message }
+ *   GET  ?action=my_feedback    (requires visitor login)
  *
  * Admin:
- *   GET  ?action=list     [&rating=&status=&search=&page=]
+ *   GET  ?action=list           [&rating=&status=&search=&page=]
  *   GET  ?action=stats
- *   POST ?action=reply    { id, reply }
- *   POST ?action=flag     { id }
- *   POST ?action=unflag   { id }
- *   POST ?action=delete   { id }
- *   POST ?action=mark_read { ids: [...] }
+ *   POST ?action=reply          { id, reply }
+ *   POST ?action=delete_reply   { id }
+ *   POST ?action=flag           { id }
+ *   POST ?action=unflag         { id }
+ *   POST ?action=delete         { id }
+ *   POST ?action=mark_read      { ids: [...] }
  */
 
 require_once __DIR__ . '/../config/helpers.php';
@@ -44,8 +46,8 @@ if ($action === 'submit') {
     }
 
     $pdo->prepare(
-        "INSERT INTO feedback (user_id, name, email, rating, message)
-         VALUES (?, ?, ?, ?, ?)"
+        "INSERT INTO feedback (user_id, name, email, rating, message, status, is_read)
+         VALUES (?, ?, ?, ?, ?, 'pending', 0)"
     )->execute([$userId, $name, $email, $rating, $message]);
 
     // Notify all active admins
@@ -53,7 +55,7 @@ if ($action === 'submit') {
         "SELECT user_id FROM users WHERE role = 'admin' AND is_active = 1"
     )->fetchAll(PDO::FETCH_COLUMN);
 
-    $nStmt = $pdo->prepare(
+    $nStmt   = $pdo->prepare(
         "INSERT INTO notifications (user_id, type, title, body)
          VALUES (?, 'new_feedback', 'New Feedback Received', ?)"
     );
@@ -63,6 +65,31 @@ if ($action === 'submit') {
     }
 
     respond(true, 'Feedback submitted. Thank you!');
+}
+
+/* ── MY FEEDBACK (visitor: view own submissions + replies) ── */
+if ($action === 'my_feedback') {
+    $u = $_SESSION['user'] ?? null;
+    if (!$u || $u['role'] !== 'visitor') respond(false, 'Login required.');
+
+    $stmt = $pdo->prepare(
+        "SELECT id, name, email, rating, message,
+                status, admin_reply, replied_at, created_at
+         FROM feedback
+         WHERE user_id = ?
+         ORDER BY created_at DESC
+         LIMIT 50"
+    );
+    $stmt->execute([(int)$u['user_id']]);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($rows as &$r) {
+        $r['id']     = (int)$r['id'];
+        $r['rating'] = (int)$r['rating'];
+    }
+    unset($r);
+
+    respond(true, 'OK', ['feedback' => $rows]);
 }
 
 /* ── All other actions require admin ── */
@@ -164,12 +191,18 @@ if ($action === 'reply') {
     $fb = $fbStmt->fetch(PDO::FETCH_ASSOC);
     if (!$fb) respond(false, 'Feedback not found.');
 
-    $pdo->prepare(
-        "UPDATE feedback SET admin_reply = ?, replied_at = NOW(), status = 'replied', is_read = 1
+    $upd = $pdo->prepare(
+        "UPDATE feedback
+         SET admin_reply = ?,
+             replied_at  = NOW(),
+             status      = 'replied',
+             is_read     = 1
          WHERE id = ?"
-    )->execute([$reply, $id]);
+    );
+    $upd->execute([$reply, $id]);
 
-    if ($fb['user_id']) {
+    // Visitor in-app notification
+    if (!empty($fb['user_id'])) {
         $preview = mb_substr($reply, 0, 100) . (mb_strlen($reply) > 100 ? '...' : '');
         $pdo->prepare(
             "INSERT INTO notifications (user_id, type, title, body)
@@ -178,6 +211,23 @@ if ($action === 'reply') {
     }
 
     respond(true, 'Reply sent.');
+}
+
+/* ── DELETE REPLY ── */
+if ($action === 'delete_reply') {
+    $body = jsonBody();
+    $id   = (int)($body['id'] ?? 0);
+    if (!$id) respond(false, 'ID required.');
+
+    $pdo->prepare(
+        "UPDATE feedback
+         SET admin_reply = NULL,
+             replied_at  = NULL,
+             status      = 'pending'
+         WHERE id = ?"
+    )->execute([$id]);
+
+    respond(true, 'Reply deleted.');
 }
 
 /* ── FLAG ── */
