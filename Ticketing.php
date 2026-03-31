@@ -1,4 +1,8 @@
-<?php require_once 'check_session.php'; ?>
+<?php 
+require_once __DIR__ . '/check_session.php';
+requireVisitorLogin();   
+$currentPage = 'visit';   
+?>
 <!DOCTYPE html>
 <html lang="en">
 

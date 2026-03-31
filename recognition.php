@@ -880,7 +880,7 @@ const ZOO_ANIMALS = {
   // 'other' is intentionally NOT in ZOO_ANIMALS — triggers the unknown banner
 };
 
-const CONFIDENCE_THRESHOLD = 0.60; // 60% minimum
+const CONFIDENCE_THRESHOLD = 0.85;
 
 // ── State ──
 let model = null;
@@ -924,7 +924,13 @@ function setImageFromFile(file) {
   const url = URL.createObjectURL(file);
   previewImg.src = url;
   previewImg.onload = () => {
-    currentImage = previewImg;
+    // Draw to an offscreen canvas so TF reads clean pixels regardless of layout
+    const canvas = document.createElement('canvas');
+    canvas.width  = 224;
+    canvas.height = 224;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(previewImg, 0, 0, 224, 224);
+    currentImage = canvas;   // pass canvas, not the <img> element
     showPreview();
   };
 }
@@ -999,7 +1005,8 @@ function showResult(predictions) {
   document.getElementById('animal-detail').style.display   = 'none';
   document.getElementById('try-again-row').style.display   = 'none';
 
-  if (!animal) {
+  // Treat as unknown if: no match found, OR confidence is low, OR "Other" class won
+  if (!animal || isLow || isOther) {
     document.getElementById('unknown-banner').style.display = 'block';
     document.getElementById('try-again-row').style.display  = 'block';
     resultSection.classList.add('show');
@@ -1008,9 +1015,8 @@ function showResult(predictions) {
     return;
   }
 
-  document.getElementById('result-card').style.display   = 'block';
-  document.getElementById('try-again-row').style.display = 'block';
-  if (isLow) document.getElementById('low-conf-banner').style.display = 'flex';
+document.getElementById('result-card').style.display   = 'block';
+document.getElementById('try-again-row').style.display = 'block';
 
   document.getElementById('result-icon').textContent    = animal.emoji;
   document.getElementById('result-name').textContent    = top.className;
@@ -1081,15 +1087,36 @@ function buildAnimalDetailCard(name, a) {
 }
 
 function shareResult() {
-  const name = document.getElementById('adc-name').textContent;
-  const text = `I just identified a ${name} at WildTrack Malaysia! 🐾`;
+  const name    = document.getElementById('adc-name').textContent;
+  const species = document.getElementById('adc-species').textContent;
+  const status  = document.getElementById('cons-title').textContent;
+  const animal  = ZOO_ANIMALS[name] || ZOO_ANIMALS[name.charAt(0).toUpperCase() + name.slice(1).toLowerCase()];
+  const factRaw = animal ? animal.fact.replace(/<[^>]+>/g, '') : ''; // strip HTML tags
+
+  const text = `🐾 I just spotted a ${name} at WildTrack Malaysia!\n\n` +
+               `🔬 Species: ${species}\n` +
+               `🌿 Conservation Status: ${status}\n` +
+               (factRaw ? `💡 Fun fact: ${factRaw}\n\n` : '\n') +
+               `📍 Visit WildTrack Malaysia to see it in person!\n` +
+               window.location.href;
+
   if (navigator.share) {
-    navigator.share({ title: 'WildTrack Animal Recognition', text, url: window.location.href });
+    navigator.share({
+      title: `I found a ${name} at WildTrack Malaysia! 🐾`,
+      text: text,
+    });
   } else {
-    navigator.clipboard.writeText(text + ' ' + window.location.href)
-      .then(() => alert('Copied to clipboard!'));
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        const btn = document.querySelector('.btn-share');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '✅ Copied!';
+        btn.style.borderColor = 'var(--teal-dk)';
+        setTimeout(() => { btn.innerHTML = orig; btn.style.borderColor = ''; }, 2000);
+      });
   }
 }
+
 
 async function logToServer(animalName, confidence) {
   try {

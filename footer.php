@@ -15,6 +15,7 @@
       <a href="accessibility.php">Accessibility at the Zoo</a>
       <a href="foodAndDrink.php">Food and Drink</a>
       <a href="animalFeeding.php">Animal Feeding</a>
+
     </div>
 
     <div class="footer-col">
@@ -26,6 +27,7 @@
 
     <div class="footer-col">
       <h3><a href="animalMain.php">Animal</a></h3>
+      <a href="recognition.php">Animal Recognition</a>
     </div>
 
     <div class="footer-col">
@@ -33,10 +35,6 @@
       <a href="savingWildlife.php">Saving Wildlife</a>
       <a href="greenZooGreenYou.php">Green Zoo, Green You</a>
       <a href="safeCatSafeWildlife.php">Safe Cat, Safe Wildlife</a>
-    </div>
-
-    <div class="footer-col">
-      <h3><a href="venueMain.php">Venue</a></h3>
     </div>
 
     <div class="footer-col">

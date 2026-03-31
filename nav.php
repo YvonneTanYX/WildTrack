@@ -6,6 +6,7 @@
  */
 if (!isset($currentPage)) $currentPage = '';
 $loggedInUser = $_SESSION['user'] ?? null;
+$isGuest      = !$loggedInUser;
 $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'Guest';
 ?>
 <nav>
@@ -67,7 +68,9 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
               <a href="animalMain.php"><img src="https://images.unsplash.com/photo-1605092676920-8ac5ae40c7c8?q=80&w=1065&auto=format&fit=crop&ixlib=rb-4.1.0" alt="Animals"></a>
             </div>
           </div>
-          <div class="right-column"></div>
+          <div class="right-column">
+            <a href="recognition.php">Animal Recognition</a>
+          </div>
         </div>
       </li>
 
@@ -89,20 +92,6 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
         </div>
       </li>
 
-      <!-- VENUE -->
-      <li class="dropdown <?php echo $currentPage==='venue'?'active-section':''; ?>" aria-expanded="false">
-        <a href="venueMain.php" class="dropbutton">Venue ▾</a>
-        <div class="dropdown-menu">
-          <div class="left-column">
-            <div class="image-container-venue">
-              <h2 class="image-text-venue">Venue</h2>
-              <a href="venueMain.php"><img src="https://images.unsplash.com/photo-1550853024-fae8cd4be47f?q=80&w=1488&auto=format&fit=crop&ixlib=rb-4.1.0" alt="Venue"></a>
-            </div>
-          </div>
-          <div class="right-column"></div>
-        </div>
-      </li>
-
       <!-- GET IN TOUCH -->
       <li class="dropdown <?php echo $currentPage==='contact'?'active-section':''; ?>" aria-expanded="false">
         <a href="getInTouch.php" class="dropbutton">Get in Touch ▾</a>
@@ -114,26 +103,43 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
             </div>
           </div>
           <div class="right-column">
-            <a href="getInTouch.php#general">Enquiries & Feedback</a>
+            <a href="getInTouch.php#general">Enquiries &amp; Feedback</a>
           </div>
         </div>
       </li>
 
-      <!-- BUY TICKETS button -->
+      <!-- BUY TICKETS button
+           Guests   → buyTicket.php  (they see prices + locked button there)
+           Logged in → Ticketing.php (go straight to booking) -->
       <li style="list-style:none; display:flex; align-items:center; margin-left:auto; padding-right:6px;">
-        <a href="Ticketing.php" class="wt-nav-buy-btn">🎟 Buy Tickets</a>
+        <?php if ($isGuest): ?>
+          <a href="Ticketing.php" class="wt-nav-buy-btn">🎟 Buy Tickets</a>
+        <?php else: ?>
+          <a href="Ticketing.php" class="wt-nav-buy-btn">🎟 Buy Tickets</a>
+        <?php endif; ?>
       </li>
 
-      <!-- USER MENU (right side) -->
+      <!-- USER MENU -->
       <li class="dropdown" aria-expanded="false" style="margin-left:0;">
         <a href="#" class="dropbutton" style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:18px;">👤</span> <?php echo $displayName; ?> ▾
         </a>
         <div class="dropdown-menu" style="min-width:200px;left:auto;right:0;transform:none;">
           <div class="right-column" style="margin-left:0;">
-            <a href="MyTickets.php">🎟️ Check Ticket</a>
-            <a href="MyBookings.php">📅 Booking Status</a>
-            <a href="#" onclick="doLogout();return false;">🚪 Sign Out</a>
+            <?php if ($isGuest): ?>
+              <!--
+                login.html?tab=login   → JS reads ?tab= and opens sign-in directly
+                login.html?tab=signup  → JS reads ?tab= and opens register directly
+                Both skip the portal chooser entirely (no ?reason= so no banner either,
+                but we add ?portal=visitor so the visitor step opens straight away).
+              -->
+              <a href="login.html?portal=visitor&tab=login">🔑 Login</a>
+              <a href="login.html?portal=visitor&tab=signup">📝 Register</a>
+            <?php else: ?>
+              <a href="MyTickets.php">🎟️ Check Ticket</a>
+              <a href="MyBookings.php">📅 Booking Status</a>
+              <a href="#" onclick="doLogout();return false;">🚪 Sign Out</a>
+            <?php endif; ?>
           </div>
         </div>
       </li>
@@ -150,6 +156,17 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
         </div>
       </li>
 
+      <!-- ANIMAL RECOGNITION camera icon -->
+      <li style="list-style:none; display:flex; align-items:center; padding-left:8px;">
+        <div class="wt-nav-bell" onclick="window.location.href='recognition.php'" title="Animal Recognition" style="cursor:pointer;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+               stroke="#2D5A27" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+      </li>
+
     </ul>
   </div>
 </nav>
@@ -160,19 +177,23 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
 </nav>
 
 <script>
+<?php if (!$isGuest): ?>
 async function doLogout() {
     if (!confirm('Are you sure you want to sign out?')) return;
     try {
-        await fetch('api/auth.php?action=logout', {method: 'POST', credentials: 'include'});
+        await fetch('api/auth.php?action=logout', { method: 'POST', credentials: 'include' });
     } catch (e) {
-        console.error("Logout failed:", e);
+        console.error('Logout failed:', e);
     } finally {
         window.location.href = 'login.html';
     }
 }
+<?php else: ?>
+function doLogout() { /* guest — no-op */ }
+<?php endif; ?>
 </script>
 
-<!-- ── NOTIFICATION DROPDOWN ── -->
+<!-- NOTIFICATION DROPDOWN -->
 <div class="wt-notif-dropdown" id="wt-notif-dropdown">
   <div class="wt-notif-dropdown-header">Notifications</div>
   <div id="wt-notif-list">
@@ -180,43 +201,33 @@ async function doLogout() {
   </div>
 </div>
 
-<!-- ── TOAST ── -->
+<!-- TOAST -->
 <div class="wt-toast" id="wt-toast"></div>
 
 <style>
-/* ── Buy Tickets nav button ── */
 .wt-nav-buy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #b59f75;          /* warm gold — complements the green nav */
-  color: #a0ff94 !important;    /* dark green text for contrast */
-  font-size: 14px;
-  font-weight: 700;
-  padding: 9px 20px;
-  border-radius: 20px;
-  text-decoration: none !important;
-  letter-spacing: 0.4px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #b59f75; color: #a0ff94 !important;
+  font-size: 14px; font-weight: 700; padding: 9px 20px; border-radius: 20px;
+  text-decoration: none !important; letter-spacing: 0.4px;
   border: 2px solid #ffffff;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 .wt-nav-buy-btn:hover {
-  background: #b8924e;
-  transform: translateY(-1px);
+  background: #b8924e; transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(0,0,0,0.22);
-  color: #1a3d18 !important;
-  text-decoration: none !important;
+  color: #1a3d18 !important; text-decoration: none !important;
 }
-.wt-nav-bell {
+.wt-nav-bell, a.wt-nav-bell {
   width: 40px; height: 40px; border-radius: 50%;
   background: #fff; border: 1px solid #e4e9e0;
-  display: flex; align-items: center; justify-content: center;
+  display: flex !important; align-items: center; justify-content: center;
   cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   position: relative; transition: background 0.2s, border-color 0.2s;
+  text-decoration: none;
 }
-.wt-nav-bell:hover { background: #f0f4ee; border-color: #2D5A27; }
+.wt-nav-bell:hover, a.wt-nav-bell:hover { background: #f0f4ee; border-color: #2D5A27; }
 .wt-notif-badge {
   position: absolute; top: -4px; right: -4px;
   width: 18px; height: 18px; background: #E74C3C;
@@ -232,21 +243,11 @@ async function doLogout() {
   display: none; overflow: hidden;
 }
 .wt-notif-dropdown.open { display: block; }
-.wt-notif-dropdown-header {
-  padding: 16px 20px 12px; font-size: 14px; font-weight: 700;
-  color: #2F3640; border-bottom: 1px solid #f0f4ee;
-}
-.wt-notif-item {
-  padding: 14px 20px; border-bottom: 1px solid #f0f4ee;
-  cursor: pointer; transition: background 0.15s;
-  display: flex; gap: 10px; align-items: flex-start;
-}
+.wt-notif-dropdown-header { padding: 16px 20px 12px; font-size: 14px; font-weight: 700; color: #2F3640; border-bottom: 1px solid #f0f4ee; }
+.wt-notif-item { padding: 14px 20px; border-bottom: 1px solid #f0f4ee; cursor: pointer; transition: background 0.15s; display: flex; gap: 10px; align-items: flex-start; }
 .wt-notif-item:last-child { border-bottom: none; }
 .wt-notif-item:hover { background: #f7faf5; }
-.wt-notif-item-dot {
-  width: 8px; height: 8px; background: #2D5A27;
-  border-radius: 50%; flex-shrink: 0; margin-top: 4px;
-}
+.wt-notif-item-dot { width: 8px; height: 8px; background: #2D5A27; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
 .wt-notif-item-title { font-size: 13px; font-weight: 600; color: #2F3640; margin-bottom: 3px; }
 .wt-notif-item-body  { font-size: 12px; color: #7F8C8D; }
 .wt-notif-empty { padding: 24px 20px; text-align: center; font-size: 13px; color: #aaa; }
@@ -263,9 +264,7 @@ async function doLogout() {
 </style>
 
 <script>
-(function() {
-  var wtPollingInterval = null;
-  var wtNotifCache = [];
+(function () {
   var wtToastTimer = null;
 
   function wtEscHtml(str) {
@@ -279,7 +278,7 @@ async function doLogout() {
     toast.textContent = msg;
     toast.classList.add('show');
     if (wtToastTimer) clearTimeout(wtToastTimer);
-    wtToastTimer = setTimeout(function() { toast.classList.remove('show'); }, duration);
+    wtToastTimer = setTimeout(function () { toast.classList.remove('show'); }, duration);
   }
 
   function wtRenderNotifDropdown(notifications) {
@@ -289,20 +288,17 @@ async function doLogout() {
       return;
     }
     listEl.innerHTML = '';
-    notifications.forEach(function(n) {
+    notifications.forEach(function (n) {
       var item = document.createElement('div');
       item.className = 'wt-notif-item';
       item.innerHTML =
         (n.is_read ? '' : '<div class="wt-notif-item-dot"></div>') +
         '<div><div class="wt-notif-item-title">' + wtEscHtml(n.title) + '</div>' +
-        '<div class="wt-notif-item-body">' + wtEscHtml(n.body) + '</div></div>';
-      item.onclick = function() {
+        '<div class="wt-notif-item-body">'  + wtEscHtml(n.body)  + '</div></div>';
+      item.onclick = function () {
         wtMarkNotifRead(n.id);
         wtCloseNotifDropdown();
-        if (n.type === 'booking_approved') {
-          var ids = n.ticket_ids ? (typeof n.ticket_ids === 'string' ? n.ticket_ids : JSON.stringify(n.ticket_ids)) : '';
-          window.location.href = 'MyTickets.php';
-        }
+        if (n.type === 'booking_approved') { window.location.href = 'MyTickets.php'; }
       };
       listEl.appendChild(item);
     });
@@ -315,58 +311,52 @@ async function doLogout() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notification_id: notifId })
       });
-    } catch(e) {}
+    } catch (e) {}
   }
 
   async function wtPollNotifications() {
+    <?php if ($isGuest): ?>
+    return; // guests have no notifications
+    <?php endif; ?>
     try {
       var res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=check_notifications', { credentials: 'include' });
       var data = await res.json();
       if (!data.success) return;
       var notifications = data.notifications || [];
-      var unread = notifications.filter(function(n) { return !n.is_read; });
+      var unread = notifications.filter(function (n) { return !n.is_read; });
       var count  = unread.length;
       var badge  = document.getElementById('wt-notif-badge');
       if (badge) { badge.style.display = count > 0 ? 'flex' : 'none'; badge.textContent = count > 0 ? count : ''; }
 
-      // Use sessionStorage to track which notifications have already shown a toast
-      // so navigating between pages doesn't re-trigger the toast
       var shownKey = 'wt_shown_notifs';
       var shownRaw = '';
-      try { shownRaw = sessionStorage.getItem(shownKey) || ''; } catch(e) {}
+      try { shownRaw = sessionStorage.getItem(shownKey) || ''; } catch (e) {}
       var shownIds = shownRaw ? shownRaw.split(',') : [];
-
-      notifications.forEach(function(n) {
+      notifications.forEach(function (n) {
         var idStr = String(n.id);
         if (n.type === 'booking_approved' && shownIds.indexOf(idStr) === -1) {
           wtShowToast('✓ Booking ' + n.booking_ref + ' approved! Click the bell to view your QR ticket.', 6000);
           shownIds.push(idStr);
         }
       });
+      try { sessionStorage.setItem(shownKey, shownIds.join(',')); } catch (e) {}
 
-      try { sessionStorage.setItem(shownKey, shownIds.join(',')); } catch(e) {}
-
-      wtNotifCache = notifications;
       wtRenderNotifDropdown(notifications);
-    } catch(e) {}
+    } catch (e) {}
   }
 
-  window.wtToggleNotifDropdown = function() {
-    document.getElementById('wt-notif-dropdown').classList.toggle('open');
-  };
-  window.wtCloseNotifDropdown = function() {
-    document.getElementById('wt-notif-dropdown').classList.remove('open');
-  };
+  window.wtToggleNotifDropdown = function () { document.getElementById('wt-notif-dropdown').classList.toggle('open'); };
+  window.wtCloseNotifDropdown  = function () { document.getElementById('wt-notif-dropdown').classList.remove('open'); };
 
-  document.addEventListener('click', function(e) {
+  document.addEventListener('click', function (e) {
     var dd   = document.getElementById('wt-notif-dropdown');
     var bell = e.target.closest('#wt-bell-btn');
     if (dd && !bell && !dd.contains(e.target)) dd.classList.remove('open');
   });
 
-  window.addEventListener('load', function() {
+  window.addEventListener('load', function () {
     wtPollNotifications();
-    wtPollingInterval = setInterval(wtPollNotifications, 30000);
+    setInterval(wtPollNotifications, 30000);
   });
 })();
 </script>

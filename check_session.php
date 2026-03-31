@@ -1,25 +1,41 @@
 <?php
 /**
  * check_session.php
- * Place in: WildTrack/check_session.php
  *
- * Include at the TOP of every visitor-facing page:
- *   <?php require_once 'check_session.php'; ?>
+ * Starts the session and makes $_SESSION['user'] available.
+ * Pages are PUBLIC by default — no forced redirect.
  *
- * What it does:
- *  - Starts the session
- *  - If not logged in → redirect to login.html
- *  - If logged in but NOT a visitor → redirect to login.html
- *    (admin/worker have their own portals)
+ * To protect a specific page or action, call requireVisitorLogin().
  */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$user = $_SESSION['user'] ?? null;
-
-if (!$user || $user['role'] !== 'visitor') {
-    header('Location: login.html');
+/**
+ * Redirects to login if not logged in.
+ * Saves the intended URL so login.html can bounce the user back after login.
+ */
+function requireVisitorLogin(): void
+{
+    $u = $_SESSION['user'] ?? null;
+    if ($u && isset($u['role'])) {
+        return; // already logged in — nothing to do
+    }
+    $target = $_SERVER['REQUEST_URI'] ?? 'mainPage.php';
+    $_SESSION['login_redirect'] = $target;
+    header('Location: login.html?reason=login_required&redirect=' . urlencode($target));
     exit;
+}
+
+/** Returns true if any user (visitor / admin / worker) is logged in. */
+function isLoggedIn(): bool
+{
+    return isset($_SESSION['user']['role']);
+}
+
+/** Returns true only for a logged-in visitor. */
+function isVisitor(): bool
+{
+    return ($_SESSION['user']['role'] ?? '') === 'visitor';
 }

@@ -5174,7 +5174,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (activePage && activePage.id === 'page-staff') loadStaff();
 });
 
-/* ── Feedback state ─────────────────────────────────────────── */
 let fbPage = 1;
 let fbTotalPages = 1;
 let fbSearchTimer = null;
@@ -5188,20 +5187,31 @@ function changeFbPage(dir) {
   loadFeedback();
 }
 
-/* ── Load stats ─────────────────────────────────────────────── */
+/* ── Stats ───────────────────────────────────────────────────── */
 async function loadFeedbackStats() {
   try {
     const res  = await fetch('api/feedback.php?action=stats', { credentials: 'include' });
     const data = await res.json();
     if (!data.success) return;
 
-    document.getElementById('fbAvgRating').textContent = data.avg || '—';
-    const full = Math.round(data.avg || 0);
-    document.getElementById('fbAvgStars').textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
-    document.getElementById('fbTotalLabel').textContent =
-      'Based on ' + data.total + ' review' + (data.total !== 1 ? 's' : '');
-    document.getElementById('fbUnreadCount').textContent  = data.unread;
-    document.getElementById('fbPendingCount').textContent = data.pending;
+    const avgEl = document.getElementById('fbAvgRating');
+    if (avgEl) avgEl.textContent = data.avg || '—';
+
+    const starsEl = document.getElementById('fbAvgStars');
+    if (starsEl) {
+      const full = Math.round(data.avg || 0);
+      starsEl.textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
+    }
+
+    const totalEl = document.getElementById('fbTotalLabel');
+    if (totalEl) totalEl.textContent = 'Based on ' + data.total + ' review' + (data.total !== 1 ? 's' : '');
+
+    const unreadEl = document.getElementById('fbUnreadCount');
+    if (unreadEl) unreadEl.textContent = data.unread;
+
+    // "Awaiting Reply" = only genuinely pending (not replied, not flagged)
+    const pendingEl = document.getElementById('fbPendingCount');
+    if (pendingEl) pendingEl.textContent = data.pending;
 
     const bd = data.breakdown || {};
     for (let r = 1; r <= 5; r++) {
@@ -5214,7 +5224,7 @@ async function loadFeedbackStats() {
   } catch (e) { console.error('loadFeedbackStats', e); }
 }
 
-/* ── Load list ──────────────────────────────────────────────── */
+/* ── List ────────────────────────────────────────────────────── */
 async function loadFeedback() {
   await loadFeedbackStats();
 
@@ -5224,8 +5234,8 @@ async function loadFeedback() {
 
   const params = new URLSearchParams({ action: 'list', page: fbPage });
   if (search.trim()) params.set('search', search.trim());
-  if (rating) params.set('rating', rating);
-  if (status) params.set('status', status);
+  if (rating)        params.set('rating', rating);
+  if (status)        params.set('status', status);
 
   const list = document.getElementById('fbList');
   if (!list) return;
@@ -5241,16 +5251,17 @@ async function loadFeedback() {
     }
 
     fbTotalPages = data.total_pages || 1;
-    const rows   = data.feedback || [];
+    const rows   = data.feedback   || [];
 
     if (!rows.length) {
       list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">No feedback found.</div>';
-      document.getElementById('fbPagination').style.display = 'none';
+      const pag = document.getElementById('fbPagination');
+      if (pag) pag.style.display = 'none';
       loadContactInfoTable();
       return;
     }
 
-    // Mark unread as read silently
+    // Mark unread silently
     const unreadIds = rows.filter(r => !r.is_read).map(r => r.id);
     if (unreadIds.length) {
       fetch('api/feedback.php?action=mark_read', {
@@ -5267,19 +5278,37 @@ async function loadFeedback() {
       const dot      = !fb.is_read
         ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--orange);display:inline-block;margin-left:6px;vertical-align:middle;"></span>'
         : '';
-      const badge = {
+
+      const badgeMap = {
         pending: '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;">Pending</span>',
         replied: '<span style="background:var(--green-pale);color:var(--green-dark);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;">Replied</span>',
         flagged: '<span style="background:#FEE2E2;color:var(--red);font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;">Flagged</span>',
-      }[fb.status] || '';
+      };
+      const badge = badgeMap[fb.status] || '';
 
+      // Admin reply section with delete-reply button
       const replySection = fb.admin_reply
         ? `<div style="margin-top:12px;background:#f0f7ef;border-left:3px solid var(--green-light);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;">
-             <strong style="color:var(--green-dark);">Admin Reply</strong>
-             <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${new Date(fb.replied_at).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})}</span>
-             <p style="margin:6px 0 0;color:var(--text-mid);">${escA(fb.admin_reply)}</p>
+             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+               <span>
+                 <strong style="color:var(--green-dark);">Admin Reply</strong>
+                 <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${new Date(fb.replied_at).toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})}</span>
+               </span>
+               <button onclick="deleteFbReply(${fb.id})"
+                 style="background:none;border:1px solid #FECACA;color:var(--red);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;cursor:pointer;">
+                 ✕ Delete Reply
+               </button>
+             </div>
+             <p style="margin:0;color:var(--text-mid);line-height:1.6;">${escA(fb.admin_reply)}</p>
            </div>`
         : '';
+
+      // Action buttons
+      const replyBtn  = `<button class="btn-approve" onclick="openFbReply(${fb.id})">&#x21A9; Reply</button>`;
+      const flagBtn   = fb.status !== 'flagged'
+        ? `<button class="btn-reject" onclick="flagFeedback(${fb.id})">&#x2691; Flag</button>`
+        : `<button class="btn-edit"   onclick="unflagFeedback(${fb.id})">&#x21BA; Unflag</button>`;
+      const deleteBtn = `<button class="btn-reject-sm" title="Delete feedback" onclick="deleteFeedback(${fb.id})">&#x1F5D1;</button>`;
 
       return `
         <div class="review-card" id="fb-row-${fb.id}" style="${!fb.is_read ? 'border-left:3px solid var(--orange);' : ''}">
@@ -5291,11 +5320,9 @@ async function loadFeedback() {
               <div class="review-stars" style="margin-top:4px;">${stars} <span>${date}</span></div>
             </div>
             <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;">
-              ${fb.status !== 'replied' ? `<button class="btn-approve" onclick="openFbReply(${fb.id})">&#x21A9; Reply</button>` : ''}
-              ${fb.status !== 'flagged'
-                ? `<button class="btn-reject" onclick="flagFeedback(${fb.id})">&#x2691; Flag</button>`
-                : `<button class="btn-edit"   onclick="unflagFeedback(${fb.id})">&#x21BA; Unflag</button>`}
-              <button class="btn-reject-sm" onclick="deleteFeedback(${fb.id})">&#x1F5D1;</button>
+              ${replyBtn}
+              ${flagBtn}
+              ${deleteBtn}
             </div>
           </div>
           <p class="review-text">${escA(fb.message)}</p>
@@ -5316,11 +5343,10 @@ async function loadFeedback() {
     }
 
     loadContactInfoTable();
-
   } catch (e) { console.error('loadFeedback', e); }
 }
 
-/* ── Reply ─────────────────────────────────────────────────── */
+/* ── Open reply modal ────────────────────────────────────────── */
 function openFbReply(id) {
   document.getElementById('fbReplyId').value   = id;
   document.getElementById('fbReplyText').value = '';
@@ -5328,17 +5354,21 @@ function openFbReply(id) {
   const row     = document.getElementById('fb-row-' + id);
   const preview = document.getElementById('fbOriginalPreview');
   if (row && preview) {
-    const name  = (row.querySelector('.reviewer-name') || {}).textContent || '';
-    const stars = (row.querySelector('.review-stars')  || {}).textContent || '';
-    const msg   = (row.querySelector('.review-text')   || {}).textContent || '';
+    const nameEl  = row.querySelector('.reviewer-name');
+    const starsEl = row.querySelector('.review-stars');
+    const msgEl   = row.querySelector('.review-text');
+    const name    = nameEl  ? nameEl.textContent.trim()  : '';
+    const stars   = starsEl ? starsEl.textContent.trim() : '';
+    const msg     = msgEl   ? msgEl.textContent.trim()   : '';
     preview.innerHTML =
-      '<strong style="font-size:13px;color:var(--text-dark);">' + escA(name.trim()) + '</strong>' +
-      '<span style="font-size:12px;color:var(--text-muted);margin-left:8px;">' + escA(stars.trim()) + '</span>' +
-      '<p style="margin:8px 0 0;font-size:13px;color:var(--text-mid);line-height:1.6;">' + escA(msg.trim()) + '</p>';
+      '<strong style="font-size:13px;color:var(--text-dark);">'  + escA(name)  + '</strong>' +
+      '<span style="font-size:12px;color:var(--text-muted);margin-left:8px;">' + escA(stars) + '</span>' +
+      '<p style="margin:8px 0 0;font-size:13px;color:var(--text-mid);line-height:1.6;">' + escA(msg) + '</p>';
   }
   openModal('fbReplyModal');
 }
 
+/* ── Submit reply ────────────────────────────────────────────── */
 async function submitFbReply() {
   const id    = parseInt(document.getElementById('fbReplyId').value);
   const reply = document.getElementById('fbReplyText').value.trim();
@@ -5355,7 +5385,22 @@ async function submitFbReply() {
   } catch (e) { showToast('Network error.', 'error'); }
 }
 
-/* ── Flag / Unflag / Delete ─────────────────────────────────── */
+/* ── Delete reply ────────────────────────────────────────────── */
+async function deleteFbReply(id) {
+  if (!confirm('Delete this reply? The feedback will go back to Pending status.')) return;
+  try {
+    const res  = await fetch('api/feedback.php?action=delete_reply', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    const data = await res.json();
+    if (data.success) { showToast('Reply deleted'); loadFeedback(); }
+    else showToast(data.message || 'Failed.', 'error');
+  } catch (e) { showToast('Network error.', 'error'); }
+}
+
+/* ── Flag / Unflag / Delete whole feedback ───────────────────── */
 async function flagFeedback(id) {
   const res  = await fetch('api/feedback.php?action=flag', {
     method: 'POST', credentials: 'include',
@@ -5379,7 +5424,7 @@ async function unflagFeedback(id) {
 }
 
 async function deleteFeedback(id) {
-  if (!confirm('Delete this feedback? This cannot be undone.')) return;
+  if (!confirm('Delete this feedback entirely? This cannot be undone.')) return;
   const res  = await fetch('api/feedback.php?action=delete', {
     method: 'POST', credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
@@ -5390,7 +5435,7 @@ async function deleteFeedback(id) {
   else showToast(data.message || 'Failed.', 'error');
 }
 
-/* ── Contact Info table ─────────────────────────────────────── */
+/* ── Contact Info table ──────────────────────────────────────── */
 async function loadContactInfoTable() {
   const tbody = document.getElementById('contactInfoBody');
   if (!tbody) return;
@@ -5462,9 +5507,9 @@ async function submitContactModal() {
     sort_order: parseInt(document.getElementById('cmSort').value) || 0,
   };
   if (id) payload.id = parseInt(id);
-  const action = id ? 'update' : 'create';
+  const act = id ? 'update' : 'create';
   try {
-    const res  = await fetch('api/contact_info.php?action=' + action, {
+    const res  = await fetch('api/contact_info.php?action=' + act, {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -5498,7 +5543,7 @@ async function deleteContact(id) {
   else showToast(data.message || 'Failed.', 'error');
 }
 
-/* ── Patch showPage ─────────────────────────────────────────── */
+/* ── Patch showPage ──────────────────────────────────────────── */
 (function() {
   const _orig = window.showPage;
   window.showPage = function(name) {
@@ -5512,7 +5557,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (active && active.id === 'page-feedback') { fbPage = 1; loadFeedback(); }
 });
 
-/* ── Sidebar badge: poll for unread feedback ────────────────── */
+/* ── Sidebar badge ───────────────────────────────────────────── */
 async function refreshFeedbackBadge() {
   try {
     const res  = await fetch('api/feedback.php?action=stats', { credentials: 'include' });

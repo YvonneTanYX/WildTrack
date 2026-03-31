@@ -85,6 +85,13 @@ if (empty($sliderImages)) {
       </div>
     </a>
 
+     <a href="recognition.php" style="text-decoration:none;">
+      <div style="background:#fff; border-radius:14px; padding:28px 24px; text-align:center; width:200px; box-shadow:0 2px 12px rgba(0,0,0,0.08); transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
+        <div style="font-size:36px; margin-bottom:10px;">📸</div>
+        <div style="font-weight:bold; color:#2a5a2e; font-size:15px;">Animal Recognition</div>
+      </div>
+    </a>
+
     <a href="animalFeeding.php" style="text-decoration:none;">
       <div style="background:#fff; border-radius:14px; padding:28px 24px; text-align:center; width:200px; box-shadow:0 2px 12px rgba(0,0,0,0.08); transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
         <div style="font-size:36px; margin-bottom:10px;">🦒</div>

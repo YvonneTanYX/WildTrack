@@ -51,49 +51,11 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
 .live-dot{width:6px;height:6px;background:#2e8b77;border-radius:50%;animation:pulse 1.5s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 .topbar-right{display:flex;align-items:center;gap:12px;}
-
-/* ─── GLOBAL SEARCH FIX ─── */
-.search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;width:220px;position:relative;}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;width:220px;}
 .search-box input{border:none;outline:none;background:transparent;font-size:13px;color:var(--text);font-family:inherit;width:100%;}
 .search-box input::placeholder{color:#bbb;}
-.search-results-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--white);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);z-index:999;max-height:320px;overflow-y:auto;display:none;}
-.search-results-dropdown.open{display:block;}
-.search-result-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s;}
-.search-result-item:last-child{border-bottom:none;}
-.search-result-item:hover{background:rgba(78,122,81,0.06);}
-.sri-icon{width:34px;height:34px;border-radius:9px;background:rgba(78,122,81,0.09);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.sri-title{font-size:13px;font-weight:600;color:var(--text);}
-.sri-sub{font-size:11px;color:var(--sub);}
-.search-no-results{padding:18px;text-align:center;color:var(--sub);font-size:13px;}
-.search-category{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:1px;padding:8px 14px 4px;background:rgba(78,122,81,0.03);}
-
-/* ─── NOTIFICATION PANEL FIX ─── */
-.notif-wrapper{position:relative;}
 .topbar-icon-btn{width:36px;height:36px;border-radius:9px;background:var(--bg);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);position:relative;}
 .notif-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid var(--white);}
-.notif-panel{position:absolute;top:calc(100% + 10px);right:0;width:340px;background:var(--white);border:1.5px solid var(--border);border-radius:14px;box-shadow:var(--shadow-lg);z-index:999;display:none;overflow:hidden;}
-.notif-panel.open{display:block;animation:fadeUp 0.2s ease both;}
-.notif-panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
-.notif-panel-title{font-size:14px;font-weight:700;color:var(--text);}
-.notif-mark-all{font-size:11px;color:var(--header);font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit;}
-.notif-mark-all:hover{text-decoration:underline;}
-.notif-list{max-height:300px;overflow-y:auto;}
-.notif-item{display:flex;align-items:flex-start;gap:11px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;position:relative;}
-.notif-item:last-child{border-bottom:none;}
-.notif-item:hover{background:rgba(78,122,81,0.04);}
-.notif-item.unread{background:rgba(118,215,196,0.07);}
-.notif-item-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.ni-green{background:rgba(118,215,196,0.18);}
-.ni-orange{background:rgba(224,123,57,0.12);}
-.ni-red{background:rgba(217,79,61,0.1);}
-.notif-item-title{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;}
-.notif-item-sub{font-size:11px;color:var(--sub);margin-top:2px;}
-.notif-unread-dot{position:absolute;top:14px;right:14px;width:7px;height:7px;border-radius:50%;background:var(--teal-dark);}
-.notif-empty{padding:28px;text-align:center;color:var(--sub);font-size:13px;}
-.notif-panel-footer{padding:10px 16px;border-top:1px solid var(--border);text-align:center;}
-.notif-panel-footer a{font-size:12px;color:var(--header);font-weight:600;cursor:pointer;text-decoration:none;}
-.notif-count-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;}
-
 .page-wrap{padding:28px 32px 80px;flex:1;}
 .section-header{margin-bottom:22px;}
 .section-header h2{font-size:22px;font-weight:700;color:var(--text);}
@@ -157,7 +119,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
 .btn-danger{background:var(--white);color:var(--red);border:1.5px solid rgba(217,79,61,0.3);padding:10px 22px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:7px;font-family:inherit;}
 .btn-danger:hover{background:rgba(217,79,61,0.06);border-color:var(--red);}
 
-/* SEARCH BAR (page-level) */
+/* SEARCH BAR */
 .search-bar{display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:10px 16px;}
 .search-bar:focus-within{border-color:var(--header);}
 .search-bar input{border:none;outline:none;flex:1;font-size:14px;background:transparent;color:var(--text);font-family:inherit;}
@@ -253,40 +215,19 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
 .filter-row{display:flex;gap:7px;margin-bottom:18px;flex-wrap:wrap;}
 .filter-btn{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);cursor:pointer;transition:all 0.18s;background:var(--white);color:var(--sub);font-family:inherit;}
 .filter-btn.active,.filter-btn:hover{border-color:var(--header);color:var(--header);background:rgba(78,122,81,0.06);}
-
-/* Task card layout */
-.task-item{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);transition:opacity 0.2s;}
+.task-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
 .task-item:last-child{border-bottom:none;}
-.task-item.inactive{opacity:0.45;}
 .task-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
 .task-check.done{background:var(--header);border-color:var(--header);}
 .task-check.done::after{content:'✓';color:#fff;font-size:12px;font-weight:700;}
-.task-check.inactive-check{border-color:#ccc;background:#f5f5f5;cursor:default;}
-.task-text{flex:1;min-width:0;}
-.task-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.task-text{flex:1;}
+.task-name{font-size:13px;font-weight:600;color:var(--text);}
 .task-name.done{text-decoration:line-through;color:var(--sub);}
-.task-name.inactive-name{color:var(--sub);}
 .task-meta{font-size:11px;color:var(--sub);margin-top:2px;}
-.task-pri{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px;flex-shrink:0;}
+.task-pri{font-size:11px;font-weight:700;padding:3px 9px;border-radius:7px;}
 .tp-h{background:rgba(217,79,61,0.1);color:var(--red);}
 .tp-m{background:rgba(224,123,57,0.12);color:var(--orange);}
 .tp-l{background:rgba(118,215,196,0.18);color:#2e8b77;}
-.task-actions{display:flex;gap:5px;flex-shrink:0;}
-.task-toggle-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);transition:all 0.18s;font-size:13px;}
-.task-toggle-btn:hover{border-color:var(--teal-dark);color:var(--teal-dark);}
-.task-toggle-btn.active-task{background:rgba(118,215,196,0.15);border-color:var(--teal-dark);color:var(--teal-dark);}
-.task-edit-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);transition:all 0.18s;}
-.task-edit-btn:hover{border-color:var(--header);color:var(--header);}
-.task-del-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sub);transition:all 0.18s;}
-.task-del-btn:hover{border-color:var(--red);color:var(--red);}
-
-/* Real-time notification toast (floats top-right) */
-.rt-notif{position:fixed;top:72px;right:22px;background:var(--white);border:1.5px solid var(--border);border-radius:13px;padding:12px 16px;display:flex;align-items:flex-start;gap:11px;box-shadow:var(--shadow-lg);z-index:9999;max-width:310px;transform:translateX(340px);transition:transform 0.35s cubic-bezier(.22,.68,0,1.2);pointer-events:none;}
-.rt-notif.show{transform:translateX(0);}
-.rt-notif-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.rt-notif-title{font-size:13px;font-weight:700;color:var(--text);}
-.rt-notif-sub{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.4;}
-.rt-notif-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--teal);border-radius:0 0 13px 13px;width:100%;transform-origin:left;transition:width linear;}
 
 /* INCIDENTS */
 .sev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
@@ -323,14 +264,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
 <body>
 
 <div class="toast" id="toast"></div>
-<div class="rt-notif" id="rtNotif">
-  <div class="rt-notif-icon ni-green" id="rtNotifIcon">🔔</div>
-  <div>
-    <div class="rt-notif-title" id="rtNotifTitle"></div>
-    <div class="rt-notif-sub" id="rtNotifSub"></div>
-  </div>
-  <div class="rt-notif-bar" id="rtNotifBar"></div>
-</div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -403,31 +336,14 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
       <div class="live-badge"><div class="live-dot"></div> LIVE</div>
     </div>
     <div class="topbar-right">
-
-      <!-- ─── GLOBAL SEARCH ─── -->
-      <div class="search-box" id="globalSearchBox">
+      <div class="search-box">
         <span class="iconify" data-icon="lucide:search" style="font-size:14px;color:#bbb;flex-shrink:0;"></span>
-        <input type="text" placeholder="Search anything..." id="globalSearchInput" autocomplete="off"
-               oninput="handleGlobalSearch(this.value)" onfocus="handleGlobalSearch(this.value)" />
-        <div class="search-results-dropdown" id="searchDropdown"></div>
+        <input type="text" placeholder="Search anything...">
       </div>
-
-      <!-- ─── NOTIFICATION BELL ─── -->
-      <div class="notif-wrapper">
-        <div class="topbar-icon-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notifications">
-          <span class="iconify" data-icon="lucide:bell" style="font-size:16px;"></span>
-          <div class="notif-dot" id="notifDot"></div>
-        </div>
-        <div class="notif-panel" id="notifPanel">
-          <div class="notif-panel-header">
-            <span class="notif-panel-title">Notifications <span class="notif-count-badge" id="notifCountBadge">0</span></span>
-            <button class="notif-mark-all" onclick="markAllRead()">Mark all read</button>
-          </div>
-          <div class="notif-list" id="notifList"></div>
-          <div class="notif-panel-footer"><a onclick="clearAllNotifs()">Clear all notifications</a></div>
-        </div>
+      <div class="topbar-icon-btn">
+        <span class="iconify" data-icon="lucide:bell" style="font-size:16px;"></span>
+        <div class="notif-dot"></div>
       </div>
-
     </div>
   </div>
 
@@ -614,25 +530,31 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
   <!-- TASKS -->
   <div class="page" id="pg-tasks">
   <div class="page-wrap">
-    <div class="section-header"><h2>Daily Tasks</h2><p>Manage shift tasks — add, edit, activate/deactivate, complete, and delete.</p></div>
+    <div class="section-header"><h2>Daily Tasks</h2><p>Tap checkboxes to mark tasks complete. Progress syncs live to dashboard.</p></div>
     <div class="block">
-      <div class="progress-label"><span id="taskDoneLabel">0 of 0 completed</span><span id="taskPctLabel" style="font-weight:700;color:var(--header);">0%</span></div>
-      <div class="progress-bar"><div class="progress-fill" id="taskBar" style="width:0%;"></div></div>
+      <div class="progress-label"><span id="taskDoneLabel">3 of 8 completed</span><span id="taskPctLabel" style="font-weight:700;color:var(--header);">37%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="taskBar" style="width:37%;"></div></div>
     </div>
     <div class="block">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-        <div class="filter-row" style="margin-bottom:0;">
-          <button class="filter-btn active" onclick="filterTasks('all',this)">All</button>
-          <button class="filter-btn" onclick="filterTasks('active',this)">Active</button>
-          <button class="filter-btn" onclick="filterTasks('pending',this)">Pending</button>
-          <button class="filter-btn" onclick="filterTasks('done',this)">Completed</button>
-          <button class="filter-btn" onclick="filterTasks('inactive',this)">Inactive</button>
-        </div>
-        <button class="btn-primary" style="padding:8px 16px;font-size:13px;" onclick="openTaskModal()">
-          <span class="iconify" data-icon="lucide:plus" data-width="14"></span> Add Task
-        </button>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterTasks('all',this)">All Tasks</button>
+        <button class="filter-btn" onclick="filterTasks('pending',this)">Pending</button>
+        <button class="filter-btn" onclick="filterTasks('done',this)">Completed</button>
       </div>
       <div id="taskList"></div>
+    </div>
+    <div class="block">
+      <div class="block-title">Add New Task</div>
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Task Description</label><input class="form-input" type="text" id="newTaskInput" placeholder="e.g. Clean enclosure 3, refill water tanks..."></div>
+        <div class="form-group"><label class="form-label">Priority</label>
+          <select class="form-select" id="newTaskPriority"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Assigned Zone</label>
+          <select class="form-select" id="newTaskZone"><option>Zone A</option><option>Zone B</option><option>Zone C</option><option>All Zones</option></select>
+        </div>
+      </div>
+      <div style="margin-top:16px;"><button class="btn-primary" onclick="addTask()"><span class="iconify" data-icon="lucide:plus" data-width="15"></span> Add Task</button></div>
     </div>
   </div>
   </div>
@@ -670,6 +592,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
 </div>
 
 <!-- ADD/EDIT ANIMAL MODAL -->
+<!-- CHANGE 2: Enclosure field removed from this modal -->
 <div class="modal-overlay" id="animalModal">
   <div class="modal">
     <div class="modal-header">
@@ -770,54 +693,6 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
   </div>
 </div>
 
-<!-- ADD / EDIT TASK MODAL -->
-<div class="modal-overlay" id="taskModal">
-  <div class="modal" style="max-width:500px;">
-    <div class="modal-header">
-      <div class="modal-title" id="taskModalTitle">Add New Task</div>
-      <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
-    </div>
-    <div class="form-grid">
-      <div class="form-group full">
-        <label class="form-label">Task Description *</label>
-        <input class="form-input" type="text" id="tm_name" placeholder="e.g. Clean enclosure 3, refill water tanks...">
-      </div>
-      <div class="form-group full">
-        <label class="form-label">Details / Notes</label>
-        <input class="form-input" type="text" id="tm_meta" placeholder="e.g. Enclosure 3 · Est. 30 min">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Priority</label>
-        <select class="form-select" id="tm_priority">
-          <option value="low">Low</option>
-          <option value="med" selected>Medium</option>
-          <option value="high">High</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Assigned Zone</label>
-        <select class="form-select" id="tm_zone">
-          <option>Zone A</option><option>Zone B</option><option>Zone C</option><option>All Zones</option>
-        </select>
-      </div>
-      <div class="form-group full">
-        <label class="form-label">Status</label>
-        <select class="form-select" id="tm_active">
-          <option value="true">Active (visible &amp; assignable)</option>
-          <option value="false">Inactive (hidden from active list)</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-outline" onclick="closeModal('taskModal')">Cancel</button>
-      <button class="btn-primary" onclick="saveTask()">
-        <span class="iconify" data-icon="lucide:save" data-width="14"></span>
-        <span id="taskModalSaveLbl">Add Task</span>
-      </button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ─── PAGE & NAV ───
 const PAGE_TITLES = {
@@ -829,7 +704,6 @@ function openPage(id){
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
   document.getElementById('topbarTitle').textContent=PAGE_TITLES[id]||'Overview';
-  closeSearchDropdown();
   syncDashboard();
 }
 function navTo(pageId,navEl){
@@ -857,6 +731,7 @@ async function initSession(){
     document.getElementById('sidebarRole').textContent=data.user.role==='admin'?'Administrator':'Caretaker';
     updateGreeting();loadAnimals();
   }catch(e){
+    // Offline/dev fallback
     currentWorker={username:'John Doe',role:'worker'};
     document.getElementById('sidebarName').textContent='John Doe';
     document.getElementById('sidebarRole').textContent='Caretaker';
@@ -893,294 +768,15 @@ function showToast(msg,type='success'){
   setTimeout(()=>{t.className='toast';},3000);
 }
 
-// ─── LOCALSTORAGE HELPERS ───
+// ════════════════════════════════════════════════════════
+// CHANGE 1: localStorage persistence helpers
+// All data (animals, feeding, health, vax, incidents, tasks)
+// is saved to localStorage so it survives page reloads.
+// ════════════════════════════════════════════════════════
 const LS = {
-  get(key,fallback=null){ try{ const v=localStorage.getItem('wt_'+key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } },
-  set(key,val){ try{ localStorage.setItem('wt_'+key,JSON.stringify(val)); }catch(e){} }
+  get(key, fallback=null){ try{ const v=localStorage.getItem('wt_'+key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } },
+  set(key, val){ try{ localStorage.setItem('wt_'+key, JSON.stringify(val)); }catch(e){} }
 };
-
-// ═══════════════════════════════════════════════
-// ── REAL-TIME NOTIFICATION SYSTEM ──
-// Uses BroadcastChannel (same-origin tabs) + localStorage events
-// + periodic self-poll so notifications update live without reload
-// ═══════════════════════════════════════════════
-let notifications = LS.get('notifications', [
-  {id:1, icon:'🦁', iconClass:'ni-green', title:'Shift started', sub:'Your morning shift begins now. Check tasks.', unread:true, time:'Just now', ts: Date.now()-300000},
-  {id:2, icon:'💉', iconClass:'ni-orange', title:'Vaccination due', sub:'Luna (Leopard) is due for a Rabies booster today.', unread:true, time:'2 hrs ago', ts: Date.now()-7200000},
-  {id:3, icon:'⚠️', iconClass:'ni-red', title:'Incident flagged', sub:'Rex showed aggressive behaviour during feeding.', unread:true, time:'Yesterday', ts: Date.now()-86400000},
-  {id:4, icon:'🍖', iconClass:'ni-green', title:'Feeding reminder', sub:'Afternoon feeding for Zone B animals at 12:00 PM.', unread:false, time:'Yesterday', ts: Date.now()-90000000},
-]);
-let notifNextId = notifications.length ? Math.max(...notifications.map(n=>n.id))+1 : 5;
-
-// BroadcastChannel for cross-tab real-time sync
-let notifChannel = null;
-try {
-  notifChannel = new BroadcastChannel('wt_notifications');
-  notifChannel.onmessage = e => {
-    if(e.data && e.data.type === 'new_notif') {
-      notifications = LS.get('notifications', notifications);
-      notifNextId = notifications.length ? Math.max(...notifications.map(n=>n.id))+1 : 1;
-      renderNotifPanel();
-      // Show the RT toast for incoming cross-tab notif
-      showRTNotif(e.data.icon, e.data.iconClass, e.data.title, e.data.sub);
-    }
-  };
-} catch(e) { /* fallback: no BroadcastChannel */ }
-
-// Listen for storage changes from other tabs
-window.addEventListener('storage', e => {
-  if(e.key === 'wt_notifications') {
-    notifications = e.newValue ? JSON.parse(e.newValue) : [];
-    notifNextId = notifications.length ? Math.max(...notifications.map(n=>n.id))+1 : 1;
-    renderNotifPanel();
-  }
-});
-
-// Poll every 5s to keep badge + dot in sync (self or other tabs)
-setInterval(() => {
-  const fresh = LS.get('notifications', null);
-  if(fresh) {
-    const freshIds = fresh.map(n=>n.id).join(',');
-    const curIds = notifications.map(n=>n.id).join(',');
-    if(freshIds !== curIds) {
-      notifications = fresh;
-      notifNextId = notifications.length ? Math.max(...notifications.map(n=>n.id))+1 : 1;
-      renderNotifPanel();
-    } else {
-      // Just keep badge updated even if list unchanged
-      _updateNotifBadge();
-    }
-  }
-}, 5000);
-
-function _updateNotifBadge() {
-  const unreadCount = notifications.filter(n=>n.unread).length;
-  const badge = document.getElementById('notifCountBadge');
-  if(badge) badge.textContent = unreadCount;
-  const dot = document.getElementById('notifDot');
-  if(dot) dot.style.display = unreadCount > 0 ? 'block' : 'none';
-}
-
-function timeAgo(ts) {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if(s < 60) return 'Just now';
-  if(s < 3600) return Math.floor(s/60) + ' min ago';
-  if(s < 86400) return Math.floor(s/3600) + ' hrs ago';
-  if(s < 172800) return 'Yesterday';
-  return Math.floor(s/86400) + ' days ago';
-}
-
-// Update relative times every 60s
-setInterval(() => {
-  notifications.forEach(n => n.time = timeAgo(n.ts||Date.now()));
-  if(document.getElementById('notifPanel').classList.contains('open')) renderNotifPanel();
-  else _updateNotifBadge();
-}, 60000);
-
-function renderNotifPanel(){
-  const list = document.getElementById('notifList');
-  const unreadCount = notifications.filter(n=>n.unread).length;
-  document.getElementById('notifCountBadge').textContent = unreadCount;
-  const dot = document.getElementById('notifDot');
-  dot.style.display = unreadCount > 0 ? 'block' : 'none';
-
-  if(!notifications.length){
-    list.innerHTML = '<div class="notif-empty">🔔 No notifications yet.</div>';
-    return;
-  }
-  list.innerHTML = notifications.map(n=>`
-    <div class="notif-item ${n.unread?'unread':''}" onclick="markOneRead(${n.id})">
-      <div class="notif-item-icon ${n.iconClass}">${n.icon}</div>
-      <div style="flex:1;">
-        <div class="notif-item-title">${n.title}</div>
-        <div class="notif-item-sub">${n.sub}</div>
-        <div class="notif-item-sub" style="margin-top:3px;">${timeAgo(n.ts||Date.now())}</div>
-      </div>
-      ${n.unread?'<div class="notif-unread-dot"></div>':''}
-    </div>`).join('');
-}
-
-function toggleNotifPanel(){
-  const panel = document.getElementById('notifPanel');
-  const isOpen = panel.classList.contains('open');
-  closeAllDropdowns();
-  if(!isOpen){
-    panel.classList.add('open');
-    renderNotifPanel();
-  }
-}
-
-function markOneRead(id){
-  const n = notifications.find(n=>n.id===id);
-  if(n){ n.unread=false; LS.set('notifications',notifications); renderNotifPanel(); }
-}
-
-function markAllRead(){
-  notifications.forEach(n=>n.unread=false);
-  LS.set('notifications',notifications);
-  renderNotifPanel();
-  showToast('✅ All notifications marked as read.');
-}
-
-function clearAllNotifs(){
-  notifications=[];
-  LS.set('notifications',notifications);
-  renderNotifPanel();
-  showToast('🗑️ Notifications cleared.');
-}
-
-// Push a new notification — broadcasts to all tabs instantly
-function pushNotif(icon, iconClass, title, sub){
-  const entry = {id:notifNextId++, icon, iconClass, title, sub, unread:true, time:'Just now', ts: Date.now()};
-  notifications.unshift(entry);
-  if(notifications.length > 50) notifications = notifications.slice(0,50); // cap at 50
-  LS.set('notifications', notifications);
-  // Broadcast to other tabs
-  try { notifChannel && notifChannel.postMessage({type:'new_notif', icon, iconClass, title, sub}); } catch(e){}
-  renderNotifPanel();
-  showRTNotif(icon, iconClass, title, sub);
-}
-
-// ── REAL-TIME TOAST (slides in top-right) ──
-let rtTimer = null;
-function showRTNotif(icon, iconClass, title, sub) {
-  const el = document.getElementById('rtNotif');
-  const bar = document.getElementById('rtNotifBar');
-  document.getElementById('rtNotifIcon').textContent = icon;
-  document.getElementById('rtNotifIcon').className = 'rt-notif-icon ' + iconClass;
-  document.getElementById('rtNotifTitle').textContent = title;
-  document.getElementById('rtNotifSub').textContent = sub;
-  // Clear any pending dismiss
-  if(rtTimer) clearTimeout(rtTimer);
-  bar.style.transition = 'none';
-  bar.style.width = '100%';
-  el.classList.add('show');
-  // Animate bar drain
-  requestAnimationFrame(() => {
-    bar.style.transition = 'width 4s linear';
-    bar.style.width = '0%';
-  });
-  rtTimer = setTimeout(() => el.classList.remove('show'), 4200);
-}
-
-// ═══════════════════════════════════════════════
-// ── GLOBAL SEARCH SYSTEM ──
-// ═══════════════════════════════════════════════
-const PAGES_INDEX = [
-  {page:'pg-animals', navIdx:1, icon:'🐾', label:'Animal Profiles', sub:'Manage animal records'},
-  {page:'pg-feeding', navIdx:2, icon:'🍖', label:'Feeding Management', sub:'Log animal feedings'},
-  {page:'pg-health',  navIdx:3, icon:'🩺', label:'Animal Health', sub:'Health records & vet visits'},
-  {page:'pg-vaccination', navIdx:4, icon:'💉', label:'Vaccination Tracker', sub:'Vaccination history'},
-  {page:'pg-tasks',   navIdx:5, icon:'📋', label:'Daily Tasks', sub:'Shift task list'},
-  {page:'pg-incidents',navIdx:6,icon:'⚠️', label:'Incident Reports', sub:'Report incidents'},
-  {page:'pg-dashboard',navIdx:0,icon:'📊', label:'Dashboard Overview', sub:'Main overview'},
-];
-
-function handleGlobalSearch(q){
-  q = q.trim().toLowerCase();
-  const dd = document.getElementById('searchDropdown');
-  if(!q){ dd.classList.remove('open'); dd.innerHTML=''; return; }
-
-  const results = [];
-
-  // Search pages
-  const pageMatches = PAGES_INDEX.filter(p=>
-    p.label.toLowerCase().includes(q) || p.sub.toLowerCase().includes(q)
-  );
-  if(pageMatches.length){
-    results.push({type:'category', label:'Pages'});
-    pageMatches.forEach(p=>results.push({type:'page', ...p}));
-  }
-
-  // Search animals
-  const animalMatches = animals.filter(a=>
-    a.name.toLowerCase().includes(q) ||
-    a.species.toLowerCase().includes(q) ||
-    (a.zone||'').toLowerCase().includes(q) ||
-    a.status.toLowerCase().includes(q) ||
-    (a.notes||'').toLowerCase().includes(q)
-  );
-  if(animalMatches.length){
-    results.push({type:'category', label:'Animals'});
-    animalMatches.slice(0,5).forEach(a=>results.push({type:'animal', ...a}));
-  }
-
-  // Search tasks
-  const taskMatches = tasks.filter(t=>
-    t.name.toLowerCase().includes(q) ||
-    t.meta.toLowerCase().includes(q) ||
-    t.zone.toLowerCase().includes(q)
-  );
-  if(taskMatches.length){
-    results.push({type:'category', label:'Tasks'});
-    taskMatches.slice(0,4).forEach(t=>results.push({type:'task', ...t}));
-  }
-
-  // Search feeding log
-  const feedMatches = feedingLog.filter(r=>
-    r.animal.toLowerCase().includes(q) ||
-    r.type.toLowerCase().includes(q) ||
-    (r.notes||'').toLowerCase().includes(q)
-  );
-  if(feedMatches.length){
-    results.push({type:'category', label:'Feeding Records'});
-    feedMatches.slice(0,3).forEach(r=>results.push({type:'feed', ...r}));
-  }
-
-  // Search incidents
-  const incMatches = incidentLog.filter(r=>
-    r.title.toLowerCase().includes(q) ||
-    r.desc.toLowerCase().includes(q)
-  );
-  if(incMatches.length){
-    results.push({type:'category', label:'Incidents'});
-    incMatches.slice(0,3).forEach(r=>results.push({type:'incident', ...r}));
-  }
-
-  if(!results.length){
-    dd.innerHTML = `<div class="search-no-results">No results found for "<strong>${q}</strong>"</div>`;
-    dd.classList.add('open');
-    return;
-  }
-
-  dd.innerHTML = results.map(r=>{
-    if(r.type==='category') return `<div class="search-category">${r.label}</div>`;
-    if(r.type==='page') return `<div class="search-result-item" onclick="searchGoToPage('${r.page}',${r.navIdx})"><div class="sri-icon">${r.icon}</div><div><div class="sri-title">${r.label}</div><div class="sri-sub">${r.sub}</div></div></div>`;
-    if(r.type==='animal'){
-      const st={healthy:'Healthy',watch:'Under Observation',treatment:'Under Treatment'};
-      return `<div class="search-result-item" onclick="searchGoToPage('pg-animals',1)"><div class="sri-icon">${r.emoji}</div><div><div class="sri-title">${r.name}</div><div class="sri-sub">${r.species} · ${st[r.status]}</div></div></div>`;
-    }
-    if(r.type==='task') return `<div class="search-result-item" onclick="searchGoToPage('pg-tasks',5)"><div class="sri-icon">📋</div><div><div class="sri-title">${r.name}</div><div class="sri-sub">${r.zone} · ${r.done?'Completed':'Pending'}</div></div></div>`;
-    if(r.type==='feed') return `<div class="search-result-item" onclick="searchGoToPage('pg-feeding',2)"><div class="sri-icon">🍖</div><div><div class="sri-title">${r.animal} — ${r.type}</div><div class="sri-sub">${r.time} · ${r.consumed}</div></div></div>`;
-    if(r.type==='incident') return `<div class="search-result-item" onclick="searchGoToPage('pg-incidents',6)"><div class="sri-icon">⚠️</div><div><div class="sri-title">${r.title}</div><div class="sri-sub">${r.meta}</div></div></div>`;
-    return '';
-  }).join('');
-  dd.classList.add('open');
-}
-
-function searchGoToPage(pageId, navIdx){
-  const navItems = document.querySelectorAll('.nav-item');
-  navTo(pageId, navItems[navIdx]);
-  closeSearchDropdown();
-  document.getElementById('globalSearchInput').value='';
-}
-
-function closeSearchDropdown(){
-  document.getElementById('searchDropdown').classList.remove('open');
-}
-
-// Close dropdowns when clicking outside
-function closeAllDropdowns(){
-  closeSearchDropdown();
-  document.getElementById('notifPanel').classList.remove('open');
-}
-
-document.addEventListener('click', e=>{
-  const searchBox = document.getElementById('globalSearchBox');
-  const notifWrapper = document.querySelector('.notif-wrapper');
-  if(!searchBox.contains(e.target)) closeSearchDropdown();
-  if(!notifWrapper.contains(e.target)) document.getElementById('notifPanel').classList.remove('open');
-});
 
 // ─── ANIMALS ───
 const EMOJIS=['🦁','🐯','🐘','🦍','🐺','🦊','🐆','🐬','🦓','🦏','🐊','🦅','🦜','🦒','🐻','🦌','🐍','🦈','🐧','🦩'];
@@ -1191,9 +787,14 @@ async function loadAnimals(){
   try{
     const res=await fetch(API,{credentials:'include'});
     const data=await res.json();
-    if(data.success){ animals=data.animals; LS.set('animals',animals); }
-    else throw new Error(data.message);
-  }catch(e){ animals=LS.get('animals',[]); }
+    if(data.success){
+      animals=data.animals;
+      LS.set('animals', animals); // keep local copy in sync
+    } else { throw new Error(data.message); }
+  }catch(e){
+    // Fallback: load from localStorage if backend unavailable
+    animals=LS.get('animals',[]);
+  }
   renderAnimals();syncDashboard();populateDropdowns();
 }
 
@@ -1271,20 +872,38 @@ async function saveAnimal(){
   const name=document.getElementById('mName').value.trim();
   const species=document.getElementById('mSpecies').value.trim();
   if(!name||!species){showToast('Name and Species are required.','error');return;}
-  const d={name,species,age:document.getElementById('mAge').value.trim()||'Unknown',weight:document.getElementById('mWeight').value.trim()||'Unknown',diet:document.getElementById('mDiet').value,status:document.getElementById('mStatus').value,gender:document.getElementById('mGender').value,zone:document.getElementById('mZone').value.trim(),notes:document.getElementById('mNotes').value.trim(),emoji:selEmoji};
+  const d={
+    name,species,
+    age:document.getElementById('mAge').value.trim()||'Unknown',
+    weight:document.getElementById('mWeight').value.trim()||'Unknown',
+    diet:document.getElementById('mDiet').value,
+    status:document.getElementById('mStatus').value,
+    gender:document.getElementById('mGender').value,
+    zone:document.getElementById('mZone').value.trim(),
+    notes:document.getElementById('mNotes').value.trim(),
+    emoji:selEmoji
+  };
   const method=editingId?'PUT':'POST';
   if(editingId)d.id=editingId;
   try{
     const res=await fetch(API,{method,credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
     const data=await res.json();
-    if(data.success){showToast(editingId?`✏️ ${name} updated!`:`🐾 ${name} added!`);closeAnimalModal();await loadAnimals();}
-    else showToast(data.message,'error');
+    if(data.success){
+      showToast(editingId?`✏️ ${name} updated!`:`🐾 ${name} added!`);
+      closeAnimalModal();await loadAnimals();
+    } else showToast(data.message,'error');
   }catch(e){
-    if(editingId){const idx=animals.findIndex(a=>a.id===editingId);if(idx>-1)animals[idx]={...animals[idx],...d};showToast(`✏️ ${name} updated!`);}
-    else{const newId=animals.length?Math.max(...animals.map(a=>a.id))+1:1;animals.push({id:newId,...d});showToast(`🐾 ${name} added!`);
-      pushNotif('🐾','ni-green',`${name} added`,`New animal profile created: ${name} (${species})`);
+    // Save locally when backend unavailable
+    if(editingId){
+      const idx=animals.findIndex(a=>a.id===editingId);
+      if(idx>-1)animals[idx]={...animals[idx],...d};
+      showToast(`✏️ ${name} updated!`);
+    }else{
+      const newId=animals.length?Math.max(...animals.map(a=>a.id))+1:1;
+      animals.push({id:newId,...d});
+      showToast(`🐾 ${name} added!`);
     }
-    LS.set('animals',animals);
+    LS.set('animals', animals); // persist locally
     closeAnimalModal();renderAnimals();syncDashboard();populateDropdowns();
   }
 }
@@ -1305,7 +924,7 @@ async function confirmDelete(){
     else showToast(data.message,'error');
   }catch(e){
     animals=animals.filter(x=>x.id!==deletingId);
-    LS.set('animals',animals);
+    LS.set('animals', animals); // persist locally
     closeDeleteModal();renderAnimals();syncDashboard();populateDropdowns();
     showToast(`🗑️ ${a.name} removed.`);
   }
@@ -1329,7 +948,7 @@ function updateHealthCounts(){
   document.getElementById('hcTreatment').textContent=animals.filter(a=>a.status==='treatment').length;
 }
 
-// ─── COUNTERS ───
+// ─── COUNTERS (loaded from localStorage) ───
 let feedingCount=LS.get('feedingCount',0);
 let healthCount=LS.get('healthCount',0);
 let vaxCount=LS.get('vaxCount',0);
@@ -1352,39 +971,62 @@ function syncDashboard(){
 }
 
 // ─── FEEDING ───
+// Stored as array of row objects; rendered to table on load
 let feedingLog=LS.get('feedingLog',[]);
+
 function renderFeedingTable(){
   const tbody=document.getElementById('feedingTableBody');
-  if(!feedingLog.length){tbody.innerHTML='<tr class="table-empty-row"><td colspan="8">No feedings logged yet. Log a feeding above to see records here.</td></tr>';return;}
+  if(!feedingLog.length){
+    tbody.innerHTML='<tr class="table-empty-row"><td colspan="8">No feedings logged yet. Log a feeding above to see records here.</td></tr>';
+    return;
+  }
   const bc={'All Eaten':'b-green','Refused Food':'b-red','75% Eaten':'b-orange','50% Eaten':'b-orange','25% Eaten':'b-red'};
-  tbody.innerHTML=feedingLog.map((r,i)=>`<tr><td>${r.time}</td><td>${r.animal}</td><td>${r.type}</td><td>${r.qty}</td><td><span class="badge ${bc[r.consumed]||'b-orange'}">${r.consumed}</span></td><td style="color:var(--sub);font-size:12px;">${r.notes||'—'}</td><td>${r.worker}</td><td><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editFeeding(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteFeeding(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></td></tr>`).join('');
+  tbody.innerHTML=feedingLog.map((r,i)=>`<tr>
+    <td>${r.time}</td><td>${r.animal}</td><td>${r.type}</td><td>${r.qty}</td>
+    <td><span class="badge ${bc[r.consumed]||'b-orange'}">${r.consumed}</span></td>
+    <td style="color:var(--sub);font-size:12px;">${r.notes||'—'}</td>
+    <td>${r.worker}</td>
+    <td><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editFeeding(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteFeeding(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></td>
+  </tr>`).join('');
 }
+
 function logFeeding(){
   const animal=document.getElementById('feedAnimal').value;
   const qty=document.getElementById('feedQty').value;
-  if(!animal||!qty){showToast('Please select an animal and enter quantity.','error');return;}
   const type=document.getElementById('feedType').value;
   const consumed=document.getElementById('feedConsumed').value;
   const notes=document.getElementById('feedNotes').value.trim();
+  if(!animal||!qty){showToast('Please select an animal and enter quantity.','error');return;}
   const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
   const workerName=currentWorker?currentWorker.username:'Worker';
   const entry={time,animal:animal.split(' ')[0],type,qty:parseFloat(qty).toFixed(1),consumed,notes,worker:workerName};
-  feedingLog.unshift(entry);LS.set('feedingLog',feedingLog);
-  feedingCount++;LS.set('feedingCount',feedingCount);
-  pushNotif('🍖','ni-green',`Feeding logged`,`${entry.animal} was fed ${type} — ${consumed}`);
+  feedingLog.unshift(entry);
+  LS.set('feedingLog', feedingLog); // persist
+  feedingCount++;
+  LS.set('feedingCount', feedingCount); // persist
   renderFeedingTable();
-  document.getElementById('feedQty').value='';document.getElementById('feedNotes').value='';
-  syncDashboard();showToast('🍖 Feeding logged successfully!');
+  document.getElementById('feedQty').value='';
+  document.getElementById('feedNotes').value='';
+  syncDashboard();
+  showToast('🍖 Feeding logged successfully!');
 }
 
 // ─── HEALTH ───
 let healthLog=LS.get('healthLog',[]);
+
 function renderHealthRecords(){
   const container=document.getElementById('healthRecords');
-  if(!healthLog.length){container.innerHTML='<p class="placeholder-msg">No health records yet. Save a record above to see it here.</p>';return;}
+  if(!healthLog.length){
+    container.innerHTML='<p class="placeholder-msg">No health records yet. Save a record above to see it here.</p>';
+    return;
+  }
   const iMap={'Routine Check':'ri-g lucide:check-circle','Illness Observation':'ri-o lucide:eye','Vet Visit':'ri-g lucide:stethoscope','Medication Given':'ri-r lucide:pill','Post-Surgery Observation':'ri-o lucide:eye','Injury Report':'ri-r lucide:alert-triangle'};
-  container.innerHTML=healthLog.map((r,i)=>{const ic=(iMap[r.type]||'ri-g lucide:check-circle').split(' ');return`<div class="record-row"><div class="record-left"><div class="rec-icon ${ic[0]}"><span class="iconify" data-icon="${ic[1]}" data-width="17"></span></div><div><div class="rec-name">${r.type} — ${r.animal}</div><div class="rec-sub">${r.notes||'No additional notes'}</div></div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;"><span class="rec-date">${r.dateStr}</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editHealth(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteHealth(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`;}).join('');
+  container.innerHTML=healthLog.map((r,i)=>{
+    const ic=(iMap[r.type]||'ri-g lucide:check-circle').split(' ');
+    return `<div class="record-row"><div class="record-left"><div class="rec-icon ${ic[0]}"><span class="iconify" data-icon="${ic[1]}" data-width="17"></span></div><div><div class="rec-name">${r.type} — ${r.animal}</div><div class="rec-sub">${r.notes||'No additional notes'}</div></div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;"><span class="rec-date">${r.dateStr}</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editHealth(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteHealth(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`;
+  }).join('');
 }
+
 function logHealth(){
   const animal=document.getElementById('healthAnimal').value;
   const type=document.getElementById('healthType').value;
@@ -1392,21 +1034,30 @@ function logHealth(){
   if(!animal){showToast('Please select an animal.','error');return;}
   const timeStr=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
   const entry={animal:animal.split(' ')[0],type,notes,dateStr:'Today, '+timeStr};
-  healthLog.unshift(entry);LS.set('healthLog',healthLog);
-  healthCount++;LS.set('healthCount',healthCount);
-  pushNotif('🩺','ni-orange',`Health event recorded`,`${type} logged for ${entry.animal}`);
+  healthLog.unshift(entry);
+  LS.set('healthLog', healthLog); // persist
+  healthCount++;
+  LS.set('healthCount', healthCount); // persist
   renderHealthRecords();
-  document.getElementById('healthAnimal').value='';document.getElementById('healthNotes').value='';
-  syncDashboard();showToast('🩺 Health record saved!');
+  document.getElementById('healthAnimal').value='';
+  document.getElementById('healthNotes').value='';
+  syncDashboard();
+  showToast('🩺 Health record saved!');
 }
 
 // ─── VACCINATION ───
 let vaxLog=LS.get('vaxLog',[]);
+
 function renderVaxList(){
   const container=document.getElementById('vaxList');
-  if(!vaxLog.length){container.innerHTML='<p class="placeholder-msg">No vaccination records yet. Save a record above to see it here.</p>';return;}
-  container.innerHTML=vaxLog.map((r,i)=>`<div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="17"></span></div><div><div class="vax-name">${r.animal} — ${r.name}</div><div class="vax-detail">${r.detail}</div></div></div><div style="display:flex;align-items:center;gap:8px;"><span class="vax-status vs-done">✓ Done</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editVax(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteVax(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`).join('');
+  if(!vaxLog.length){
+    container.innerHTML='<p class="placeholder-msg">No vaccination records yet. Save a record above to see it here.</p>';
+    return;
+  }
+  container.innerHTML=vaxLog.map((r,i)=>`
+    <div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="17"></span></div><div><div class="vax-name">${r.animal} — ${r.name}</div><div class="vax-detail">${r.detail}</div></div></div><div style="display:flex;align-items:center;gap:8px;"><span class="vax-status vs-done">✓ Done</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editVax(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteVax(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`).join('');
 }
+
 function logVaccination(){
   const animal=document.getElementById('vaxAnimal').value;
   const name=document.getElementById('vaxName').value;
@@ -1417,163 +1068,57 @@ function logVaccination(){
   const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'';
   const detail=`Given: ${fmtDate(date)}${next?' · Next: '+fmtDate(next):''}${vet?' · '+vet:''}`;
   const entry={animal:animal.split(' ')[0],name,detail,rawDate:date,rawNext:next,vet};
-  vaxLog.unshift(entry);LS.set('vaxLog',vaxLog);
-  vaxCount++;LS.set('vaxCount',vaxCount);
-  pushNotif('💉','ni-orange',`Vaccination recorded`,`${name} administered to ${entry.animal}`);
+  vaxLog.unshift(entry);
+  LS.set('vaxLog', vaxLog); // persist
+  vaxCount++;
+  LS.set('vaxCount', vaxCount); // persist
   renderVaxList();
-  document.getElementById('vaxAnimal').value='';document.getElementById('vaxDate').value='';document.getElementById('vaxNext').value='';document.getElementById('vaxVet').value='';
-  syncDashboard();showToast('💉 Vaccination recorded!');
+  document.getElementById('vaxAnimal').value='';
+  document.getElementById('vaxDate').value='';
+  document.getElementById('vaxNext').value='';
+  document.getElementById('vaxVet').value='';
+  syncDashboard();
+  showToast('💉 Vaccination recorded!');
 }
 
-// ─── TASKS (full CRUD: add, edit, toggle done, activate/deactivate, delete) ───
+// ─── TASKS ───
 const defaultTasks=[
-  {id:1,name:'Morning feeding — Simba & Rex',meta:'Enclosure 1 & 2 · 07:00 AM',zone:'Zone A',priority:'high',done:false,active:true},
-  {id:2,name:'Clean Gorilla enclosure',meta:'Enclosure 3 · Est. 45 min',zone:'Zone B',priority:'med',done:false,active:true},
-  {id:3,name:'Health check — Koko',meta:'Follow-up from yesterday',zone:'Zone B',priority:'high',done:false,active:true},
-  {id:4,name:'Afternoon feeding — Nila',meta:'Enclosure 5 · 12:00 PM',zone:'Zone C',priority:'med',done:false,active:true},
-  {id:5,name:'Refill water tanks — Zone A',meta:'All Zone A enclosures',zone:'Zone A',priority:'low',done:false,active:true},
-  {id:6,name:'Fence integrity check — Zone B',meta:'Weekly routine',zone:'Zone B',priority:'med',done:false,active:true},
-  {id:7,name:'End-of-day feeding log submission',meta:'Submit before shift ends',zone:'All Zones',priority:'low',done:false,active:true},
-  {id:8,name:'Luna medication dose',meta:'Anti-parasite · 2nd dose',zone:'Zone A',priority:'high',done:false,active:true},
+  {id:1,name:'Morning feeding — Simba & Rex',meta:'Enclosure 1 & 2 · 07:00 AM',zone:'Zone A',priority:'high',done:false},
+  {id:2,name:'Clean Gorilla enclosure',meta:'Enclosure 3 · Est. 45 min',zone:'Zone B',priority:'med',done:false},
+  {id:3,name:'Health check — Koko',meta:'Follow-up from yesterday',zone:'Zone B',priority:'high',done:false},
+  {id:4,name:'Afternoon feeding — Nila',meta:'Enclosure 5 · 12:00 PM',zone:'Zone C',priority:'med',done:false},
+  {id:5,name:'Refill water tanks — Zone A',meta:'All Zone A enclosures',zone:'Zone A',priority:'low',done:false},
+  {id:6,name:'Fence integrity check — Zone B',meta:'Weekly routine',zone:'Zone B',priority:'med',done:false},
+  {id:7,name:'End-of-day feeding log submission',meta:'Submit before shift ends',zone:'All Zones',priority:'low',done:false},
+  {id:8,name:'Luna medication dose',meta:'Anti-parasite · 2nd dose',zone:'Zone A',priority:'high',done:false},
 ];
-let tasks=LS.get('tasks',defaultTasks).map(t=>({active:true,...t}));
+let tasks=LS.get('tasks', defaultTasks); // persist task completion state
 let taskNextId=tasks.length?Math.max(...tasks.map(t=>t.id))+1:9;
 let taskFilter='all';
-let editingTaskId=null;
 
 function renderTasks(){
+  const filtered=tasks.filter(t=>taskFilter==='all'?true:taskFilter==='done'?t.done:!t.done);
   const pc={high:'tp-h',med:'tp-m',low:'tp-l'},pl={high:'High',med:'Medium',low:'Low'};
-  let filtered;
-  if(taskFilter==='all') filtered=[...tasks];
-  else if(taskFilter==='active') filtered=tasks.filter(t=>t.active&&!t.done);
-  else if(taskFilter==='pending') filtered=tasks.filter(t=>t.active&&!t.done);
-  else if(taskFilter==='done') filtered=tasks.filter(t=>t.done);
-  else if(taskFilter==='inactive') filtered=tasks.filter(t=>!t.active);
-  else filtered=[...tasks];
-
-  const tl=document.getElementById('taskList');
-  if(!filtered.length){
-    tl.innerHTML=`<div class="empty-state" style="padding:30px 0;"><div class="empty-icon">📋</div><p>${
-      taskFilter==='done'?'No completed tasks yet.':
-      taskFilter==='inactive'?'No inactive tasks.':
-      'No tasks match this filter.'
-    }</p></div>`;
-    updateTaskProgress();return;
-  }
-  tl.innerHTML=filtered.map(t=>`
-    <div class="task-item ${!t.active?'inactive':''}">
-      <div class="task-check ${t.done?'done':''} ${!t.active?'inactive-check':''}"
-           onclick="${t.active&&!t.done?`toggleTask(${t.id})`:t.active&&t.done?`toggleTask(${t.id})`:''}"></div>
-      <div class="task-text">
-        <div class="task-name ${t.done?'done':''} ${!t.active?'inactive-name':''}">${t.name}</div>
-        <div class="task-meta">${t.meta||''} · ${t.zone}${!t.active?' · <em>Inactive</em>':''}</div>
-      </div>
-      <span class="task-pri ${pc[t.priority]}">${pl[t.priority]}</span>
-      <div class="task-actions">
-        <button class="task-toggle-btn ${t.active?'active-task':''}" title="${t.active?'Deactivate task':'Activate task'}" onclick="toggleTaskActive(${t.id})">
-          <span class="iconify" data-icon="${t.active?'lucide:toggle-right':'lucide:toggle-left'}" data-width="15"></span>
-        </button>
-        <button class="task-edit-btn" title="Edit task" onclick="openTaskModal(${t.id})">
-          <span class="iconify" data-icon="lucide:pencil" data-width="13"></span>
-        </button>
-        <button class="task-del-btn" title="Delete task" onclick="deleteTask(${t.id})">
-          <span class="iconify" data-icon="lucide:trash-2" data-width="13"></span>
-        </button>
-      </div>
-    </div>`).join('');
+  document.getElementById('taskList').innerHTML=filtered.length
+    ?filtered.map(t=>`<div class="task-item"><div class="task-check ${t.done?'done':''}" onclick="toggleTask(${t.id})"></div><div class="task-text"><div class="task-name ${t.done?'done':''}">${t.name}</div><div class="task-meta">${t.meta} · ${t.zone}</div></div><span class="task-pri ${pc[t.priority]}">${pl[t.priority]}</span></div>`).join('')
+    :`<div class="empty-state"><div class="empty-icon">✅</div><p>${taskFilter==='done'?'No completed tasks yet.':'All tasks are done!'}</p></div>`;
   updateTaskProgress();
 }
-
 function toggleTask(id){
   const t=tasks.find(t=>t.id===id);
-  if(t){
-    t.done=!t.done;
-    LS.set('tasks',tasks);
-    if(t.done) pushNotif('✅','ni-green','Task completed',`"${t.name}" marked as done.`);
-    renderTasks();syncDashboard();
-  }
+  if(t){t.done=!t.done;LS.set('tasks',tasks);renderTasks();syncDashboard();} // persist
 }
-
-function toggleTaskActive(id){
-  const t=tasks.find(t=>t.id===id);
-  if(!t)return;
-  t.active=!t.active;
-  if(!t.active) t.done=false;
-  LS.set('tasks',tasks);
-  showToast(t.active?'✅ Task activated!':'⏸️ Task deactivated.');
-  pushNotif(t.active?'✅':'⏸️',t.active?'ni-green':'ni-orange',
-    t.active?'Task activated':'Task deactivated',
-    `"${t.name}" is now ${t.active?'active':'inactive'}.`);
-  renderTasks();syncDashboard();
-}
-
-function openTaskModal(id=null){
-  editingTaskId=id;
-  if(id){
-    const t=tasks.find(t=>t.id===id);
-    document.getElementById('taskModalTitle').textContent='Edit Task';
-    document.getElementById('taskModalSaveLbl').textContent='Save Changes';
-    document.getElementById('tm_name').value=t.name;
-    document.getElementById('tm_meta').value=t.meta||'';
-    document.getElementById('tm_priority').value=t.priority;
-    document.getElementById('tm_zone').value=t.zone;
-    document.getElementById('tm_active').value=String(t.active!==false);
-  }else{
-    document.getElementById('taskModalTitle').textContent='Add New Task';
-    document.getElementById('taskModalSaveLbl').textContent='Add Task';
-    document.getElementById('tm_name').value='';
-    document.getElementById('tm_meta').value='';
-    document.getElementById('tm_priority').value='med';
-    document.getElementById('tm_zone').value='Zone A';
-    document.getElementById('tm_active').value='true';
-  }
-  document.getElementById('taskModal').classList.add('open');
-}
-
-function saveTask(){
-  const name=document.getElementById('tm_name').value.trim();
+function filterTasks(f,btn){taskFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTasks();}
+function addTask(){
+  const input=document.getElementById('newTaskInput'),name=input.value.trim();
   if(!name){showToast('Please enter a task description.','error');return;}
-  const meta=document.getElementById('tm_meta').value.trim();
-  const priority=document.getElementById('tm_priority').value;
-  const zone=document.getElementById('tm_zone').value;
-  const active=document.getElementById('tm_active').value==='true';
-  if(editingTaskId){
-    const t=tasks.find(t=>t.id===editingTaskId);
-    if(t) Object.assign(t,{name,meta:meta||'No details',priority,zone,active});
-    showToast('✏️ Task updated!');
-    pushNotif('✏️','ni-orange','Task updated',`"${name}" has been edited.`);
-  }else{
-    tasks.push({id:taskNextId++,name,meta:meta||'Added manually',zone,priority,done:false,active});
-    showToast('📋 Task added!');
-    pushNotif('📋','ni-green','New task added',`"${name}" added to ${zone}.`);
-  }
-  LS.set('tasks',tasks);
-  closeModal('taskModal');
-  renderTasks();syncDashboard();
+  tasks.push({id:taskNextId++,name,meta:'Added manually · Just now',zone:document.getElementById('newTaskZone').value,priority:document.getElementById('newTaskPriority').value,done:false});
+  LS.set('tasks',tasks); // persist
+  input.value='';renderTasks();syncDashboard();showToast('📋 Task added!');
 }
-
-function deleteTask(id){
-  const t=tasks.find(t=>t.id===id);
-  if(!t||!confirm(`Delete task "${t.name}"?`))return;
-  tasks=tasks.filter(x=>x.id!==id);
-  LS.set('tasks',tasks);
-  showToast('🗑️ Task deleted.');
-  renderTasks();syncDashboard();
-}
-
-function filterTasks(f,btn){
-  taskFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTasks();
-}
-
 function updateTaskProgress(){
-  const activeTasks=tasks.filter(t=>t.active);
-  const done=activeTasks.filter(t=>t.done).length;
-  const total=activeTasks.length;
-  const pct=total?Math.round(done/total*100):0;
-  document.getElementById('taskDoneLabel').textContent=`${done} of ${total} active tasks completed`;
+  const done=tasks.filter(t=>t.done).length,total=tasks.length,pct=total?Math.round(done/total*100):0;
+  document.getElementById('taskDoneLabel').textContent=`${done} of ${total} completed`;
   document.getElementById('taskPctLabel').textContent=`${pct}%`;
   document.getElementById('taskBar').style.width=pct+'%';
   document.getElementById('dashTaskCount').textContent=total;
@@ -1584,13 +1129,19 @@ function updateTaskProgress(){
 renderTasks();
 
 // ─── INCIDENTS ───
-let incidentLog=LS.get('incidentLog',[]);
+let incidentLog=LS.get('incidentLog',[]); // persist incident history
 let selSev='low';
+
 function renderIncidents(){
   const container=document.getElementById('incidentHistory');
-  if(!incidentLog.length){container.innerHTML='<p class="placeholder-msg">No incidents reported yet. Submit a report above if needed.</p>';return;}
-  container.innerHTML=incidentLog.map((r,i)=>`<div class="inc-row"><div class="inc-dot-col"><div class="inc-dot" style="background:${r.dotC};"></div><div class="inc-line"></div></div><div style="flex:1;"><div class="inc-title">${r.title}</div><div class="inc-desc">${r.desc}</div><div class="inc-meta">📅 ${r.meta}</div></div><div class="card-actions" style="flex-shrink:0;padding-top:2px;"><button class="icon-btn" title="Edit" onclick="editIncident(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteIncident(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div>`).join('');
+  if(!incidentLog.length){
+    container.innerHTML='<p class="placeholder-msg">No incidents reported yet. Submit a report above if needed.</p>';
+    return;
+  }
+  container.innerHTML=incidentLog.map((r,i)=>`
+    <div class="inc-row"><div class="inc-dot-col"><div class="inc-dot" style="background:${r.dotC};"></div><div class="inc-line"></div></div><div style="flex:1;"><div class="inc-title">${r.title}</div><div class="inc-desc">${r.desc}</div><div class="inc-meta">📅 ${r.meta}</div></div><div class="card-actions" style="flex-shrink:0;padding-top:2px;"><button class="icon-btn" title="Edit" onclick="editIncident(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteIncident(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div>`).join('');
 }
+
 function pickSev(el,s){document.querySelectorAll('.sev-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selSev=s;}
 function submitIncident(){
   const type=document.getElementById('incType').value;
@@ -1601,13 +1152,21 @@ function submitIncident(){
   const sev=selSev.charAt(0).toUpperCase()+selSev.slice(1);
   const time=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
   const workerName=currentWorker?currentWorker.username:'Worker';
-  const entry={dotC,title:`${type}${animal?' — '+animal.split(' ')[0]:''} (${sev})`,desc,meta:`Today ${time} · Reported by ${workerName}`};
-  incidentLog.unshift(entry);LS.set('incidentLog',incidentLog);
-  incidentCount++;LS.set('incidentCount',incidentCount);
-  pushNotif('🚨','ni-red','Incident reported',`${type} — ${sev} severity`);
+  const entry={
+    dotC,
+    title:`${type}${animal?' — '+animal.split(' ')[0]:''} (${sev})`,
+    desc,
+    meta:`Today ${time} · Reported by ${workerName}`
+  };
+  incidentLog.unshift(entry);
+  LS.set('incidentLog', incidentLog); // persist
+  incidentCount++;
+  LS.set('incidentCount', incidentCount); // persist
   renderIncidents();
-  document.getElementById('incAnimal').value='';document.getElementById('incDesc').value='';
-  syncDashboard();showToast('🚨 Incident report submitted!');
+  document.getElementById('incAnimal').value='';
+  document.getElementById('incDesc').value='';
+  syncDashboard();
+  showToast('🚨 Incident report submitted!');
 }
 
 // ─── MODAL HELPER ───
@@ -1615,34 +1174,125 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 // ─── FEEDING EDIT / DELETE ───
 let editFeedIdx=null;
-function editFeeding(i){editFeedIdx=i;const r=feedingLog[i];document.getElementById('ef_type').value=r.type;document.getElementById('ef_qty').value=r.qty;document.getElementById('ef_consumed').value=r.consumed;document.getElementById('ef_notes').value=r.notes||'';document.getElementById('editFeedModal').classList.add('open');}
-function saveEditFeeding(){const r=feedingLog[editFeedIdx];r.type=document.getElementById('ef_type').value;r.qty=parseFloat(document.getElementById('ef_qty').value).toFixed(1);r.consumed=document.getElementById('ef_consumed').value;r.notes=document.getElementById('ef_notes').value.trim();LS.set('feedingLog',feedingLog);closeModal('editFeedModal');renderFeedingTable();showToast('✏️ Feeding record updated!');}
-function deleteFeeding(i){if(!confirm('Delete this feeding record?'))return;feedingLog.splice(i,1);feedingCount=feedingLog.length;LS.set('feedingLog',feedingLog);LS.set('feedingCount',feedingCount);renderFeedingTable();syncDashboard();showToast('🗑️ Feeding record deleted.');}
+function editFeeding(i){
+  editFeedIdx=i;
+  const r=feedingLog[i];
+  document.getElementById('ef_type').value=r.type;
+  document.getElementById('ef_qty').value=r.qty;
+  document.getElementById('ef_consumed').value=r.consumed;
+  document.getElementById('ef_notes').value=r.notes||'';
+  document.getElementById('editFeedModal').classList.add('open');
+}
+function saveEditFeeding(){
+  const r=feedingLog[editFeedIdx];
+  r.type=document.getElementById('ef_type').value;
+  r.qty=parseFloat(document.getElementById('ef_qty').value).toFixed(1);
+  r.consumed=document.getElementById('ef_consumed').value;
+  r.notes=document.getElementById('ef_notes').value.trim();
+  LS.set('feedingLog',feedingLog);
+  closeModal('editFeedModal');
+  renderFeedingTable();
+  showToast('✏️ Feeding record updated!');
+}
+function deleteFeeding(i){
+  if(!confirm('Delete this feeding record?'))return;
+  feedingLog.splice(i,1);
+  feedingCount=feedingLog.length;
+  LS.set('feedingLog',feedingLog);LS.set('feedingCount',feedingCount);
+  renderFeedingTable();syncDashboard();
+  showToast('🗑️ Feeding record deleted.');
+}
 
 // ─── HEALTH EDIT / DELETE ───
 let editHealthIdx=null;
-function editHealth(i){editHealthIdx=i;const r=healthLog[i];document.getElementById('eh_type').value=r.type;document.getElementById('eh_notes').value=r.notes||'';document.getElementById('editHealthModal').classList.add('open');}
-function saveEditHealth(){const r=healthLog[editHealthIdx];r.type=document.getElementById('eh_type').value;r.notes=document.getElementById('eh_notes').value.trim();LS.set('healthLog',healthLog);closeModal('editHealthModal');renderHealthRecords();showToast('✏️ Health record updated!');}
-function deleteHealth(i){if(!confirm('Delete this health record?'))return;healthLog.splice(i,1);healthCount=healthLog.length;LS.set('healthLog',healthLog);LS.set('healthCount',healthCount);renderHealthRecords();syncDashboard();showToast('🗑️ Health record deleted.');}
+function editHealth(i){
+  editHealthIdx=i;
+  const r=healthLog[i];
+  document.getElementById('eh_type').value=r.type;
+  document.getElementById('eh_notes').value=r.notes||'';
+  document.getElementById('editHealthModal').classList.add('open');
+}
+function saveEditHealth(){
+  const r=healthLog[editHealthIdx];
+  r.type=document.getElementById('eh_type').value;
+  r.notes=document.getElementById('eh_notes').value.trim();
+  LS.set('healthLog',healthLog);
+  closeModal('editHealthModal');
+  renderHealthRecords();
+  showToast('✏️ Health record updated!');
+}
+function deleteHealth(i){
+  if(!confirm('Delete this health record?'))return;
+  healthLog.splice(i,1);
+  healthCount=healthLog.length;
+  LS.set('healthLog',healthLog);LS.set('healthCount',healthCount);
+  renderHealthRecords();syncDashboard();
+  showToast('🗑️ Health record deleted.');
+}
 
 // ─── VAX EDIT / DELETE ───
 let editVaxIdx=null;
-function editVax(i){editVaxIdx=i;const r=vaxLog[i];document.getElementById('ev_name').value=r.name;document.getElementById('ev_date').value=r.rawDate||'';document.getElementById('ev_next').value=r.rawNext||'';document.getElementById('ev_vet').value=r.vet||'';document.getElementById('editVaxModal').classList.add('open');}
-function saveEditVax(){const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'';const r=vaxLog[editVaxIdx];r.name=document.getElementById('ev_name').value;r.rawDate=document.getElementById('ev_date').value;r.rawNext=document.getElementById('ev_next').value;r.vet=document.getElementById('ev_vet').value.trim();r.detail=`Given: ${fmtDate(r.rawDate)}${r.rawNext?' · Next: '+fmtDate(r.rawNext):''}${r.vet?' · '+r.vet:''}`;LS.set('vaxLog',vaxLog);closeModal('editVaxModal');renderVaxList();showToast('✏️ Vaccination record updated!');}
-function deleteVax(i){if(!confirm('Delete this vaccination record?'))return;vaxLog.splice(i,1);vaxCount=vaxLog.length;LS.set('vaxLog',vaxLog);LS.set('vaxCount',vaxCount);renderVaxList();syncDashboard();showToast('🗑️ Vaccination record deleted.');}
+function editVax(i){
+  editVaxIdx=i;
+  const r=vaxLog[i];
+  document.getElementById('ev_name').value=r.name;
+  // parse raw values stored on the entry for the edit form
+  document.getElementById('ev_date').value=r.rawDate||'';
+  document.getElementById('ev_next').value=r.rawNext||'';
+  document.getElementById('ev_vet').value=r.vet||'';
+  document.getElementById('editVaxModal').classList.add('open');
+}
+function saveEditVax(){
+  const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'';
+  const r=vaxLog[editVaxIdx];
+  r.name=document.getElementById('ev_name').value;
+  r.rawDate=document.getElementById('ev_date').value;
+  r.rawNext=document.getElementById('ev_next').value;
+  r.vet=document.getElementById('ev_vet').value.trim();
+  r.detail=`Given: ${fmtDate(r.rawDate)}${r.rawNext?' · Next: '+fmtDate(r.rawNext):''}${r.vet?' · '+r.vet:''}`;
+  LS.set('vaxLog',vaxLog);
+  closeModal('editVaxModal');
+  renderVaxList();
+  showToast('✏️ Vaccination record updated!');
+}
+function deleteVax(i){
+  if(!confirm('Delete this vaccination record?'))return;
+  vaxLog.splice(i,1);
+  vaxCount=vaxLog.length;
+  LS.set('vaxLog',vaxLog);LS.set('vaxCount',vaxCount);
+  renderVaxList();syncDashboard();
+  showToast('🗑️ Vaccination record deleted.');
+}
 
 // ─── INCIDENT EDIT / DELETE ───
 let editIncIdx=null;
-function editIncident(i){editIncIdx=i;document.getElementById('ei_desc').value=incidentLog[i].desc;document.getElementById('editIncModal').classList.add('open');}
-function saveEditIncident(){incidentLog[editIncIdx].desc=document.getElementById('ei_desc').value.trim();LS.set('incidentLog',incidentLog);closeModal('editIncModal');renderIncidents();showToast('✏️ Incident report updated!');}
-function deleteIncident(i){if(!confirm('Delete this incident report?'))return;incidentLog.splice(i,1);incidentCount=incidentLog.length;LS.set('incidentLog',incidentLog);LS.set('incidentCount',incidentCount);renderIncidents();syncDashboard();showToast('🗑️ Incident report deleted.');}
+function editIncident(i){
+  editIncIdx=i;
+  document.getElementById('ei_desc').value=incidentLog[i].desc;
+  document.getElementById('editIncModal').classList.add('open');
+}
+function saveEditIncident(){
+  incidentLog[editIncIdx].desc=document.getElementById('ei_desc').value.trim();
+  LS.set('incidentLog',incidentLog);
+  closeModal('editIncModal');
+  renderIncidents();
+  showToast('✏️ Incident report updated!');
+}
+function deleteIncident(i){
+  if(!confirm('Delete this incident report?'))return;
+  incidentLog.splice(i,1);
+  incidentCount=incidentLog.length;
+  LS.set('incidentLog',incidentLog);LS.set('incidentCount',incidentCount);
+  renderIncidents();syncDashboard();
+  showToast('🗑️ Incident report deleted.');
+}
 
 // ─── BOOT ───
+// Restore persisted rendered data on page load
 renderFeedingTable();
 renderHealthRecords();
 renderVaxList();
 renderIncidents();
-renderNotifPanel();
 initSession();
 </script>
 </body>
