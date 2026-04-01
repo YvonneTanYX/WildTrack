@@ -195,7 +195,14 @@ function doLogout() { /* guest — no-op */ }
 
 <!-- NOTIFICATION DROPDOWN -->
 <div class="wt-notif-dropdown" id="wt-notif-dropdown">
-  <div class="wt-notif-dropdown-header">Notifications</div>
+  <div class="wt-notif-dropdown-header">
+    <span>Notifications</span>
+    <button id="wt-mark-all-btn"
+            onclick="wtMarkAllRead()"
+            style="background:none;border:none;font-size:12px;font-weight:600;color:#2D5A27;cursor:pointer;padding:0;margin-left:auto;">
+      Mark all read
+    </button>
+  </div>
   <div id="wt-notif-list">
     <div class="wt-notif-empty">No notifications yet</div>
   </div>
@@ -243,10 +250,17 @@ function doLogout() { /* guest — no-op */ }
   display: none; overflow: hidden;
 }
 .wt-notif-dropdown.open { display: block; }
-.wt-notif-dropdown-header { padding: 16px 20px 12px; font-size: 14px; font-weight: 700; color: #2F3640; border-bottom: 1px solid #f0f4ee; }
+.wt-notif-dropdown-header {
+  padding: 14px 20px 12px;
+  font-size: 14px; font-weight: 700; color: #2F3640;
+  border-bottom: 1px solid #f0f4ee;
+  display: flex; align-items: center; justify-content: space-between;
+}
 .wt-notif-item { padding: 14px 20px; border-bottom: 1px solid #f0f4ee; cursor: pointer; transition: background 0.15s; display: flex; gap: 10px; align-items: flex-start; }
 .wt-notif-item:last-child { border-bottom: none; }
 .wt-notif-item:hover { background: #f7faf5; }
+.wt-notif-item.wt-notif-unread { background: #f0f7ee; }
+.wt-notif-item.wt-notif-unread:hover { background: #e6f2e3; }
 .wt-notif-item-dot { width: 8px; height: 8px; background: #2D5A27; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
 .wt-notif-item-title { font-size: 13px; font-weight: 600; color: #2F3640; margin-bottom: 3px; }
 .wt-notif-item-body  { font-size: 12px; color: #7F8C8D; }
@@ -266,6 +280,7 @@ function doLogout() { /* guest — no-op */ }
 <script>
 (function () {
   var wtToastTimer = null;
+  var _wtNotifications = [];  // cache for mark-all-read
 
   function wtEscHtml(str) {
     if (!str) return '';
@@ -282,23 +297,38 @@ function doLogout() { /* guest — no-op */ }
   }
 
   function wtRenderNotifDropdown(notifications) {
+    _wtNotifications = notifications || [];
     var listEl = document.getElementById('wt-notif-list');
     if (!notifications || notifications.length === 0) {
       listEl.innerHTML = '<div class="wt-notif-empty">No notifications yet</div>';
+      // Hide mark all read button when empty
+      var btn = document.getElementById('wt-mark-all-btn');
+      if (btn) btn.style.display = 'none';
       return;
     }
+    // Show mark all read if there are unread items
+    var hasUnread = notifications.some(function(n) { return !parseInt(n.is_read); });
+    var btn = document.getElementById('wt-mark-all-btn');
+    if (btn) btn.style.display = hasUnread ? '' : 'none';
+
     listEl.innerHTML = '';
     notifications.forEach(function (n) {
+      var isUnread = !parseInt(n.is_read);
       var item = document.createElement('div');
-      item.className = 'wt-notif-item';
+      item.className = 'wt-notif-item' + (isUnread ? ' wt-notif-unread' : '');
       item.innerHTML =
-        (n.is_read ? '' : '<div class="wt-notif-item-dot"></div>') +
-        '<div><div class="wt-notif-item-title">' + wtEscHtml(n.title) + '</div>' +
-        '<div class="wt-notif-item-body">'  + wtEscHtml(n.body)  + '</div></div>';
+        (isUnread ? '<div class="wt-notif-item-dot"></div>' : '<div style="width:8px;flex-shrink:0;"></div>') +
+        '<div style="flex:1;min-width:0;">' +
+          '<div class="wt-notif-item-title">' + wtEscHtml(n.title) + '</div>' +
+          '<div class="wt-notif-item-body">'  + wtEscHtml(n.body)  + '</div>' +
+        '</div>';
       item.onclick = function () {
         wtMarkNotifRead(n.id);
+        item.classList.remove('wt-notif-unread');
+        item.querySelector('.wt-notif-item-dot')?.remove();
         wtCloseNotifDropdown();
-        if (n.type === 'booking_approved') { window.location.href = 'MyTickets.php'; }
+        if (n.type === 'booking_approved')  window.location.href = 'MyTickets.php';
+        if (n.type === 'feedback_reply')    window.location.href = 'getInTouch.php';
       };
       listEl.appendChild(item);
     });
@@ -306,36 +336,71 @@ function doLogout() { /* guest — no-op */ }
 
   async function wtMarkNotifRead(notifId) {
     try {
-      await fetch('http://localhost/WildTrack/api/tickets.php?action=mark_notification_read', {
+      await fetch('api/notifications.php', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notification_id: notifId })
+        body: JSON.stringify({ ids: [notifId] })
       });
     } catch (e) {}
   }
+
+  // FIX 3 — Mark All Read for visitor
+  window.wtMarkAllRead = async function () {
+    var unreadIds = _wtNotifications
+      .filter(function(n) { return !parseInt(n.is_read); })
+      .map(function(n) { return n.id; });
+    if (!unreadIds.length) return;
+    try {
+      await fetch('api/notifications.php?action=mark_read', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: unreadIds })
+      });
+      // Update UI immediately
+      var badge = document.getElementById('wt-notif-badge');
+      if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
+      var btn = document.getElementById('wt-mark-all-btn');
+      if (btn) btn.style.display = 'none';
+      document.querySelectorAll('.wt-notif-unread').forEach(function(el) {
+        el.classList.remove('wt-notif-unread');
+        var dot = el.querySelector('.wt-notif-item-dot');
+        if (dot) dot.remove();
+      });
+      wtShowToast('All notifications marked as read ✓');
+    } catch (e) {}
+  };
 
   async function wtPollNotifications() {
     <?php if ($isGuest): ?>
     return; // guests have no notifications
     <?php endif; ?>
     try {
-      var res  = await fetch('http://localhost/WildTrack/api/tickets.php?action=check_notifications', { credentials: 'include' });
+      // FIX 1 — use the correct visitor notifications endpoint
+      var res  = await fetch('api/notifications.php', { credentials: 'include' });
       var data = await res.json();
       if (!data.success) return;
       var notifications = data.notifications || [];
-      var unread = notifications.filter(function (n) { return !n.is_read; });
+      var unread = notifications.filter(function (n) { return !parseInt(n.is_read); });
       var count  = unread.length;
       var badge  = document.getElementById('wt-notif-badge');
-      if (badge) { badge.style.display = count > 0 ? 'flex' : 'none'; badge.textContent = count > 0 ? count : ''; }
+      if (badge) {
+        badge.style.display = count > 0 ? 'flex' : 'none';
+        badge.textContent   = count > 0 ? count : '';
+      }
 
+      // Toast for newly approved bookings (only once per session)
       var shownKey = 'wt_shown_notifs';
       var shownRaw = '';
       try { shownRaw = sessionStorage.getItem(shownKey) || ''; } catch (e) {}
-      var shownIds = shownRaw ? shownRaw.split(',') : [];
+      var shownIds = shownRaw ? shownRaw.split(',').filter(Boolean) : [];
       notifications.forEach(function (n) {
         var idStr = String(n.id);
-        if (n.type === 'booking_approved' && shownIds.indexOf(idStr) === -1) {
-          wtShowToast('✓ Booking ' + n.booking_ref + ' approved! Click the bell to view your QR ticket.', 6000);
+        if (n.type === 'booking_approved' && !parseInt(n.is_read) && shownIds.indexOf(idStr) === -1) {
+          wtShowToast('🎉 Booking ' + (n.booking_ref || '') + ' approved! Tap the bell to view your QR ticket.', 6000);
+          shownIds.push(idStr);
+        }
+        if (n.type === 'feedback_reply' && !parseInt(n.is_read) && shownIds.indexOf(idStr) === -1) {
+          wtShowToast('💬 The zoo replied to your feedback!', 4000);
           shownIds.push(idStr);
         }
       });
@@ -345,8 +410,13 @@ function doLogout() { /* guest — no-op */ }
     } catch (e) {}
   }
 
-  window.wtToggleNotifDropdown = function () { document.getElementById('wt-notif-dropdown').classList.toggle('open'); };
-  window.wtCloseNotifDropdown  = function () { document.getElementById('wt-notif-dropdown').classList.remove('open'); };
+  window.wtToggleNotifDropdown = function () {
+    var dd = document.getElementById('wt-notif-dropdown');
+    dd.classList.toggle('open');
+  };
+  window.wtCloseNotifDropdown  = function () {
+    document.getElementById('wt-notif-dropdown').classList.remove('open');
+  };
 
   document.addEventListener('click', function (e) {
     var dd   = document.getElementById('wt-notif-dropdown');
