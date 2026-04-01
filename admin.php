@@ -2263,23 +2263,8 @@ textarea.form-input {
           <span>Notifications</span>
           <button onclick="markAllRead()">Mark all read</button>
         </div>
-        <div class="notif-list">
-          <div class="notif-item unread">
-            <div class="notif-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg></div>
-            <div><strong>14 tickets pending</strong><br/><small>Require your approval</small></div>
-          </div>
-          <div class="notif-item unread">
-            <div class="notif-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg></div>
-            <div><strong>New 5-star review</strong><br/><small>John Stevenson left a review</small></div>
-          </div>
-          <div class="notif-item">
-            <div class="notif-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-            <div><strong>Reptile House maintenance</strong><br/><small>Scheduled for tomorrow 8AM</small></div>
-          </div>
-          <div class="notif-item">
-            <div class="notif-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
-            <div><strong>New media upload</strong><br/><small>3 images awaiting review</small></div>
-          </div>
+        <div class="notif-list" id="notifList">
+          <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Loading…</div>
         </div>
       </div>
     </div>
@@ -2427,22 +2412,40 @@ textarea.form-input {
 
     <!-- Tab: Approvals -->
     <div class="tab-content active" id="tab-approvals">
+      <!-- Sub-tab bar: Recent vs History -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="approvalSubRecent"   onclick="switchApprovalView('recent')"  style="font-size:12px;padding:7px 16px;">Recent (3 days)</button>
+        <button class="btn btn-outline" id="approvalSubHistory"  onclick="switchApprovalView('history')" style="font-size:12px;padding:7px 16px;">History</button>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-muted);" id="approvalViewLabel">Showing pending + last 3 days of approved/rejected</span>
+      </div>
+
       <div class="card">
         <div class="card-header">
-          <h3>Pending Payment Approvals</h3>
-          <div style="display:flex;gap:8px;">
-            <input type="text" class="search-input" placeholder="Search by TXN or customer..."/>
-            <select class="filter-select"><option>All Status</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+          <h3 id="approvalCardTitle">Pending &amp; Recent Payments</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="text" class="search-input" id="approvalSearch"
+                   placeholder="Search TXN or customer…"
+                   oninput="filterApprovalTable()"
+                   style="min-width:200px;" />
+            <select class="filter-select" id="approvalStatusFilter" onchange="filterApprovalTable()">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
           </div>
         </div>
         <table class="data-table">
           <thead>
-            <tr><th>TXN ID</th><th>Customer</th><th>Tickets</th><th>Amount</th><th>Payment Proof</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>TXN ID</th><th>Customer</th><th>Tickets</th><th>Amount</th><th>Payment Proof</th><th>Date</th><th>Status</th><th>Approved By</th><th>Actions</th></tr>
           </thead>
           <tbody id="approvalTableBody">
-            <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-muted);">Loading payments…</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted);">Loading payments…</td></tr>
           </tbody>
         </table>
+        <div class="pagination" id="approvalPagination" style="display:none;">
+          <span id="approvalPaginationInfo" style="color:var(--text-muted);font-size:13px;"></span>
+        </div>
       </div>
     </div>
 
@@ -2818,7 +2821,7 @@ textarea.form-input {
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="stat-value" id="reportMonthVisitors">—</div><div class="stat-label">Monthly Visitors</div></div>
       <div class="stat-card"><div class="stat-top"><div class="stat-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="stat-value" id="reportMonthRevenue">—</div><div class="stat-label">Monthly Revenue</div></div>
-      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div></div><div class="stat-value">—</div><div class="stat-label">Satisfaction Rate</div></div>
+      <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div></div><div class="stat-value" id="reportSatisfactionRate">—</div><div class="stat-label">Satisfaction Rate</div></div>
       <div class="stat-card"><div class="stat-top"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/></svg></div></div><div class="stat-value" id="reportMonthTickets">—</div><div class="stat-label">Tickets Sold</div></div>
     </div>
     <div class="card" style="margin-top:20px;"><div class="card-header"><h3>Monthly Revenue Trend</h3></div><canvas id="revenueChart" height="120"></canvas></div>
@@ -3416,8 +3419,12 @@ function toggleSidebar() {
 }
 
 // ---- NOTIFICATIONS ----
+// FIX 4: Refresh notifications each time the panel is opened
 function toggleNotifications() {
-  document.getElementById('notifPanel').classList.toggle('open');
+  const panel = document.getElementById('notifPanel');
+  const wasOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if (!wasOpen) loadAdminNotifications(); // refresh on every open
 }
 document.addEventListener('click', e => {
   const panel = document.getElementById('notifPanel');
@@ -3426,9 +3433,14 @@ document.addEventListener('click', e => {
     panel.classList.remove('open');
   }
 });
-function markAllRead() {
+// FIX 4: markAllRead — persists to server so notifications stay read across page loads
+async function markAllRead() {
+  try {
+    await fetch('api/notifications.php?action=mark_all_read', { method: 'POST', credentials: 'include' });
+  } catch(_) {}
   document.querySelectorAll('.notif-item').forEach(i => i.classList.remove('unread'));
-  document.querySelector('.notif-dot').style.display = 'none';
+  const dot = document.querySelector('.notif-dot');
+  if (dot) dot.style.display = 'none';
   showToast('All notifications marked as read');
 }
 
@@ -3446,6 +3458,77 @@ function switchTab(btn, tabId) {
   // Lazy-load dynamic tabs
   if (tabId === 'tab-pricing')    { loadPricingTable(); loadAddonPricingTable(); loadFeedingPricingTable(); }
   if (tabId === 'tab-promotions') loadVouchersTable();
+  if (tabId === 'tab-approvals')  { filterApprovalTable(); }
+}
+
+// ── Approval view: 'recent' (default) or 'history' ──
+let _approvalView = 'recent'; // default: pending + last 3 days
+
+function switchApprovalView(view) {
+  _approvalView = view;
+  const recentBtn  = document.getElementById('approvalSubRecent');
+  const historyBtn = document.getElementById('approvalSubHistory');
+  const label      = document.getElementById('approvalViewLabel');
+  const title      = document.getElementById('approvalCardTitle');
+
+  if (view === 'recent') {
+    if (recentBtn)  { recentBtn.className  = 'btn btn-primary'; recentBtn.style.cssText  = 'font-size:12px;padding:7px 16px;'; }
+    if (historyBtn) { historyBtn.className = 'btn btn-outline';  historyBtn.style.cssText = 'font-size:12px;padding:7px 16px;'; }
+    if (label) label.textContent = 'Showing pending + last 3 days of approved/rejected';
+    if (title) title.textContent = 'Pending & Recent Payments';
+  } else {
+    if (recentBtn)  { recentBtn.className  = 'btn btn-outline';  recentBtn.style.cssText  = 'font-size:12px;padding:7px 16px;'; }
+    if (historyBtn) { historyBtn.className = 'btn btn-primary';  historyBtn.style.cssText = 'font-size:12px;padding:7px 16px;'; }
+    if (label) label.textContent = 'All approved/rejected records older than 3 days';
+    if (title) title.textContent = 'Payment History';
+  }
+  filterApprovalTable();
+}
+
+// ── Filter + render approval table based on view, search, status ──
+function filterApprovalTable() {
+  const q         = (document.getElementById('approvalSearch')?.value || '').toLowerCase().trim();
+  const statusF   = document.getElementById('approvalStatusFilter')?.value || '';
+  const cutoff    = new Date(); cutoff.setDate(cutoff.getDate() - 3); // 3 days ago
+
+  const filtered = _allPayments.filter(p => {
+    const purchaseDate = p.purchase_date ? new Date(p.purchase_date) : null;
+    const isPending    = p.status === 'pending';
+    const isOld        = purchaseDate && purchaseDate < cutoff;
+
+    // View filter
+    if (_approvalView === 'recent') {
+      // Show: ALL pending (no age limit) + approved/rejected within 3 days
+      if (!isPending && isOld) return false;
+    } else {
+      // History: only approved/rejected older than 3 days
+      if (isPending) return false;
+      if (!isOld)    return false;
+    }
+
+    // Status filter
+    if (statusF && p.status !== statusF) return false;
+
+    // Search filter — TXN ID or customer name/email
+    if (q) {
+      const ref   = (p.booking_ref  || '').toLowerCase();
+      const name  = (p.visitor_name || p.username || '').toLowerCase();
+      const email = (p.visitor_email || p.email   || '').toLowerCase();
+      if (!ref.includes(q) && !name.includes(q) && !email.includes(q)) return false;
+    }
+
+    return true;
+  });
+
+  renderApprovalTable(filtered);
+
+  // Update pagination info
+  const pag  = document.getElementById('approvalPagination');
+  const info = document.getElementById('approvalPaginationInfo');
+  if (pag && info) {
+    pag.style.display = filtered.length ? 'flex' : 'none';
+    info.textContent  = filtered.length + ' record' + (filtered.length !== 1 ? 's' : '') + ' shown';
+  }
 }
 
 // ---- TICKET ACTIONS (LIVE — connected to database) ----
@@ -3465,7 +3548,7 @@ async function loadPendingPayments() {
       return;
     }
     _allPayments = data.payments || [];
-    renderApprovalTable(_allPayments);
+    filterApprovalTable();   // FIX 4: apply 3-day / history filter instead of showing all
     renderOverviewApprovals(_allPayments.filter(p => p.status === 'pending').slice(0, 4));
     const pendingCount = _allPayments.filter(p => p.status === 'pending').length;
     const tabBadge = document.getElementById('tabPendingCount');
@@ -3528,6 +3611,10 @@ function renderApprovalTable(payments) {
          <button class="btn-reject"  onclick="event.stopPropagation();rejectTicket(this,'${p.booking_ref}')">✕ Reject</button>`
       : statusBadge;
 
+    const approvedByCell = p.approved_by_name
+      ? `<span style="font-weight:600;color:var(--green-dark);">👤 ${p.approved_by_name}</span>`
+      : (p.status === 'pending' ? '<span style="color:var(--text-muted);font-size:12px;">—</span>' : '<span style="color:var(--text-muted);font-size:12px;">—</span>');
+
     return `<tr style="cursor:pointer;" onclick="openBookingDetails('${p.booking_ref}')" title="Click to view booking details">
       <td class="txn-id">${p.booking_ref}</td>
       <td><strong>${customerName}</strong><br/><small>${customerEmail}</small></td>
@@ -3536,6 +3623,7 @@ function renderApprovalTable(payments) {
       <td>${proofBtn}</td>
       <td>${dateStr}</td>
       <td>${statusBadge}</td>
+      <td style="font-size:12px;">${approvedByCell}</td>
       <td class="action-cell">${actionCell}</td>
     </tr>`;
   }).join('');
@@ -3764,14 +3852,52 @@ function viewProof(proofPath, bookingRef, username, visitDate) {
 
 function updatePendingCount(delta) { /* handled by loadPendingPayments */ }
 
+// FIX 4: Dynamic admin notifications — fully DB-driven, replaces hardcoded panel
 async function loadAdminNotifications() {
   try {
-    const res = await fetch('api/tickets.php?action=check_notifications', { credentials: 'include' });
+    const res  = await fetch('api/notifications.php?action=get', { credentials: 'include' });
     const data = await res.json();
     if (!data.success) return;
-    const unread = (data.notifications || []).filter(n => !n.is_read);
+
+    const notifs      = data.notifications  || [];
+    const unreadCount = data.unread_count   || 0;
+
+    // Update the red dot indicator
     const dot = document.querySelector('.notif-dot');
-    if (dot) dot.style.display = unread.length > 0 ? '' : 'none';
+    if (dot) dot.style.display = unreadCount > 0 ? '' : 'none';
+
+    // Render notification items
+    const list = document.getElementById('notifList');
+    if (!list) return;
+
+    if (!notifs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:24px 16px;color:var(--text-muted);font-size:13px;">✅ All caught up — no new notifications</div>';
+      return;
+    }
+
+    const iconSVG = {
+      ticket:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>',
+      calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+      message:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+      star:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,16 5,21 7,14 2,9 9,9"/></svg>',
+    };
+
+    list.innerHTML = notifs.map(n => {
+      const clickAttr = n.action
+        ? `onclick="showPage('${n.action}');document.getElementById('notifPanel').classList.remove('open');"`
+        : '';
+      return `
+        <div class="notif-item ${n.is_read ? '' : 'unread'}"
+             style="cursor:${n.action ? 'pointer' : 'default'};"
+             ${clickAttr}>
+          <div class="notif-icon ${n.type}">${iconSVG[n.icon] || iconSVG.message}</div>
+          <div>
+            <strong>${n.title}</strong><br/>
+            <small>${n.sub}</small>
+          </div>
+        </div>`;
+    }).join('');
+
   } catch (_) {}
 }
 
@@ -3827,6 +3953,8 @@ function startAutoRefresh() {
     try { loadPendingPayments(); } catch(e) {}
     try { loadAdminNotifications(); } catch(e) {}
     try { loadVouchersTable(); } catch(e) {}
+    // FIX 2: periodically refresh events so expired dates auto-deactivate while page is open
+    try { if (document.getElementById('page-events')?.classList.contains('active')) loadEvents(); } catch(e) {}
   }, 30000);
 }
 
@@ -4360,7 +4488,8 @@ let _allEvents = [];
 
 async function loadEvents() {
   try {
-    const res  = await fetch('api/events.php?action=get_events', { credentials: 'include' });
+    // FIX 2: pass admin=1 so the API returns all events (including past-date) for management
+    const res  = await fetch('api/events.php?action=get_events&admin=1', { credentials: 'include' });
     const data = await res.json();
     if (!data.success) throw new Error();
     _allEvents = data.events;
@@ -4407,8 +4536,14 @@ function renderEventsTable(events) {
   tb.innerHTML = events.map(e => {
     const active     = parseInt(e.is_active);
     const sessionLbl = e.session === 'morning' ? '🌅 Morning' : '☀️ Afternoon';
+
+    // FIX 2: detect expired specific-date events and show a red badge
+    const todayStr   = new Date().toISOString().slice(0, 10);
+    const isPastDate = e.event_date && e.event_date < todayStr;
     const dateLbl    = e.event_date
-      ? `<span style="background:#fff3e0;color:#c0620a;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">${escE(e.event_date)}</span>`
+      ? `<span style="background:${isPastDate ? '#fee2e2' : '#fff3e0'};color:${isPastDate ? '#dc2626' : '#c0620a'};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">
+           ${escE(e.event_date)}${isPastDate ? ' ⚠ Expired' : ''}
+         </span>`
       : `<span style="background:var(--green-pale);color:var(--green-dark);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">Every day</span>`;
 
     return `<tr>
@@ -4717,6 +4852,24 @@ function updateReportsStatCards(data) {
   if (mv) mv.textContent = (data.month_visitors || 0).toLocaleString();
   if (mr) mr.textContent = 'RM' + parseFloat(data.month_revenue || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   if (mt) mt.textContent = (data.month_tickets  || 0).toLocaleString();
+  // FIX 3: Pull satisfaction rate live from real feedback data
+  loadSatisfactionRate();
+}
+
+// FIX 3: Live satisfaction rate from feedback stats
+async function loadSatisfactionRate() {
+  try {
+    const res  = await fetch('api/feedback.php?action=stats', { credentials: 'include' });
+    const data = await res.json();
+    const sr   = document.getElementById('reportSatisfactionRate');
+    if (!sr) return;
+    // feedback.php stats returns { avg, total, unread, pending, breakdown }
+    const avg = parseFloat(data.avg || data.avg_rating || 0);
+    if (!data.success || !avg) { sr.textContent = '—'; return; }
+    const pct = Math.round((avg / 5) * 100);
+    sr.textContent = pct + '%';
+    sr.title = 'Based on ' + (data.total || 0) + ' reviews · Avg ' + avg.toFixed(1) + ' / 5 ★';
+  } catch(e) {}
 }
 
 // ── Filter button handler ──
@@ -4741,6 +4894,8 @@ function initReportsChart() {
   reportsChartInit = true;
   // Re-use same data fetch; charts share instances
   loadChartData(_currentDays);
+  // FIX 3: also pull satisfaction rate on first load of reports page
+  loadSatisfactionRate();
 }
 
 // ── Auto-load media gallery when that page is shown ──

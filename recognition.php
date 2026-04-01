@@ -835,7 +835,7 @@ const ZOO_ANIMALS = {
     weight: '100–200 kg', lifespan: 'Up to 40 years',
     fact: 'Gorillas share <strong>98.3% of their DNA</strong> with humans, making them our closest relatives after chimpanzees. They can learn sign language and use simple tools.',
     consDesc: 'Critically endangered due to habitat destruction, poaching, and disease. Fewer than 300,000 western gorillas remain in the wild.',
-    profile: 'animalMain.html'
+    profile: 'gorilla.html'
   },
   'Elephant': {
     emoji: '🐘', species: 'Elephas maximus',
@@ -845,7 +845,7 @@ const ZOO_ANIMALS = {
     weight: '2,700–5,000 kg', lifespan: 'Up to 70 years',
     fact: 'Elephants have the <strong>largest brain of any land animal</strong> and are one of the few species that can recognise themselves in a mirror. They mourn their dead.',
     consDesc: 'Asian elephants are endangered; African forest elephants are critically endangered. Habitat loss and ivory poaching are the primary threats.',
-    profile: 'animalMain.html'
+    profile: 'elephant.html'
   },
   'Lion': {
     emoji: '🦁', species: 'Panthera leo',
@@ -855,7 +855,7 @@ const ZOO_ANIMALS = {
     weight: '120–190 kg', lifespan: '10–14 years (wild)',
     fact: 'Lions are the only truly social wild cats — they live in groups called <strong>prides</strong> of up to 30 individuals. The male\'s roar can be heard up to 8 km away.',
     consDesc: 'Lion populations have declined by over 40% in the last three generations due to habitat loss and conflict with humans.',
-    profile: 'animalMain.html'
+    profile: 'lion.html'
   },
   'Penguin': {
     emoji: '🐧', species: 'Spheniscidae (family)',
@@ -865,7 +865,7 @@ const ZOO_ANIMALS = {
     weight: '1–40 kg', lifespan: '15–20 years',
     fact: 'Penguins are <strong>flightless birds</strong> that are exceptional swimmers — they can reach speeds of 25 km/h underwater. They use their wings as flippers.',
     consDesc: 'Several penguin species are threatened by climate change reducing sea ice, overfishing depleting food sources, and oil spills.',
-    profile: 'animalMain.html'
+    profile: 'penguin.html'
   },
   'Panda': {
     emoji: '🐼', species: 'Ailuropoda melanoleuca',
@@ -875,7 +875,7 @@ const ZOO_ANIMALS = {
     weight: '70–125 kg', lifespan: 'Up to 20 years (wild)',
     fact: 'Giant pandas eat up to <strong>14 kg of bamboo per day</strong> and spend 10–16 hours eating. Despite being carnivores by classification, 99% of their diet is bamboo.',
     consDesc: 'Once critically endangered, conservation efforts have helped recover wild populations to around 1,800. Still listed as Vulnerable due to habitat fragmentation.',
-    profile: 'animalMain.html'
+    profile: 'panda.html'
   },
   // 'other' is intentionally NOT in ZOO_ANIMALS — triggers the unknown banner
 };
