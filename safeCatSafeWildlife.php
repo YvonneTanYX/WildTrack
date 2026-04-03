@@ -6,6 +6,8 @@ $currentPage = 'conservation'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Safe Cat, Safe Wildlife — WildTrack Zoo</title>
   <style>
@@ -32,13 +34,21 @@ $currentPage = 'conservation'; ?>
 <body>
 
 <?php include 'nav.php'; ?>
-
-<img src="https://images.unsplash.com/photo-1511044568932-338cba0ad803?q=80&w=2070&auto=format&fit=crop"
-     class="page-img" alt="Safe Cat Safe Wildlife">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="https://images.unsplash.com/photo-1511044568932-338cba0ad803?q=80&w=2070&auto=format&fit=crop" alt="Safe Cat Safe Wildlife">/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Safe Cat<br/><em>Safe Wildlife</em></h1>
+    <p class="hero-sub">Responsible Pet Ownership: Protecting Local Biodiversity</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
-
-  <h1>Safe Cat, Safe Wildlife</h1>
 
   <div class="two-col">
     <div class="col-info">

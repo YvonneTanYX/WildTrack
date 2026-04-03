@@ -37,6 +37,11 @@ function getPending(): void {
     // One row per booking_ref; aggregate ticket types and count
     $stmt = $pdo->query("
         SELECT
+            CASE
+                WHEN t.status IN ('approved','rejected')
+                THEN COALESCE(MAX(t.approved_by_name), 'Admin')
+                ELSE NULL
+            END AS approved_by_name,
             t.booking_ref,
             u.username,
             u.email,
@@ -112,8 +117,26 @@ function checkNotifications(): void {
 //   email         (optional override — updates users.email)
 // ════════════════════════════════════════════════════════════════════════
 function approvePayment(): void {
-    $admin = requireRole('admin');
+    $admin     = requireRole('admin');
+    $adminUser = $admin['username'] ?? 'Admin';
+    $adminId   = (int)($admin['user_id'] ?? 0);
     $body  = jsonBody();
+
+    $bookingRef = clean($body['booking_ref'] ?? '');
+    if (!$bookingRef) respond(false, 'booking_ref is required.');
+
+    $pdo = getDB();
+
+    // Resolve the best display name: prefer full_name from workers table
+    $adminName = $adminUser;
+    if ($adminId) {
+        $wRow = $pdo->prepare("SELECT full_name FROM workers WHERE user_id = ? LIMIT 1");
+        $wRow->execute([$adminId]);
+        $w = $wRow->fetch(PDO::FETCH_ASSOC);
+        if ($w && !empty($w['full_name'])) {
+            $adminName = $w['full_name'];
+        }
+    }
 
     $bookingRef = clean($body['booking_ref'] ?? '');
     if (!$bookingRef) respond(false, 'booking_ref is required.');
@@ -178,7 +201,8 @@ function approvePayment(): void {
                  qr_code      = ?,
                  ticket_type  = COALESCE(NULLIF(?, ''), ticket_type),
                  visit_date   = COALESCE(NULLIF(?, ''), visit_date),
-                 price        = COALESCE(?, price)
+                 price        = COALESCE(?, price),
+                 approved_by_name = ?
              WHERE ticket_id = ?"
         );
 
@@ -191,6 +215,7 @@ function approvePayment(): void {
                 $newType  ?: null,
                 $newDate  ?: null,
                 $newPrice,
+                $adminName,  
                 $t['ticket_id'],
             ]);
             $approvedIds[] = $t['ticket_id'];

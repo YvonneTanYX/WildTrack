@@ -20,6 +20,8 @@ if ($visitorLoggedIn) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Get in Touch — WildTrack Zoo</title>
   <style>
@@ -144,14 +146,23 @@ if ($visitorLoggedIn) {
 <body>
 
 <?php include 'nav.php'; ?>
-
-<img src="https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?q=80&w=987&auto=format&fit=crop"
-     class="page-img" alt="Get in Touch — WildTrack Zoo">
-
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="images/rabbit.avif" alt="Get in Touch — WildTrack Zoo">/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Get in<em> Touch</em></h1>
+    <p class="hero-sub"> We Value Your Voice: Contact Us and Share Your Experience </p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 <div class="content-section">
 
   <div class="git-intro">
-    <h1>Get in Touch</h1>
+    <h1>Contact Us and Send Your Feedbacks</h1>
     <p>Our team receives a high volume of calls and emails and always does its best to
        respond as quickly as possible — thank you for your patience!</p>
   </div>

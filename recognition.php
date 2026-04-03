@@ -126,8 +126,6 @@ $currentPage = 'animal'; ?>
     }
     .preview-clear:hover { background: var(--red); }
 
-
-
     /* ── IDENTIFY BUTTON ── */
     .identify-wrap { text-align: center; margin-bottom: 48px; }
     #btn-identify {
@@ -472,18 +470,6 @@ $currentPage = 'animal'; ?>
     .adc-conservation.vu .cons-body h5, .adc-conservation.vu .cons-body p { color: #b45309; }
     .adc-conservation.lc .cons-body h5, .adc-conservation.lc .cons-body p { color: #065f46; }
 
-    /* Footer action row */
-    .adc-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-    .btn-profile {
-      flex: 1; min-width: 160px;
-      background: var(--nav); color: #fff;
-      border: none; border-radius: 30px;
-      padding: .75rem 1.5rem; font-family: 'DM Sans', sans-serif;
-      font-size: .9rem; font-weight: 600;
-      cursor: pointer; text-decoration: none;
-      display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
-      transition: all .2s; box-shadow: 0 4px 14px rgba(46,90,48,.25);
-    }
     .btn-profile:hover { background: var(--green); transform: translateY(-1px); }
     .btn-share {
       background: #f4faf4; color: var(--green);
@@ -505,20 +491,6 @@ $currentPage = 'animal'; ?>
     .model-status.ready   { display: block; background: #eafaf0; color: #1a6a3a; border: 1px solid #b0e0c0; }
     .model-status.error   { display: block; background: #fdeaea; color: #9a1a1a; border: 1px solid #f0b0b0; }
 
-    /* ── FOOTER matches mainPage.css ── */
-    footer { background-color: #67976a; padding-bottom: 30px; margin-top: 60px; }
-    .footer-container { padding: 0; }
-    .footers { display: flex; flex-direction: row; flex-wrap: wrap; }
-    .footers > div { margin: 30px 5px 0 40px; }
-    .footers > div:first-child { margin-left: 250px; }
-    .footers h3 { margin-bottom: 10px; }
-    .footers a { color: #3a3a3a; text-decoration: none; display: block; margin-bottom: 4px; font-size: .9rem; }
-    .footers a:hover { color: #fff; }
-    .footer-bottom {
-      text-align: center; padding: 16px;
-      font-size: .8rem; color: rgba(255,255,255,.7);
-      border-top: 1px solid rgba(255,255,255,.15); margin-top: 20px;
-    }
   </style>
 </head>
 <body>
@@ -595,7 +567,6 @@ $currentPage = 'visit';?>
         <span class="unknown-tip">🎯 Centre the animal in frame</span>
         <span class="unknown-tip">🚫 Avoid photos through glass or fencing</span>
       </div>
-      <button class="try-again-btn" onclick="resetAll()">↺ Try Another Photo</button>
     </div>
 
     <!-- ⚠️ LOW CONFIDENCE WARNING -->
@@ -718,45 +689,8 @@ $currentPage = 'visit';?>
       <div class="tip-item"><div class="tip-dot" style="background:#d94f3d;"></div><p class="tip-text">Animals outside WildTrack's collection won't be matched</p></div>
     </div>
   </div>
-
-</div><!-- /page-body -->
-
-<!-- ── FOOTER ── -->
-<footer>
-  <div class="footer-container">
-    <div class="footers">
-      <div class="visit-footer">
-        <h3><a href="visitMain.html">Visit</a></h3>
-        <a href="openingHourRate.php">Opening Hour &amp; Rates</a>
-        <a href="zoomap.html">Zoo Map</a>
-        <a href="ticket.html">Buy Ticket</a>
-        <a href="accessbility.html">Accessibility</a>
-        <a href="foodAndDrink.html">Food and Drink</a>
-        <a href="animalfeeding.html">Animal Feeding</a>
-      </div>
-      <div class="thingToDo-footer">
-        <h3><a href="thingMain.html">Things to Do</a></h3>
-        <a href="event.html">Events</a>
-        <a href="learning.html">Learning</a>
-        <a href="birthdayParties.html">Birthday Parties</a>
-      </div>
-      <div class="animal-footer">
-        <h3><a href="#">Animal</a></h3>
-        <a href="recognition.html">Animal Recognition</a>
-      </div>
-      <div class="conservation-footer">
-        <h3><a href="conservationMain.html">Conservation</a></h3>
-        <a href="savingWildlife.html">Saving Wildlife</a>
-        <a href="greenZooGreenYou.html">Green Zoo Green You</a>
-        <a href="safeCatSafeWildlife.html">Safe Cat, Safe Wildlife</a>
-      </div>
-      <div class="getInTouch-footer">
-        <h3><a href="getInTouch.html">Get in Touch</a></h3>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">© 2026 WildTrack Malaysia · All rights reserved</div>
-</footer>
+</div> </div> </div>
+  <?php include 'footer.php'; ?>
 
 
 <!-- TensorFlow.js + Teachable Machine -->

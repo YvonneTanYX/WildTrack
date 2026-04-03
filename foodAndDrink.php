@@ -6,6 +6,8 @@ $currentPage = 'visit'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Food &amp; Drink — WildTrack Zoo</title>
 </head>
@@ -13,14 +15,22 @@ $currentPage = 'visit'; ?>
 
 <?php include 'nav.php'; ?>
 
-<img src="https://images.rzss.org.uk/media/Highland_Wildlife_Park/HWP_site_images/Visitors/antlers_cafe_visitors.jpg"
-     class="page-img" alt="Food and drink at the zoo">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="https://images.rzss.org.uk/media/Highland_Wildlife_Park/HWP_site_images/Visitors/antlers_cafe_visitors.jpg" alt="Food and drink at the zoo">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title"><em>Food</em><br/>and Drink</h1>
+    <p class="hero-sub">Fuel up for your adventure! WildTrack Zoo offers a variety of dining options
+     for the whole family — from hearty meals to sweet treats.</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
-
-  <h1>Food &amp; Drink</h1>
-  <p>Fuel up for your adventure! WildTrack Zoo offers a variety of dining options
-     for the whole family — from hearty meals to sweet treats.</p>
 
   <!-- Restaurant -->
   <div class="two-col">

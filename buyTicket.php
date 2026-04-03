@@ -10,6 +10,8 @@ $visitorLoggedIn = isVisitor();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Buy a Ticket — WildTrack Zoo</title>
   <style>
@@ -73,14 +75,20 @@ $visitorLoggedIn = isVisitor();
 <body>
 
 <?php include 'nav.php'; ?>
-
-<img src="https://images.unsplash.com/photo-1695272016860-c3d5eaa6c660?q=80&w=1740&auto=format&fit=crop"
-     class="page-img" alt="Zoo entrance">
+<section class="hero">
+  <img class="hero-img" src="https://images.unsplash.com/photo-1695272016860-c3d5eaa6c660?q=80&w=1740&auto=format&fit=crop" alt="Zoo entrance">/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Buy a<br/><em>Ticket</em></h1>
+    <p class="hero-sub">We can't wait to welcome you to WildTrack Zoo! Book online to save time at the gate.</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
-
-  <h1>Buy a Ticket</h1>
-  <p>We can't wait to welcome you to WildTrack Zoo! Book online to save time at the gate.</p>
 
   <div class="notice-box">
     💡 <strong>Save by booking online</strong> — tickets purchased at the gate may be subject

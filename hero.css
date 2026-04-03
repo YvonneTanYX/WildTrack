@@ -1,0 +1,67 @@
+    :root {
+      --nav:      #4e7a51;
+      --green:    #2d5a30;
+      --green-md: #3e7a3e;
+      --green-lt: #5a9e52;
+      --teal:     #76d7c4;
+      --teal-dk:  #4eb8a8;
+      --bg:       #f1f8e9;
+      --white:    #ffffff;
+      --text:     #1a2e1a;
+      --muted:    #5a7a5a;
+      --border:   #c8e0c8;
+      --amber:    #e8a020;
+      --red:      #d94f3d;
+      --card-sh:  0 4px 24px rgba(46,90,48,.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; width: 100%; height: 460px;
+      overflow: hidden; background: var(--green);
+    }
+    .hero-img {
+      width: 100%; height: 100%; object-fit: cover;
+      opacity: .45; transform: scale(1.04);
+      transition: transform 10s ease;
+    }
+    .hero:hover .hero-img { transform: scale(1); }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(160deg, rgba(46,90,48,.75) 0%, rgba(30,60,30,.5) 20%, transparent 100%);
+    }
+    .hero-content {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      justify-content: center; padding: 0 10%;
+    }
+    .hero-eyebrow {
+      font-size: .75rem; font-weight: 600; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: .9rem; animation: fadeUp .6s ease both;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5.5vw, 4.5rem);
+      font-weight: 800; color: #fff;
+      line-height: 1.05; margin-bottom: 1.1rem;
+      animation: fadeUp .7s .1s ease both;
+    }
+    .hero-title em { font-family: Georgia, 'Times New Roman', Times, serif; color: var(--teal); }
+    .hero-sub {
+      font-size: 1.05rem; color: rgba(255,255,255,.82);
+      max-width: 500px; line-height: 1.7;
+      animation: fadeUp .7s .2s ease both;
+    }
+    .paw { position: absolute; opacity: .08; font-size: 5rem; pointer-events: none; }
+    .paw1 { right: 10%; top: 12%; transform: rotate(20deg); }
+    .paw2 { right: 20%; bottom: 8%; transform: rotate(-15deg); font-size: 3rem; }
+    .paw3 { right: 5%; bottom: 28%; transform: rotate(35deg); font-size: 2.5rem; }
+
+      @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }

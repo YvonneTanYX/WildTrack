@@ -6,6 +6,8 @@ $currentPage = 'things'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Events &amp; Talk Times — WildTrack Zoo</title>
   <style>
@@ -126,14 +128,22 @@ $currentPage = 'things'; ?>
 
 <?php include 'nav.php'; ?>
 
-<img src="https://media.istockphoto.com/id/477317714/photo/african-lions-paw.jpg?s=612x612&w=0&k=20&c=q_qbmrjRBABc6lAyBO3rEe84ICgRBIE3Nq9dyRBg_zI="
-     class="page-img" alt="Zoo events">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="https://media.istockphoto.com/id/477317714/photo/african-lions-paw.jpg?s=612x612&w=0&k=20&c=q_qbmrjRBABc6lAyBO3rEe84ICgRBIE3Nq9dyRBg_zI=" alt="Zoo events">/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title"><em>Events</em><br/>and Talk Times</h1>
+    <p class="hero-sub">Join our keepers for daily animal talks — included free with your Zoo entry!
+     Check the schedule below and plan your visit around your favourite animals.</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
-
-  <h1>Events &amp; Talk Times</h1>
-  <p>Join our keepers for daily animal talks — included free with your Zoo entry!
-     Check the schedule below and plan your visit around your favourite animals.</p>
 
   <!-- Live date & clock bar -->
   <div class="live-date-bar">

@@ -6,7 +6,9 @@ $currentPage = 'visit'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="hero.css"/>
   <title>Opening Hours &amp; Rates — WildTrack Zoo</title>
   <style>
     /* ── Ticket grid ── */
@@ -42,17 +44,23 @@ $currentPage = 'visit'; ?>
 <body>
 
 <?php include 'nav.php'; ?>
-
-<img src="https://images.rzss.org.uk/media/Highland_Wildlife_Park/HWP_animals/Amur_tiger/amur_tiger_2.jpg"
-     class="page-img" alt="Highland Wildlife Park">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="https://images.rzss.org.uk/media/Highland_Wildlife_Park/HWP_animals/Amur_tiger/amur_tiger_2.jpg" alt="Highland Wildlife Park"/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Opening<br/><em>Hours and Rate</em></h1>
+    <p class="hero-sub">Plan Your Visit: Times & Ticket Pricing</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <?php include 'announcement-banner.php'; ?>
 
 <div class="content-section">
-
-  <h1>Opening Hours &amp; Rates</h1>
-
-
 
   <!-- ── Opening Hours ── -->
   <h2>Opening Hours</h2>

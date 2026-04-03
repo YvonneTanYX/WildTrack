@@ -6,20 +6,13 @@ $currentPage = 'things'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Birthday Parties — WildTrack Zoo</title>
   <style>
     /* ── Hero ── */
     .page-img { width:100%; max-height:420px; object-fit:cover; display:block; }
-
-    /* ── Intro ── */
-    .bday-intro {
-      max-width: 800px;
-      margin: 0 auto 48px;
-      text-align: center;
-    }
-    .bday-intro h1 { color: #2a5a2e; font-size: 38px; margin-bottom: 14px; }
-    .bday-intro p  { font-size: 17px; color: #555; line-height: 1.8; }
 
     /* ── Info strip ── */
     .info-strip {
@@ -140,18 +133,22 @@ $currentPage = 'things'; ?>
 <body>
 
 <?php include 'nav.php'; ?>
-
-<img src="https://img.freepik.com/premium-vector/animal-cartoon-jungle_49499-240.jpg"
-     class="page-img" alt="Birthday Parties at WildTrack Zoo">
-
-<div class="content-section">
-
-  <!-- Intro -->
-  <div class="bday-intro">
-    <h1>🎉 Birthday Parties</h1>
-    <p>Calling all party animals! Celebrate your child's big day somewhere truly unique at WildTrack Zoo —
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="https://img.freepik.com/premium-vector/animal-cartoon-jungle_49499-240.jpg" alt="Birthday Parties at WildTrack Zoo">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Birthday<br/><em>Parties</em></h1>
+    <p class="hero-sub">Calling all party animals! Celebrate your child's big day somewhere truly unique at WildTrack Zoo —
        the perfect, one-of-a-kind setting for an unforgettable Birthday Party surrounded by the magic of wildlife. 🐾</p>
   </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
+
+<div class="content-section">
 
   <!-- Info strip -->
   <div class="info-strip">

@@ -6,6 +6,8 @@ $currentPage = 'visit'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Animal Feeding — WildTrack Zoo</title>
   <style>
@@ -115,12 +117,22 @@ $currentPage = 'visit'; ?>
 
 <?php include 'nav.php'; ?>
 
-<img src="https://images.unsplash.com/photo-1762367513797-65e32e050ef5?q=80&w=2070&auto=format&fit=crop"
-     class="page-img" alt="Animal feeding">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="images/giraffeFeeding.avif" alt="Animals feeding"/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Animal<br/><em>Feeding</em></h1>
+    <p class="hero-sub">Wild Encounters: Get Closer During Feeding Times</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
 
-  <h1>Animal Feeding</h1>
   <span class="feeding-badge">📅 Weekends &amp; Public Holidays Only</span>
   <p>Get up close to our animals during our interactive feeding sessions!
      These sessions are available on weekends and public holidays.

@@ -1,3 +1,55 @@
+<?php
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/check_session.php';
+requireVisitorLogin();
+
+// ── Fetch worker notifications from DB (uses existing notifications table) ──
+$workerNotifs = [];
+try {
+    $pdo    = getDB();
+    $userId = $_SESSION['user']['id'] ?? 0;
+
+    // Map existing notification types to worker-friendly icons
+    $iconMap = [
+        'shift_start'        => ['🌅','ni-green'],
+        'feeding_reminder'   => ['🍖','ni-orange'],
+        'health_alert'       => ['🩺','ni-red'],
+        'vaccination_due'    => ['💉','ni-orange'],
+        'incident_flagged'   => ['🚨','ni-red'],
+        'task_assigned'      => ['📋','ni-green'],
+        'worker_general'     => ['🔔','ni-green'],
+        // fallback for visitor/booking types still in table
+        'booking_approved'   => ['✅','ni-green'],
+        'booking_rejected'   => ['❌','ni-red'],
+        'new_payment_proof'  => ['💳','ni-orange'],
+        'new_feedback'       => ['💬','ni-green'],
+        'feedback_reply'     => ['↩️','ni-green'],
+    ];
+
+    $stmt = $pdo->prepare(
+        "SELECT id, type, title, body, is_read, created_at
+         FROM notifications
+         WHERE user_id = ?
+         ORDER BY created_at DESC
+         LIMIT 50"
+    );
+    $stmt->execute([$userId]);
+    foreach ($stmt->fetchAll() as $r) {
+        [$icon, $iconClass] = $iconMap[$r['type']] ?? ['🔔','ni-green'];
+        $workerNotifs[] = [
+            'id'        => (int)$r['id'],
+            'icon'      => $icon,
+            'iconClass' => $iconClass,
+            'title'     => htmlspecialchars($r['title']),
+            'sub'       => htmlspecialchars($r['body'] ?? ''),
+            'unread'    => !(bool)$r['is_read'],
+            'ts'        => strtotime($r['created_at']) * 1000,
+        ];
+    }
+} catch (Exception $e) {
+    $workerNotifs = null; // JS will fall back to localStorage
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -906,39 +958,22 @@ const LS = {
 
 // ═══════════════════════════════════════════════════════════
 // ── NOTIFICATION SYSTEM ──
-// • Only 2 persistent default notifications: Shift Started + Feeding Reminder
-// • All other notifications are generated ONLY when user records something
-// • Panel live-updates in real-time whenever pushNotif() is called
-// • Badge & dot update instantly on every push/read/clear
+// • Loaded fresh from DB on every page load via PHP injection
+// • pushNotif() saves new ones to DB via notifications_worker.php
+// • localStorage used only as offline fallback
 // ═══════════════════════════════════════════════════════════
 
-// Default notifications — only shift start & feeding reminder
-const DEFAULT_NOTIFS = [
-  {
-    id: 1,
-    icon: '🌅', iconClass: 'ni-green',
-    title: 'Shift started',
-    sub: 'Your shift begins now. Check your tasks and assignments.',
-    unread: true,
-    ts: Date.now() - 300000   // 5 min ago
-  },
-  {
-    id: 2,
-    icon: '🍖', iconClass: 'ni-orange',
-    title: 'Feeding reminder',
-    sub: 'Afternoon feeding for Zone B animals at 12:00 PM.',
-    unread: false,
-    ts: Date.now() - 3600000  // 1 hr ago
-  }
-];
+const DB_NOTIFS = <?php echo $workerNotifs !== null ? json_encode($workerNotifs) : 'null'; ?>;
 
-// Load from localStorage; if empty/first-time, seed the two defaults
-let notifications = LS.get('notifications', null);
-if (!notifications) {
-  notifications = DEFAULT_NOTIFS.map(n => ({...n}));
+let notifications;
+if (DB_NOTIFS !== null) {
+  notifications = DB_NOTIFS;
   LS.set('notifications', notifications);
+} else {
+  // DB unavailable — use cached localStorage only, no fake defaults
+  notifications = LS.get('notifications', []);
 }
-let notifNextId = notifications.length ? Math.max(...notifications.map(n => n.id)) + 1 : 3;
+let notifNextId = notifications.length ? Math.max(...notifications.map(n => n.id)) + 1 : 1;
 
 // BroadcastChannel for cross-tab real-time sync
 let notifChannel = null;
@@ -1060,13 +1095,9 @@ function markOneRead(id) {
   if (n && n.unread) {
     n.unread = false;
     LS.set('notifications', notifications);
-    // Update just this item's DOM without full re-render
+    fetch('api/notifications_worker.php',{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'read',id})}).catch(()=>{});
     const el = document.getElementById('notif-item-' + id);
-    if (el) {
-      el.classList.remove('unread');
-      const dot = el.querySelector('.notif-unread-dot');
-      if (dot) dot.remove();
-    }
+    if (el) { el.classList.remove('unread'); const dot=el.querySelector('.notif-unread-dot'); if(dot)dot.remove(); }
     _updateNotifBadge();
   }
 }
@@ -1074,6 +1105,7 @@ function markOneRead(id) {
 function markAllRead() {
   notifications.forEach(n => n.unread = false);
   LS.set('notifications', notifications);
+  fetch('api/notifications_worker.php',{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'read_all'})}).catch(()=>{});
   renderNotifPanel();
   showToast('✅ All notifications marked as read.');
 }
@@ -1081,32 +1113,30 @@ function markAllRead() {
 function clearAllNotifs() {
   notifications = [];
   LS.set('notifications', notifications);
+  fetch('api/notifications_worker.php',{method:'DELETE',credentials:'include'}).catch(()=>{});
   renderNotifPanel();
   showToast('🗑️ Notifications cleared.');
 }
 
-// ── Push a new notification — instantly updates panel & badge ──
+// ── Push a new notification — updates panel, badge & saves to DB ──
 function pushNotif(icon, iconClass, title, sub) {
-  const entry = {
-    id: notifNextId++,
-    icon, iconClass, title, sub,
-    unread: true,
-    ts: Date.now()
-  };
+  const entry = { id: notifNextId++, icon, iconClass, title, sub, unread: true, ts: Date.now() };
   notifications.unshift(entry);
   if (notifications.length > 50) notifications = notifications.slice(0, 50);
   LS.set('notifications', notifications);
 
-  // Broadcast to other tabs
-  try { notifChannel && notifChannel.postMessage({type: 'new_notif', ...entry}); } catch(e) {}
+  // Persist to DB — map iconClass back to a worker type
+  const typeMap = {'ni-green':'worker_general','ni-orange':'feeding_reminder','ni-red':'incident_flagged'};
+  fetch('api/notifications_worker.php', {
+    method: 'POST', credentials: 'include',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ type: typeMap[iconClass]||'worker_general', title, body: sub })
+  }).catch(()=>{});
 
-  // Live-update: if panel is open insert at top, otherwise just badge
+  try { notifChannel && notifChannel.postMessage({type:'new_notif',...entry}); } catch(e) {}
   const panel = document.getElementById('notifPanel');
-  if (panel && panel.classList.contains('open')) {
-    _insertNotifItem(entry);
-  }
+  if (panel && panel.classList.contains('open')) _insertNotifItem(entry);
   _updateNotifBadge();
-
   showRTNotif(icon, iconClass, title, sub);
 }
 
@@ -1245,7 +1275,7 @@ document.addEventListener('click', e=>{
 
 // ─── ANIMALS ───
 const EMOJIS=['🦁','🐯','🐘','🦍','🐺','🦊','🐆','🐬','🦓','🦏','🐊','🦅','🦜','🦒','🐻','🦌','🐍','🦈','🐧','🦩'];
-const API='http://localhost/WildTrack/api/animals.php';
+const API='http://localhost/WildTrack/api/animals_worker.php';
 let animals=[],editingId=null,deletingId=null,selEmoji='🦁';
 
 async function loadAnimals(){
@@ -1256,6 +1286,9 @@ async function loadAnimals(){
     else throw new Error(data.message);
   }catch(e){ animals=LS.get('animals',[]); }
   renderAnimals();syncDashboard();populateDropdowns();
+  // Load dependent data after animals are ready
+  await loadFeedingLog();
+  await loadHealthLog();
 }
 
 function buildEmojiPicker(){
@@ -1417,49 +1450,78 @@ function syncDashboard(){
 
 // ─── FEEDING ───
 let feedingLog=LS.get('feedingLog',[]);
+async function loadFeedingLog(){
+  try{
+    const res=await fetch('api/feeding_worker.php',{credentials:'include'});
+    const data=await res.json();
+    if(data.success){ feedingLog=data.records; LS.set('feedingLog',feedingLog); }
+  }catch(e){ feedingLog=LS.get('feedingLog',[]); }
+  feedingCount=feedingLog.length; LS.set('feedingCount',feedingCount);
+  renderFeedingTable(); syncDashboard();
+}
 function renderFeedingTable(){
   const tbody=document.getElementById('feedingTableBody');
   if(!feedingLog.length){tbody.innerHTML='<tr class="table-empty-row"><td colspan="8">No feedings logged yet. Log a feeding above to see records here.</td></tr>';return;}
   const bc={'All Eaten':'b-green','Refused Food':'b-red','75% Eaten':'b-orange','50% Eaten':'b-orange','25% Eaten':'b-red'};
   tbody.innerHTML=feedingLog.map((r,i)=>`<tr><td>${r.time}</td><td>${r.animal}</td><td>${r.type}</td><td>${r.qty}</td><td><span class="badge ${bc[r.consumed]||'b-orange'}">${r.consumed}</span></td><td style="color:var(--sub);font-size:12px;">${r.notes||'—'}</td><td>${r.worker}</td><td><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editFeeding(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteFeeding(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></td></tr>`).join('');
 }
-function logFeeding(){
-  const animal=document.getElementById('feedAnimal').value;
+async function logFeeding(){
+  const animalVal=document.getElementById('feedAnimal').value;
   const qty=document.getElementById('feedQty').value;
-  if(!animal||!qty){showToast('Please select an animal and enter quantity.','error');return;}
+  if(!animalVal||!qty){showToast('Please select an animal and enter quantity.','error');return;}
   const type=document.getElementById('feedType').value;
   const consumed=document.getElementById('feedConsumed').value;
   const notes=document.getElementById('feedNotes').value.trim();
   const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
   const workerName=currentWorker?currentWorker.username:'Worker';
-  const entry={time,animal:animal.split(' ')[0],type,qty:parseFloat(qty).toFixed(1),consumed,notes,worker:workerName};
-  feedingLog.unshift(entry);LS.set('feedingLog',feedingLog);
-  feedingCount++;LS.set('feedingCount',feedingCount);
+  // Find animal_id from name
+  const animal=animals.find(a=>animalVal.startsWith(a.name));
+  const entry={time,animal:animalVal.split(' ')[0],type,qty:parseFloat(qty).toFixed(1),consumed,notes,worker:workerName};
+  try{
+    const res=await fetch('api/feeding_worker.php',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({animal_id:animal?animal.id:null,animal_name:entry.animal,food_type:type,quantity:qty,consumed,notes,feeding_time:time})});
+    const data=await res.json();
+    if(data.success){ await loadFeedingLog(); }
+    else { feedingLog.unshift(entry); LS.set('feedingLog',feedingLog); renderFeedingTable(); }
+  }catch(e){ feedingLog.unshift(entry); LS.set('feedingLog',feedingLog); feedingCount=feedingLog.length; LS.set('feedingCount',feedingCount); renderFeedingTable(); }
   pushNotif('🍖','ni-green','Feeding logged',`${entry.animal} fed ${type} (${qty}kg) — ${consumed}`);
-  renderFeedingTable();
   document.getElementById('feedQty').value='';document.getElementById('feedNotes').value='';
   syncDashboard();showToast('🍖 Feeding logged successfully!');
 }
 
 // ─── HEALTH ───
 let healthLog=LS.get('healthLog',[]);
+async function loadHealthLog(){
+  try{
+    const res=await fetch('api/health_worker.php',{credentials:'include'});
+    const data=await res.json();
+    if(data.success){ healthLog=data.records; LS.set('healthLog',healthLog); }
+  }catch(e){ healthLog=LS.get('healthLog',[]); }
+  healthCount=healthLog.length; LS.set('healthCount',healthCount);
+  renderHealthRecords(); syncDashboard();
+}
 function renderHealthRecords(){
   const container=document.getElementById('healthRecords');
   if(!healthLog.length){container.innerHTML='<p class="placeholder-msg">No health records yet. Save a record above to see it here.</p>';return;}
   const iMap={'Routine Check':'ri-g lucide:check-circle','Illness Observation':'ri-o lucide:eye','Vet Visit':'ri-g lucide:stethoscope','Medication Given':'ri-r lucide:pill','Post-Surgery Observation':'ri-o lucide:eye','Injury Report':'ri-r lucide:alert-triangle'};
   container.innerHTML=healthLog.map((r,i)=>{const ic=(iMap[r.type]||'ri-g lucide:check-circle').split(' ');return`<div class="record-row"><div class="record-left"><div class="rec-icon ${ic[0]}"><span class="iconify" data-icon="${ic[1]}" data-width="17"></span></div><div><div class="rec-name">${r.type} — ${r.animal}</div><div class="rec-sub">${r.notes||'No additional notes'}</div></div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;"><span class="rec-date">${r.dateStr}</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editHealth(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteHealth(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`;}).join('');
 }
-function logHealth(){
-  const animal=document.getElementById('healthAnimal').value;
+async function logHealth(){
+  const animalVal=document.getElementById('healthAnimal').value;
   const type=document.getElementById('healthType').value;
   const notes=document.getElementById('healthNotes').value.trim();
-  if(!animal){showToast('Please select an animal.','error');return;}
+  if(!animalVal){showToast('Please select an animal.','error');return;}
   const timeStr=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
-  const entry={animal:animal.split(' ')[0],type,notes,dateStr:'Today, '+timeStr};
-  healthLog.unshift(entry);LS.set('healthLog',healthLog);
-  healthCount++;LS.set('healthCount',healthCount);
+  const animal=animals.find(a=>animalVal.startsWith(a.name));
+  const entry={animal:animalVal.split(' ')[0],type,notes,dateStr:'Today, '+timeStr};
+  try{
+    const res=await fetch('api/health_worker.php',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({animal_id:animal?animal.id:null,health_status:type,diagnosis:notes})});
+    const data=await res.json();
+    if(data.success){ await loadHealthLog(); }
+    else { healthLog.unshift(entry); LS.set('healthLog',healthLog); renderHealthRecords(); }
+  }catch(e){ healthLog.unshift(entry); LS.set('healthLog',healthLog); healthCount=healthLog.length; LS.set('healthCount',healthCount); renderHealthRecords(); }
   pushNotif('🩺','ni-orange','Health event recorded',`${type} logged for ${entry.animal}`);
-  renderHealthRecords();
   document.getElementById('healthAnimal').value='';document.getElementById('healthNotes').value='';
   syncDashboard();showToast('🩺 Health record saved!');
 }
@@ -1702,11 +1764,10 @@ function saveEditIncident(){incidentLog[editIncIdx].desc=document.getElementById
 function deleteIncident(i){if(!confirm('Delete this incident report?'))return;incidentLog.splice(i,1);incidentCount=incidentLog.length;LS.set('incidentLog',incidentLog);LS.set('incidentCount',incidentCount);renderIncidents();syncDashboard();showToast('🗑️ Incident report deleted.');}
 
 // ─── BOOT ───
-renderFeedingTable();
-renderHealthRecords();
+// loadAnimals() also calls loadFeedingLog, loadHealthLog after animals are ready
 renderVaxList();
 renderIncidents();
-_updateNotifBadge(); // set initial badge without full panel render
+_updateNotifBadge();
 initSession();
 </script>
 </body>

@@ -193,6 +193,40 @@ switch ($action) {
         break;
     }
 
+    // ── Get all zoo_settings key/value pairs ─────────────────
+    case 'get_settings': {
+        $stmt = $pdo->query("SELECT setting_key, setting_value FROM zoo_settings");
+        $rows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);  // ['key' => 'value', ...]
+        respond(true, 'OK', ['settings' => $rows]);
+        break;
+    }
+
+    // ── Save a single zoo_settings entry ──────────────────────
+    case 'save_setting': {
+        $body  = jsonBody();
+        $key   = clean($body['key']   ?? '');
+        $value = $body['value'] ?? '';
+
+        if (!$key) respond(false, 'Setting key is required.');
+
+        // Whitelist allowed keys so admins can't write arbitrary rows
+        $allowed = [
+            'notif_pref_tickets', 'notif_pref_reviews',
+            'notif_pref_events',  'notif_pref_stars',
+            'open_time', 'close_time', 'last_entry_mins', 'last_online_purchase_mins',
+        ];
+        if (!in_array($key, $allowed)) respond(false, 'Unknown setting key.');
+
+        $pdo->prepare(
+            "INSERT INTO zoo_settings (setting_key, setting_value)
+             VALUES (?, ?)
+             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
+        )->execute([$key, $value]);
+
+        respond(true, 'Setting saved.');
+        break;
+    }
+
     default:
         respond(false, 'Unknown action.');
 }

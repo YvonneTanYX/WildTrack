@@ -27,7 +27,9 @@
 
     <div class="footer-col">
       <h3><a href="animalMain.php">Animal</a></h3>
+
       <a href="recognition.php">Animal Recognition</a>
+      <a href="meetTheAnimals.php">Meet The Animals</a>
     </div>
 
     <div class="footer-col">

@@ -466,7 +466,7 @@ function buildBookingCard(b) {
                 <span class="iconify" data-icon="lucide:image" data-width="14"></span>
             </button>`;
     } else if (b.status === 'rejected') {
-        const reason = b.rejection_reason || 'Payment could not be verified.';
+        const reason = b.rejection_reason || 'Payment could not be verified. Please contact to admin for further assistance.';
         footer = `
             <div class="btn-rejected-info">
                 <span class="iconify" data-icon="lucide:alert-circle" data-width="14"></span>

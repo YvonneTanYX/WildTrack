@@ -225,9 +225,13 @@ switch ($action) {
             "SELECT COUNT(DISTINCT booking_ref) FROM tickets WHERE status = 'pending'"
         )->fetchColumn();
 
-        // Total revenue (approved tickets)
+        // Total revenue (approved tickets + add-ons)
         $totalRevenue = $pdo->query(
-            "SELECT COALESCE(SUM(price),0) FROM tickets WHERE status = 'approved'"
+            "SELECT COALESCE(SUM(t.price), 0) +
+                    COALESCE((SELECT SUM(ta.subtotal) FROM ticket_addons ta
+                               JOIN tickets t2 ON ta.ticket_id = t2.ticket_id
+                               WHERE t2.status = 'approved'), 0)
+             FROM tickets t WHERE t.status = 'approved'"
         )->fetchColumn();
 
         // Today's tickets (approved, visit_date = today)
@@ -261,17 +265,18 @@ switch ($action) {
             "SELECT
                 t.booking_ref,
                 t.user_id,
-                MIN(t.visit_date)     AS visit_date,
-                MIN(t.status)         AS status,
-                MIN(t.payment_proof)  AS payment_proof,
-                MIN(t.purchase_date)  AS purchase_date,
-                COUNT(t.ticket_id)    AS ticket_count,
-                SUM(t.price)          AS total_price,
-                MIN(t.ticket_id)      AS first_ticket_id,
-                u.username            AS visitor_name,
-                u.email               AS visitor_email,
+                MIN(t.visit_date)        AS visit_date,
+                MIN(t.status)            AS status,
+                MIN(t.payment_proof)     AS payment_proof,
+                MIN(t.purchase_date)     AS purchase_date,
+                COUNT(t.ticket_id)       AS ticket_count,
+                SUM(t.price)             AS total_price,
+                MIN(t.ticket_id)         AS first_ticket_id,
+                u.username               AS visitor_name,
+                u.email                  AS visitor_email,
                 u.username,
-                u.email
+                u.email,
+                MIN(t.approved_by_name)  AS approved_by_name
              FROM tickets t
              JOIN users u ON t.user_id = u.user_id
              WHERE t.booking_ref IS NOT NULL
@@ -385,6 +390,8 @@ switch ($action) {
                 // NEW: rich breakdown arrays consumed by admin.php
                 'ticket_breakdown' => $ticketBreakdown,
                 'addons'           => $addons,
+                // who approved this booking
+                'approved_by_name' => $row['approved_by_name'] ?: null,
             ];
         }
 
@@ -734,14 +741,19 @@ switch ($action) {
             $typeCounts[] = (int)$r['cnt'];
         }
 
-        // ── Monthly Revenue: last 6 months of approved tickets ──
+        // ── Monthly Revenue: last 6 months of approved tickets + add-ons ──
         $revenueStmt = $pdo->query(
-            "SELECT DATE_FORMAT(purchase_date, '%b') AS month,
-                    DATE_FORMAT(purchase_date, '%Y-%m') AS ym,
-                    COALESCE(SUM(price), 0) AS revenue
-             FROM tickets
-             WHERE status = 'approved'
-               AND purchase_date >= DATE_FORMAT(CURDATE() - INTERVAL 5 MONTH, '%Y-%m-01')
+            "SELECT DATE_FORMAT(t.purchase_date, '%b') AS month,
+                    DATE_FORMAT(t.purchase_date, '%Y-%m') AS ym,
+                    COALESCE(SUM(t.price), 0) +
+                    COALESCE((SELECT SUM(ta.subtotal) FROM ticket_addons ta
+                               JOIN tickets t2 ON ta.ticket_id = t2.ticket_id
+                               WHERE t2.status = 'approved'
+                                 AND DATE_FORMAT(t2.purchase_date,'%Y-%m') = DATE_FORMAT(t.purchase_date,'%Y-%m')), 0)
+                    AS revenue
+             FROM tickets t
+             WHERE t.status = 'approved'
+               AND t.purchase_date >= DATE_FORMAT(CURDATE() - INTERVAL 5 MONTH, '%Y-%m-01')
              GROUP BY ym, month
              ORDER BY ym ASC"
         );
@@ -757,9 +769,14 @@ switch ($action) {
         )->fetchColumn();
 
         $monthRevenue = (float)$pdo->query(
-            "SELECT COALESCE(SUM(price),0) FROM tickets
-             WHERE status = 'approved'
-               AND DATE_FORMAT(purchase_date,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')"
+            "SELECT COALESCE(SUM(t.price), 0) +
+                    COALESCE((SELECT SUM(ta.subtotal) FROM ticket_addons ta
+                               JOIN tickets t2 ON ta.ticket_id = t2.ticket_id
+                               WHERE t2.status = 'approved'
+                                 AND DATE_FORMAT(t2.purchase_date,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')), 0)
+             FROM tickets t
+             WHERE t.status = 'approved'
+               AND DATE_FORMAT(t.purchase_date,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')"
         )->fetchColumn();
 
         $monthTickets = (int)$pdo->query(

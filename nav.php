@@ -69,8 +69,8 @@ $displayName  = $loggedInUser ? htmlspecialchars($loggedInUser['username']) : 'G
             </div>
           </div>
           <div class="right-column">
-            <a href="meetTheAnimals.php">Meet the Animals</a>
             <a href="recognition.php">Animal Recognition</a>
+            <a href="meetTheAnimals.php">Meet the Animals</a>
           </div>
         </div>
       </li>

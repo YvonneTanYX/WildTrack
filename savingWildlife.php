@@ -6,6 +6,8 @@ $currentPage = 'conservation'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Saving Wildlife — WildTrack Zoo</title>
 </head>
@@ -13,14 +15,22 @@ $currentPage = 'conservation'; ?>
 
 <?php include 'nav.php'; ?>
 
-<img src="https://media.istockphoto.com/id/477317714/photo/african-lions-paw.jpg?s=612x612&w=0&k=20&c=q_qbmrjRBABc6lAyBO3rEe84ICgRBIE3Nq9dyRBg_zI="
-     class="page-img" alt="Wildlife conservation">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="images/zebra.jpg" alt="Wildlife conservation"/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Saving<br/><em>Wildlife</em></h1>
+    <p class="hero-sub">Conservation is at the heart of everything we do at WildTrack Zoo.
+     We are committed to protecting wildlife and empowering people to value and love nature.</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
-
-  <h1>Saving Wildlife</h1>
-  <p>Conservation is at the heart of everything we do at WildTrack Zoo.
-     We are committed to protecting wildlife and empowering people to value and love nature.</p>
 
   <div class="two-col">
     <div class="col-info">

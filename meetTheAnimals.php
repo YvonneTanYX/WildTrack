@@ -11,74 +11,8 @@ $currentPage = 'animal';
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="shared.css"/>
   <link rel="stylesheet" href="mainPage.css"/>
+  <link rel="stylesheet" href="hero.css"/>
   <style>
-    :root {
-      --nav:      #4e7a51;
-      --green:    #2d5a30;
-      --green-md: #3e7a3e;
-      --green-lt: #5a9e52;
-      --teal:     #76d7c4;
-      --teal-dk:  #4eb8a8;
-      --bg:       #f1f8e9;
-      --white:    #ffffff;
-      --text:     #1a2e1a;
-      --muted:    #5a7a5a;
-      --border:   #c8e0c8;
-      --amber:    #e8a020;
-      --red:      #d94f3d;
-      --card-sh:  0 4px 24px rgba(46,90,48,.10);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-    /* ── HERO ── */
-    .hero {
-      position: relative; width: 100%; height: 460px;
-      overflow: hidden; background: var(--green);
-    }
-    .hero-img {
-      width: 100%; height: 100%; object-fit: cover;
-      opacity: .45; transform: scale(1.04);
-      transition: transform 10s ease;
-    }
-    .hero:hover .hero-img { transform: scale(1); }
-    .hero-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(160deg, rgba(46,90,48,.75) 0%, rgba(30,60,30,.5) 60%, transparent 100%);
-    }
-    .hero-content {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      justify-content: center; padding: 0 10%;
-    }
-    .hero-eyebrow {
-      font-size: .75rem; font-weight: 600; letter-spacing: .2em;
-      text-transform: uppercase; color: var(--teal);
-      margin-bottom: .9rem; animation: fadeUp .6s ease both;
-    }
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.8rem, 6vw, 5rem);
-      font-weight: 800; color: #fff;
-      line-height: 1.05; margin-bottom: 1.1rem;
-      animation: fadeUp .7s .1s ease both;
-    }
-    .hero-title em { font-style: italic; color: var(--teal); }
-    .hero-sub {
-      font-size: 1.05rem; color: rgba(255,255,255,.82);
-      max-width: 500px; line-height: 1.7;
-      animation: fadeUp .7s .2s ease both;
-    }
-    .paw { position: absolute; opacity: .08; font-size: 5rem; pointer-events: none; }
-    .paw1 { right: 10%; top: 12%; transform: rotate(20deg); }
-    .paw2 { right: 20%; bottom: 8%; transform: rotate(-15deg); font-size: 3rem; }
-    .paw3 { right: 5%; bottom: 28%; transform: rotate(35deg); font-size: 2.5rem; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
 
     /* ── FILTER BAR ── */
     .filter-bar {
@@ -231,21 +165,6 @@ $currentPage = 'animal';
     }
     .quick-strip-btn:hover { background: #fff; transform: translateY(-1px); }
 
-    /* ── FOOTER ── */
-    footer { background-color: #67976a; padding-bottom: 30px; margin-top: 60px; }
-    .footer-container { padding: 0; }
-    .footers { display: flex; flex-direction: row; flex-wrap: wrap; }
-    .footers > div { margin: 30px 5px 0 40px; }
-    .footers > div:first-child { margin-left: 250px; }
-    .footers h3 { margin-bottom: 10px; }
-    .footers a { color: #3a3a3a; text-decoration: none; display: block; margin-bottom: 4px; font-size: .9rem; }
-    .footers a:hover { color: #fff; }
-    .footer-bottom {
-      text-align: center; padding: 16px;
-      font-size: .8rem; color: rgba(255,255,255,.7);
-      border-top: 1px solid rgba(255,255,255,.15); margin-top: 20px;
-    }
-
     /* hidden by filter */
     .animal-card.hidden { display: none; }
 
@@ -310,7 +229,7 @@ $currentPage = 'animal';
           <span class="chip">🎋 Herbivore</span>
           <span class="chip">⚖️ 70–125 kg</span>
         </div>
-        <a href="panda.html" class="card-link">View Full Profile <span class="arrow">→</span></a>
+        <a href="panda.php" class="card-link">View Full Profile <span class="arrow">→</span></a>
       </div>
     </div>
 
@@ -331,7 +250,7 @@ $currentPage = 'animal';
           <span class="chip">🌿 Herbivore</span>
           <span class="chip">⚖️ Up to 5,000 kg</span>
         </div>
-        <a href="elephant.html" class="card-link">View Full Profile <span class="arrow">→</span></a>
+        <a href="elephant.php" class="card-link">View Full Profile <span class="arrow">→</span></a>
       </div>
     </div>
 
@@ -352,7 +271,7 @@ $currentPage = 'animal';
           <span class="chip">🥩 Carnivore</span>
           <span class="chip">⚖️ 120–190 kg</span>
         </div>
-        <a href="lion.html" class="card-link">View Full Profile <span class="arrow">→</span></a>
+        <a href="lion.php" class="card-link">View Full Profile <span class="arrow">→</span></a>
       </div>
     </div>
 
@@ -373,7 +292,7 @@ $currentPage = 'animal';
           <span class="chip">🌿 Herbivore</span>
           <span class="chip">⚖️ 100–200 kg</span>
         </div>
-        <a href="gorilla.html" class="card-link">View Full Profile <span class="arrow">→</span></a>
+        <a href="gorilla.php" class="card-link">View Full Profile <span class="arrow">→</span></a>
       </div>
     </div>
 
@@ -394,7 +313,7 @@ $currentPage = 'animal';
           <span class="chip">🐟 Carnivore</span>
           <span class="chip">⚖️ 1–40 kg</span>
         </div>
-        <a href="penguin.html" class="card-link">View Full Profile <span class="arrow">→</span></a>
+        <a href="penguin.php" class="card-link">View Full Profile <span class="arrow">→</span></a>
       </div>
     </div>
 
@@ -410,40 +329,7 @@ $currentPage = 'animal';
   </div>
 
 </div><!-- /page-body -->
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-container">
-    <div class="footers">
-      <div class="visit-footer">
-        <h3><a href="visitMain.php">Visit</a></h3>
-        <a href="openingHourRate.php">Opening Hours &amp; Rates</a>
-        <a href="zooMap.php">Zoo Map</a>
-        <a href="buyTicket.php">Buy a Ticket</a>
-      </div>
-      <div class="things-footer">
-        <h3><a href="thingMain.php">Things to Do</a></h3>
-        <a href="event.php">Events &amp; Talk Times</a>
-        <a href="learning.php">Learning</a>
-      </div>
-      <div class="animal-footer">
-        <h3><a href="animalMain.php">Animal</a></h3>
-        <a href="meetTheAnimals.php">Meet the Animals</a>
-        <a href="recognition.php">Animal Recognition</a>
-      </div>
-      <div class="conservation-footer">
-        <h3><a href="conservationMain.php">Conservation</a></h3>
-        <a href="savingWildlife.php">Saving Wildlife</a>
-        <a href="greenZooGreenYou.php">Green Zoo Green You</a>
-        <a href="safeCatSafeWildlife.php">Safe Cat, Safe Wildlife</a>
-      </div>
-      <div class="getInTouch-footer">
-        <h3><a href="getInTouch.php">Get in Touch</a></h3>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bottom">© 2026 WildTrack Malaysia · All rights reserved</div>
-</footer>
+<?php include 'footer.php'; ?>
 
 <script>
 // ── Filter ──

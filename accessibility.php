@@ -6,6 +6,8 @@ $currentPage = 'visit'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Accessibility — WildTrack Zoo</title>
   <style>
@@ -34,12 +36,23 @@ $currentPage = 'visit'; ?>
 
 <?php include 'nav.php'; ?>
 
-<img src="https://images.unsplash.com/photo-1618142990632-1afb1bd67e7c?q=80&w=3050&auto=format&fit=crop"
-     class="page-img" alt="Zoo accessibility">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="https://images.unsplash.com/photo-1618142990632-1afb1bd67e7c?q=80&w=3050&auto=format&fit=crop" alt="Zoo accessibility">/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title"><em>Accessibility</em><br/>at the Zoo</h1>
+    <p class="hero-sub">Inclusive Exploration: Facilities for All Visitors</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
 
-  <h1>Accessibility at the Zoo</h1>
+  <h1>Accessibilities in WildTrack</h1>
   <p>We work hard to make sure WildTrack Zoo is a place where everyone feels welcome.
      We have staff and systems in place to ensure a trip to the Zoo is accessible for as many people as possible.</p>
   <p>Our Zoo was built on a steep hill that can be challenging for some to navigate.

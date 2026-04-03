@@ -6,6 +6,8 @@ $currentPage = 'things'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Learning — WildTrack Zoo</title>
   <style>
@@ -117,15 +119,24 @@ $currentPage = 'things'; ?>
 <body>
 
 <?php include 'nav.php'; ?>
-
-<img src="https://media.istockphoto.com/id/477317714/photo/african-lions-paw.jpg?s=612x612&w=0&k=20&c=q_qbmrjRBABc6lAyBO3rEe84ICgRBIE3Nq9dyRBg_zI="
-     class="page-img" alt="Learning at WildTrack Zoo">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="images/redPanda.avif" alt="Learning at WildTrack Zoo"/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Explorer<br/><em>Ranger Program</em></h1>
+    <p class="hero-sub">Discovery Zone: Educational Resources and School Programs</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
 
   <!-- Intro -->
   <div class="learning-intro">
-    <h1>Explorer Ranger Program</h1>
     <p>Explorer Ranger is an outdoor educational membership program with <strong>Classes Alive</strong> &amp;
        <strong>Discovery Classes</strong> — curated by zoologists, educators, and industry experts.
        Our Explorer Rangers gain in-depth knowledge about wildlife, sustainability, and the natural world!</p>

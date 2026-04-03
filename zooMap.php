@@ -6,6 +6,8 @@ $currentPage = 'visit'; ?>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css">
   <title>Zoo Map — WildTrack Zoo</title>
   <style>
@@ -42,13 +44,22 @@ $currentPage = 'visit'; ?>
 <body>
 
 <?php include 'nav.php'; ?>
-
-<img src="https://images.unsplash.com/photo-1480044965905-02098d419e96?q=80&w=2070&auto=format&fit=crop"
-     class="page-img" alt="Zoo">
+<!-- HERO -->
+<section class="hero">
+  <img class="hero-img" src="https://images.unsplash.com/photo-1480044965905-02098d419e96?q=80&w=2070&auto=format&fit=crop" alt="Zoo"/>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Zoo<em> Map</em></h1>
+    <p class="hero-sub">Explore the Wild: Your Interactive Zoo Guide</p>
+  </div>
+  <div class="paw1 paw">🐾</div>
+  <div class="paw2 paw">🐾</div>
+  <div class="paw3 paw">🐾</div>
+</section>
 
 <div class="content-section">
 
-  <h1>Zoo Map</h1>
   <h2>Find your way around WildTrack Zoo</h2>
   <p>Use the map below to plan your visit. You can print it out and bring it along,
      or we'll have a copy available for you at the entrance.</p>

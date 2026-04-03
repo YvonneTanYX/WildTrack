@@ -443,12 +443,14 @@ body {
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
     display: none;
+    flex-direction: column;
     z-index: 200;
     overflow: hidden;
+    max-height: 480px;
 }
 
 .notif-panel.open {
-    display: block;
+    display: flex;
 }
 
 .notif-header {
@@ -459,6 +461,7 @@ body {
     border-bottom: 1px solid var(--border);
     font-weight: 600;
     font-size: 15px;
+    flex-shrink: 0;
 }
 
 .notif-header button {
@@ -475,6 +478,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .notif-item {
@@ -2251,9 +2256,16 @@ textarea.form-input {
     <div class="topbar-right">
       <div class="search-bar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search anything..." />
+        <input type="text" id="globalSearchInput" placeholder="Search anything..." oninput="handleGlobalSearch(this.value)" autocomplete="off"/>
       </div>
-      <button class="icon-btn notif-btn" onclick="toggleNotifications()">
+      <!-- Global search results dropdown -->
+      <div id="globalSearchResults" style="
+        display:none; position:absolute; top:54px; right:240px;
+        width:340px; background:var(--white); border:1px solid var(--border);
+        border-radius:var(--radius); box-shadow:var(--shadow-lg);
+        z-index:300; overflow:hidden; max-height:400px; overflow-y:auto;">
+      </div>
+      <button class="icon-btn notif-btn" onclick="toggleNotifications(event)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
         <span class="notif-dot"></span>
       </button>
@@ -2277,7 +2289,7 @@ textarea.form-input {
         <h1>Zoo Dashboard Overview</h1>
         <p id="overviewGreeting">Loading…</p>
       </div>
-      <button class="btn btn-primary">
+      <button class="btn btn-primary" onclick="exportOverviewReport()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export Report
       </button>
@@ -2816,7 +2828,7 @@ textarea.form-input {
   <section class="page" id="page-reports">
     <div class="page-header">
       <div><h1>Reports & Analytics</h1><p>Detailed insights on performance, revenue and visitors</p></div>
-      <button class="btn btn-primary">Export PDF</button>
+      <button class="btn btn-primary" onclick="exportReportsPDF()">Export PDF</button>
     </div>
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-top"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="stat-value" id="reportMonthVisitors">—</div><div class="stat-label">Monthly Visitors</div></div>
@@ -2958,13 +2970,39 @@ textarea.form-input {
         </button>
       </div>
  
-      <!-- Notification Preferences (unchanged) -->
+      <!-- Notification Preferences — dynamic, saved to zoo_settings -->
       <div class="card settings-section">
-        <h3>Notification Preferences</h3>
-        <div class="toggle-row"><span>Email alerts for pending approvals</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
-        <div class="toggle-row"><span>New review notifications</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
-        <div class="toggle-row"><span>Weekly summary report</span><label class="toggle"><input type="checkbox"/><span class="toggle-slider"></span></label></div>
-        <div class="toggle-row"><span>Staff login alerts</span><label class="toggle"><input type="checkbox" checked/><span class="toggle-slider"></span></label></div>
+        <h3>🔔 Notification Preferences</h3>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Choose which alerts you receive in the admin notification bell.</p>
+        <div class="toggle-row">
+          <span>Pending ticket approval alerts</span>
+          <label class="toggle">
+            <input type="checkbox" id="notifPrefTickets" onchange="saveNotifPref('notif_pref_tickets', this.checked)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>New review / feedback alerts</span>
+          <label class="toggle">
+            <input type="checkbox" id="notifPrefReviews" onchange="saveNotifPref('notif_pref_reviews', this.checked)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>Expired event auto-deactivation alerts</span>
+          <label class="toggle">
+            <input type="checkbox" id="notifPrefEvents" onchange="saveNotifPref('notif_pref_events', this.checked)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span>New 5-star review highlights</span>
+          <label class="toggle">
+            <input type="checkbox" id="notifPrefStars" onchange="saveNotifPref('notif_pref_stars', this.checked)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <p id="notifPrefStatus" style="font-size:12px;color:var(--green-mid);margin-top:12px;min-height:16px;"></p>
       </div>
  
     </div>
@@ -3347,7 +3385,8 @@ function showPage(pageId) {
 
   // Lazy-init charts
   if (pageId === 'overview') initOverviewCharts();
-  if (pageId === 'reports') initReportsChart();
+  if (pageId === 'reports')  initReportsChart();
+  if (pageId === 'settings') loadNotifPrefs();   // load dynamic notification prefs
 
   // Close notif panel
   document.getElementById('notifPanel').classList.remove('open');
@@ -3419,8 +3458,8 @@ function toggleSidebar() {
 }
 
 // ---- NOTIFICATIONS ----
-// FIX 4: Refresh notifications each time the panel is opened
-function toggleNotifications() {
+function toggleNotifications(e) {
+  e.stopPropagation(); // prevent the document click handler from immediately closing
   const panel = document.getElementById('notifPanel');
   const wasOpen = panel.classList.contains('open');
   panel.classList.toggle('open');
@@ -3428,20 +3467,21 @@ function toggleNotifications() {
 }
 document.addEventListener('click', e => {
   const panel = document.getElementById('notifPanel');
-  const btn = document.querySelector('.notif-btn');
-  if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+  const btn   = document.querySelector('.notif-btn');
+  if (panel && panel.classList.contains('open') && btn
+      && !panel.contains(e.target) && !btn.contains(e.target)) {
     panel.classList.remove('open');
   }
 });
-// FIX 4: markAllRead — persists to server so notifications stay read across page loads
+// markAllRead — calls server then re-renders so read state is accurate
 async function markAllRead() {
+  // Stop click from bubbling to the outside-click handler
+  event?.stopPropagation?.();
   try {
-    await fetch('api/notifications.php?action=mark_all_read', { method: 'POST', credentials: 'include' });
+    await fetch('api/notifications_admin.php?action=mark_all_read', { method: 'POST', credentials: 'include' });
   } catch(_) {}
-  document.querySelectorAll('.notif-item').forEach(i => i.classList.remove('unread'));
-  const dot = document.querySelector('.notif-dot');
-  if (dot) dot.style.display = 'none';
-  showToast('All notifications marked as read');
+  await loadAdminNotifications();
+  showToast('All notifications marked as read ✓');
 }
 
 // ---- TABS ----
@@ -3613,7 +3653,7 @@ function renderApprovalTable(payments) {
 
     const approvedByCell = p.approved_by_name
       ? `<span style="font-weight:600;color:var(--green-dark);">👤 ${p.approved_by_name}</span>`
-      : (p.status === 'pending' ? '<span style="color:var(--text-muted);font-size:12px;">—</span>' : '<span style="color:var(--text-muted);font-size:12px;">—</span>');
+      : `<span style="color:var(--text-muted);font-size:12px;">—</span>`;
 
     return `<tr style="cursor:pointer;" onclick="openBookingDetails('${p.booking_ref}')" title="Click to view booking details">
       <td class="txn-id">${p.booking_ref}</td>
@@ -3640,7 +3680,7 @@ function renderOverviewApprovals(payments) {
     <td class="txn-id">${p.booking_ref}</td>
     <td><strong>${p.username}</strong></td>
     <td>${p.ticket_types || p.ticket_type || '—'} × ${p.ticket_count || 1}</td>
-    <td><strong>RM${parseFloat(p.total_price || p.price || 0).toFixed(2)}</strong></td>
+    <td><strong>RM${parseFloat(p.final_total || p.total_price || p.price || 0).toFixed(2)}</strong></td>
     <td class="action-cell">
       <button class="btn-approve" onclick="approveTicket(this,'${p.booking_ref}')">Approve</button>
       <button class="btn-reject"  onclick="rejectTicket(this,'${p.booking_ref}')">Reject</button>
@@ -3855,7 +3895,7 @@ function updatePendingCount(delta) { /* handled by loadPendingPayments */ }
 // FIX 4: Dynamic admin notifications — fully DB-driven, replaces hardcoded panel
 async function loadAdminNotifications() {
   try {
-    const res  = await fetch('api/notifications.php?action=get', { credentials: 'include' });
+    const res  = await fetch('api/notifications_admin.php?action=get', { credentials: 'include' });
     const data = await res.json();
     if (!data.success) return;
 
@@ -3886,14 +3926,16 @@ async function loadAdminNotifications() {
       const clickAttr = n.action
         ? `onclick="showPage('${n.action}');document.getElementById('notifPanel').classList.remove('open');"`
         : '';
+      // n.sub is our internal label; n.body comes from DB rows — support both
+      const bodyText = escA(n.sub || n.body || '');
       return `
         <div class="notif-item ${n.is_read ? '' : 'unread'}"
              style="cursor:${n.action ? 'pointer' : 'default'};"
              ${clickAttr}>
           <div class="notif-icon ${n.type}">${iconSVG[n.icon] || iconSVG.message}</div>
           <div>
-            <strong>${n.title}</strong><br/>
-            <small>${n.sub}</small>
+            <strong>${escA(n.title || '')}</strong><br/>
+            <small>${bodyText}</small>
           </div>
         </div>`;
     }).join('');
@@ -5732,6 +5774,290 @@ async function refreshFeedbackBadge() {
 }
 refreshFeedbackBadge();
 setInterval(refreshFeedbackBadge, 30000);
+
+/* ════════════════════════════════════════════════════════
+   HELPER — HTML escape (used in notification rendering)
+════════════════════════════════════════════════════════ */
+function escA(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ════════════════════════════════════════════════════════
+   EXPORT OVERVIEW REPORT  (CSV download)
+════════════════════════════════════════════════════════ */
+
+async function exportOverviewReport() {
+  try {
+    showToast('Preparing report…');
+    const [statsRes, paymentsRes] = await Promise.all([
+      fetch('api/tickets.php?action=stats',       { credentials: 'include' }),
+      fetch('api/tickets.php?action=get_pending',  { credentials: 'include' }),
+    ]);
+    const stats    = await statsRes.json();
+    const payments = await paymentsRes.json();
+
+    const now     = new Date().toLocaleString('en-MY');
+    const rows    = [
+      ['WildTrack Zoo — Overview Report'],
+      ['Generated', now],
+      [],
+      ['SUMMARY'],
+      ['Total Tickets Sold', stats.total_tickets ?? '—'],
+      ['Total Revenue (RM)', stats.total_revenue  ?? '—'],
+      ['Pending Approvals',  stats.pending_count  ?? '—'],
+      ["Today's Tickets",    stats.today_tickets  ?? '—'],
+      [],
+      ['RECENT BOOKINGS'],
+      ['TXN ID','Customer','Email','Tickets','Amount (RM)','Visit Date','Status','Approved By'],
+    ];
+
+    (payments.payments || []).forEach(p => {
+      rows.push([
+        p.booking_ref,
+        p.visitor_name  || p.username || '',
+        p.visitor_email || p.email    || '',
+        p.ticket_types  || '',
+        parseFloat(p.final_total || p.total_price || 0).toFixed(2),
+        '"' + (p.visit_date || '') + '"',
+        p.status        || '',
+        p.approved_by_name || '—',
+      ]);
+    });
+
+    const csv = rows.map(r =>
+      r.map(cell => '"' + String(cell ?? '').replace(/"/g, '""') + '"').join(',')
+    ).join('\n');
+    
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'wildtrack_overview_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Report downloaded ✓');
+  } catch(e) { showToast('Export failed. Try again.', 'error'); }
+}
+
+/* ════════════════════════════════════════════════════════
+   EXPORT REPORTS PDF  (print-to-PDF via browser)
+   Gathers live data, opens a clean print window
+════════════════════════════════════════════════════════ */
+async function exportReportsPDF() {
+  try {
+    showToast('Building PDF…');
+    const [statsRes, chartRes, fbRes] = await Promise.all([
+      fetch('api/tickets.php?action=stats',            { credentials: 'include' }),
+      fetch('api/tickets.php?action=chart_data&days=30', { credentials: 'include' }),
+      fetch('api/feedback.php?action=stats',           { credentials: 'include' }),
+    ]);
+    const stats = await statsRes.json();
+    const chart = await chartRes.json();
+    const fb    = await fbRes.json();
+
+    const satRate = fb.success && fb.avg
+      ? Math.round((parseFloat(fb.avg) / 5) * 100) + '% (' + parseFloat(fb.avg).toFixed(1) + '/5)'
+      : '—';
+
+    const revenueRows = (chart.revenue_labels || []).map((lbl, i) =>
+      `<tr><td>${lbl}</td><td>RM ${parseFloat(chart.revenue_data?.[i] || 0).toFixed(2)}</td></tr>`
+    ).join('');
+
+    const html = `<!DOCTYPE html><html><head>
+      <meta charset="UTF-8">
+      <title>WildTrack Reports — ${new Date().toLocaleDateString('en-MY')}</title>
+      <style>
+        body { font-family: 'Segoe UI', sans-serif; color:#1a2b18; padding:40px; font-size:13px; }
+        h1 { color:#2D5A27; font-size:22px; margin-bottom:4px; }
+        h2 { color:#2D5A27; font-size:15px; margin:28px 0 10px; border-bottom:2px solid #eaf1e8; padding-bottom:6px; }
+        .meta { color:#7a9170; font-size:12px; margin-bottom:28px; }
+        .grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px; }
+        .card { background:#f2f5f0; border-radius:10px; padding:16px 20px; }
+        .card .val { font-size:22px; font-weight:700; color:#2D5A27; }
+        .card .lbl { font-size:12px; color:#7a9170; margin-top:4px; }
+        table { width:100%; border-collapse:collapse; }
+        th { background:#2D5A27; color:#fff; padding:8px 12px; text-align:left; font-size:12px; }
+        td { padding:8px 12px; border-bottom:1px solid #eaf1e8; }
+        tr:last-child td { border-bottom:none; }
+        @media print { body { padding:20px; } }
+      </style>
+    </head><body>
+      <h1>WildTrack Zoo — Analytics Report</h1>
+      <div class="meta">Generated: ${new Date().toLocaleString('en-MY')} · Period: Last 30 days</div>
+
+      <h2>Key Metrics</h2>
+      <div class="grid">
+        <div class="card"><div class="val">${(stats.month_visitors || chart.month_visitors || 0).toLocaleString()}</div><div class="lbl">Monthly Visitors</div></div>
+        <div class="card"><div class="val">RM${parseFloat(stats.total_revenue||0).toLocaleString('en-MY',{minimumFractionDigits:2})}</div><div class="lbl">Total Revenue (All Time)</div></div>
+        <div class="card"><div class="val">${satRate}</div><div class="lbl">Satisfaction Rate</div></div>
+        <div class="card"><div class="val">${(stats.total_tickets||0).toLocaleString()}</div><div class="lbl">Total Tickets Sold</div></div>
+      </div>
+
+      <h2>Monthly Revenue Breakdown</h2>
+      <table>
+        <tr><th>Month</th><th>Revenue (RM)</th></tr>
+        ${revenueRows || '<tr><td colspan="2" style="color:#aaa;">No data</td></tr>'}
+      </table>
+
+      <h2>Ticket Type Distribution</h2>
+      <table>
+        <tr><th>Type</th><th>Count</th></tr>
+        ${(chart.type_labels||[]).map((lbl,i)=>`<tr><td>${lbl}</td><td>${chart.type_counts?.[i]??0}</td></tr>`).join('')||'<tr><td colspan="2" style="color:#aaa;">No data</td></tr>'}
+      </table>
+
+      <h2>Feedback Summary</h2>
+      <table>
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Total Reviews</td><td>${fb.total||0}</td></tr>
+        <tr><td>Average Rating</td><td>${fb.avg ? parseFloat(fb.avg).toFixed(1)+' / 5' : '—'}</td></tr>
+        <tr><td>Awaiting Reply</td><td>${fb.pending||0}</td></tr>
+        <tr><td>5 ★ Reviews</td><td>${fb.breakdown?.[5]||0}</td></tr>
+        <tr><td>4 ★ Reviews</td><td>${fb.breakdown?.[4]||0}</td></tr>
+        <tr><td>3 ★ or below</td><td>${(fb.breakdown?.[3]||0)+(fb.breakdown?.[2]||0)+(fb.breakdown?.[1]||0)}</td></tr>
+      </table>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
+    showToast('PDF ready — use your browser\'s Print → Save as PDF ✓');
+  } catch(e) { showToast('PDF export failed. Try again.', 'error'); }
+}
+
+/* ════════════════════════════════════════════════════════
+   GLOBAL SEARCH  — searches bookings, staff, events
+════════════════════════════════════════════════════════ */
+let _searchDebounce = null;
+
+function handleGlobalSearch(q) {
+  const results = document.getElementById('globalSearchResults');
+  if (!results) return;
+  q = (q || '').trim().toLowerCase();
+  if (q.length < 2) { results.style.display = 'none'; return; }
+
+  clearTimeout(_searchDebounce);
+  _searchDebounce = setTimeout(async () => {
+    const matches = [];
+
+    // Search bookings (in-memory _allPayments)
+    (_allPayments || []).forEach(p => {
+      const ref   = (p.booking_ref  || '').toLowerCase();
+      const name  = (p.visitor_name || p.username || '').toLowerCase();
+      const email = (p.visitor_email|| p.email    || '').toLowerCase();
+      if (ref.includes(q) || name.includes(q) || email.includes(q)) {
+        matches.push({
+          icon:    '🎫',
+          title:   p.booking_ref,
+          sub:     (p.visitor_name || p.username || '') + ' · RM' + parseFloat(p.final_total||p.total_price||0).toFixed(2),
+          badge:   p.status,
+          action:  () => { showPage('ticketing'); document.getElementById('approvalSearch').value = p.booking_ref; filterApprovalTable(); },
+        });
+      }
+    });
+
+    // Search events (in-memory _allEvents)
+    (_allEvents || []).forEach(e => {
+      if ((e.event_name||'').toLowerCase().includes(q) || (e.venue||'').toLowerCase().includes(q)) {
+        matches.push({
+          icon:   '📅',
+          title:  e.event_name,
+          sub:    e.venue + ' · ' + (e.session==='morning'?'🌅 Morning':'☀️ Afternoon'),
+          badge:  parseInt(e.is_active) ? 'active' : 'inactive',
+          action: () => showPage('events'),
+        });
+      }
+    });
+
+    if (!matches.length) {
+      results.innerHTML = '<div style="padding:16px 18px;font-size:13px;color:var(--text-muted);">No results for "' + escA(q) + '"</div>';
+    } else {
+      results.innerHTML = matches.slice(0,8).map((m,i) => `
+        <div onclick="globalSearchSelect(${i})" style="
+          padding:10px 16px; cursor:pointer; display:flex; align-items:center; gap:12px;
+          border-bottom:1px solid var(--border); font-size:13px;
+          transition:background 0.15s;" onmouseover="this.style.background='var(--green-bg)'" onmouseout="this.style.background=''">
+          <span style="font-size:18px;">${m.icon}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escA(m.title)}</div>
+            <div style="font-size:12px;color:var(--text-muted);">${escA(m.sub)}</div>
+          </div>
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--green-pale);color:var(--green-dark);text-transform:capitalize;white-space:nowrap;">${escA(m.badge||'')}</span>
+        </div>`).join('');
+      // Store matches for click handler
+      window._searchMatches = matches;
+    }
+    results.style.display = 'block';
+  }, 220);
+}
+
+function globalSearchSelect(idx) {
+  const m = (window._searchMatches || [])[idx];
+  if (m && m.action) m.action();
+  const results = document.getElementById('globalSearchResults');
+  if (results) results.style.display = 'none';
+  const inp = document.getElementById('globalSearchInput');
+  if (inp) inp.value = '';
+}
+
+// Close search results on outside click
+document.addEventListener('click', e => {
+  const results = document.getElementById('globalSearchResults');
+  const input   = document.getElementById('globalSearchInput');
+  if (results && input && !results.contains(e.target) && e.target !== input) {
+    results.style.display = 'none';
+  }
+});
+
+/* ════════════════════════════════════════════════════════
+   NOTIFICATION PREFERENCES  — dynamic, saved to zoo_settings
+════════════════════════════════════════════════════════ */
+const _notifPrefKeys = {
+  notifPrefTickets: 'notif_pref_tickets',
+  notifPrefReviews: 'notif_pref_reviews',
+  notifPrefEvents:  'notif_pref_events',
+  notifPrefStars:   'notif_pref_stars',
+};
+
+async function loadNotifPrefs() {
+  try {
+    const res  = await fetch('api/staff.php?action=get_settings', { credentials: 'include' });
+    const data = await res.json();
+    if (!data.success || !data.settings) return;
+    const s = data.settings;
+    // Default all to ON (1) if not yet set
+    document.getElementById('notifPrefTickets').checked = (s['notif_pref_tickets'] ?? '1') !== '0';
+    document.getElementById('notifPrefReviews').checked = (s['notif_pref_reviews'] ?? '1') !== '0';
+    document.getElementById('notifPrefEvents').checked  = (s['notif_pref_events']  ?? '1') !== '0';
+    document.getElementById('notifPrefStars').checked   = (s['notif_pref_stars']   ?? '1') !== '0';
+  } catch(e) {}
+}
+
+async function saveNotifPref(key, value) {
+  const statusEl = document.getElementById('notifPrefStatus');
+  try {
+    const res  = await fetch('api/staff.php?action=save_setting', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value: value ? '1' : '0' }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (statusEl) { statusEl.textContent = '✓ Preference saved'; setTimeout(() => { statusEl.textContent = ''; }, 2500); }
+    } else {
+      if (statusEl) statusEl.textContent = '⚠ Could not save — check api/staff.php';
+    }
+  } catch(e) {
+    if (statusEl) statusEl.textContent = '⚠ Network error saving preference';
+  }
+}
+
+// Load notification prefs on page load if settings page is active
+document.addEventListener('DOMContentLoaded', () => {
+  const active = document.querySelector('.page.active');
+  if (active && active.id === 'page-settings') loadNotifPrefs();
+});
 
 </script>
 </body>

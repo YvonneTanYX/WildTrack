@@ -39,6 +39,23 @@ $pdo    = getDB();
 ════════════════════════════════════════════════════════════ */
 if ($action === 'mark_all_read') {
     $_SESSION['admin_notif_last_read'] = date('Y-m-d H:i:s');
+
+    // Store pending count at time of mark-read so new ones will appear unread
+    try {
+        $row = $pdo->query("SELECT COUNT(DISTINCT booking_ref) AS cnt FROM tickets WHERE status = 'pending'")->fetch();
+        $_SESSION['admin_pending_count_at_read'] = (int)($row['cnt'] ?? 0);
+    } catch (\Throwable $e) {
+        $_SESSION['admin_pending_count_at_read'] = 0;
+    }
+
+    // Store feedback count at time of mark-read
+    try {
+        $row = $pdo->query("SELECT COUNT(*) AS cnt FROM feedback WHERE status = 'pending'")->fetch();
+        $_SESSION['admin_fb_count_at_read'] = (int)($row['cnt'] ?? 0);
+    } catch (\Throwable $e) {
+        $_SESSION['admin_fb_count_at_read'] = 0;
+    }
+
     okN();
 }
 
@@ -47,13 +64,24 @@ if ($action === 'mark_all_read') {
 ════════════════════════════════════════════════════════════ */
 if ($action === 'get') {
     $notifications = [];
-    // Use session timestamp to determine "read" state; default to 30 days ago
-    // so notifications before that are always treated as read (no flood on first load)
     $lastRead = $_SESSION['admin_notif_last_read'] ?? date('Y-m-d H:i:s', strtotime('-30 days'));
     $today    = date('Y-m-d');
 
-    /* ── 1. Pending ticket payments ── */
+    // Load notification preferences from zoo_settings (default all ON)
+    $prefs = ['tickets' => true, 'reviews' => true, 'events' => true, 'stars' => true];
     try {
+        $prefStmt = $pdo->query(
+            "SELECT setting_key, setting_value FROM zoo_settings
+              WHERE setting_key IN ('notif_pref_tickets','notif_pref_reviews','notif_pref_events','notif_pref_stars')"
+        );
+        foreach ($prefStmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $k = str_replace('notif_pref_', '', $row['setting_key']);
+            $prefs[$k] = ($row['setting_value'] !== '0');
+        }
+    } catch (\Throwable $e) {}   // table/cols missing → use defaults
+
+    /* ── 1. Pending ticket payments ── */
+    if ($prefs['tickets']) try {
         $row = $pdo->query(
             "SELECT COUNT(DISTINCT booking_ref) AS cnt
                FROM tickets
@@ -61,23 +89,25 @@ if ($action === 'get') {
         )->fetch();
         $pendingCount = (int)($row['cnt'] ?? 0);
         if ($pendingCount > 0) {
+            // Treat as read if admin has marked-all-read AND pending count hasn't grown since
+            $isReadTickets = isset($_SESSION['admin_notif_last_read'])
+                && isset($_SESSION['admin_pending_count_at_read'])
+                && (int)$_SESSION['admin_pending_count_at_read'] >= $pendingCount;
             $notifications[] = [
                 'id'       => 'pending_tickets',
                 'type'     => 'orange',
                 'icon'     => 'ticket',
                 'title'    => $pendingCount . ' booking' . ($pendingCount > 1 ? 's' : '') . ' pending approval',
                 'sub'      => 'Require your review — click to go to Ticketing',
-                'is_read'  => false,   // always unread while pending exist
+                'is_read'  => $isReadTickets,
                 'action'   => 'ticketing',
                 'priority' => 1,
             ];
         }
     } catch (\Throwable $e) {}
 
-    /* ── 2. New payment proofs submitted (unread, sent to admin user_id=5) ──
-       The notifications table has type='new_payment_proof' rows written by
-       payment_proof.php whenever a visitor uploads their proof.              */
-    try {
+    /* ── 2. New unread payment proofs from notifications table ── */
+    if ($prefs['tickets']) try {
         $stmt = $pdo->prepare(
             "SELECT n.id, n.title, n.body, n.booking_ref, n.created_at
                FROM notifications n
@@ -89,31 +119,34 @@ if ($action === 'get') {
         $stmt->execute();
         $newProofs = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         foreach ($newProofs as $np) {
+            // Respect mark-all-read: if the proof was created before lastRead, treat as read
+            $isReadProof = isset($_SESSION['admin_notif_last_read'])
+                && $np['created_at'] <= $_SESSION['admin_notif_last_read'];
             $notifications[] = [
-                'id'       => 'proof_' . $np['id'],
-                'type'     => 'orange',
-                'icon'     => 'ticket',
-                'title'    => 'New payment proof: ' . ($np['booking_ref'] ?? ''),
-                'sub'      => $np['body'] ?? 'Visitor uploaded payment screenshot',
-                'is_read'  => false,
-                'action'   => 'ticketing',
-                'priority' => 1,
-                '_notif_id' => (int)$np['id'],  // for marking read in notifications table
+                'id'        => 'proof_' . $np['id'],
+                'type'      => 'orange',
+                'icon'      => 'ticket',
+                'title'     => 'New payment proof: ' . ($np['booking_ref'] ?? ''),
+                'sub'       => $np['body'] ?? 'Visitor uploaded payment screenshot',
+                'is_read'   => $isReadProof,
+                'action'    => 'ticketing',
+                'priority'  => 1,
+                '_notif_id' => (int)$np['id'],
             ];
         }
     } catch (\Throwable $e) {}
 
     /* ── 3. Unread feedback awaiting reply ── */
-    try {
+    if ($prefs['reviews']) try {
         $row = $pdo->query(
             "SELECT COUNT(*) AS cnt FROM feedback WHERE status = 'pending'"
         )->fetch();
         $unreadFb = (int)($row['cnt'] ?? 0);
         if ($unreadFb > 0) {
-            // Check if this count changed since last read to determine read state
+            // Read if admin has marked-all-read AND no new feedback has arrived since then
             $isReadFb = isset($_SESSION['admin_notif_last_read'])
                 && isset($_SESSION['admin_fb_count_at_read'])
-                && $_SESSION['admin_fb_count_at_read'] >= $unreadFb;
+                && (int)$_SESSION['admin_fb_count_at_read'] >= $unreadFb;
             $notifications[] = [
                 'id'       => 'unread_feedback',
                 'type'     => 'blue',
@@ -127,8 +160,8 @@ if ($action === 'get') {
         }
     } catch (\Throwable $e) {}
 
-    /* ── 4. New 5-star reviews since last panel read ── */
-    try {
+    /* ── 4. New 5-star reviews ── */
+    if ($prefs['stars']) try {
         $stmt = $pdo->prepare(
             "SELECT f.id, f.name, f.rating, f.created_at
                FROM feedback f
@@ -154,8 +187,8 @@ if ($action === 'get') {
         }
     } catch (\Throwable $e) {}
 
-    /* ── 5. Expired specific-date events still marked active ── */
-    try {
+    /* ── 5. Expired specific-date events ── */
+    if ($prefs['events']) try {
         $stmt = $pdo->prepare(
             "SELECT id, event_name, event_date FROM zoo_events
               WHERE event_date IS NOT NULL
@@ -167,20 +200,21 @@ if ($action === 'get') {
         $stmt->execute([':today' => $today]);
         $expired = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         if ($expired) {
-            // Auto-deactivate them in the DB right now
             $ids          = array_column($expired, 'id');
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
             $pdo->prepare("UPDATE zoo_events SET is_active = 0 WHERE id IN ($placeholders)")
                 ->execute($ids);
-
             foreach ($expired as $ev) {
+                // Respect mark-all-read: expired events that were already seen before lastRead are read
+                $isReadEvent = isset($_SESSION['admin_notif_last_read'])
+                    && $ev['event_date'] . ' 23:59:59' <= $_SESSION['admin_notif_last_read'];
                 $notifications[] = [
                     'id'       => 'expired_event_' . $ev['id'],
                     'type'     => 'orange',
                     'icon'     => 'calendar',
                     'title'    => 'Event expired: ' . $ev['event_name'],
                     'sub'      => 'Date ' . $ev['event_date'] . ' has passed — auto-deactivated',
-                    'is_read'  => false,
+                    'is_read'  => $isReadEvent,
                     'action'   => 'events',
                     'priority' => 2,
                 ];
@@ -195,18 +229,6 @@ if ($action === 'get') {
     });
 
     $unreadCount = count(array_filter($notifications, fn($n) => !$n['is_read']));
-
-    // Store feedback count at read time so we can detect changes
-    if ($action === 'get' && isset($_SESSION['admin_notif_last_read'])) {
-        $fbCountNow = 0;
-        foreach ($notifications as $n) {
-            if ($n['id'] === 'unread_feedback') {
-                preg_match('/^(\d+)/', $n['title'], $m);
-                $fbCountNow = (int)($m[1] ?? 0);
-            }
-        }
-        $_SESSION['admin_fb_count_at_read'] = $fbCountNow;
-    }
 
     okN([
         'notifications' => $notifications,
