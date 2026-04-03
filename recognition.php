@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/check_session.php';
-$currentPage = 'visit'; ?>
+$currentPage = 'animal'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +8,8 @@ $currentPage = 'visit'; ?>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Animal Recognition — WildTrack Malaysia</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="hero.css"/>
   <link rel="stylesheet" href="shared.css"/>
   <link rel="stylesheet" href="mainPage.css"/>
   <style>
@@ -36,63 +38,6 @@ $currentPage = 'visit'; ?>
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
-    }
-
-    /* ── HERO ── */
-    .hero {
-      position: relative;
-      width: 100%;
-      height: 420px;
-      overflow: hidden;
-      background: var(--green);
-    }
-    .hero-img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      opacity: .45;
-      transform: scale(1.04);
-      transition: transform 8s ease;
-    }
-    .hero:hover .hero-img { transform: scale(1); }
-    .hero-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(160deg, rgba(46,90,48,.7) 0%, rgba(30,60,30,.5) 60%, transparent 100%);
-    }
-    .hero-content {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      justify-content: center; padding: 0 10%;
-    }
-    .hero-eyebrow {
-      font-size: .75rem; font-weight: 600; letter-spacing: .18em;
-      text-transform: uppercase; color: var(--teal);
-      margin-bottom: .8rem;
-      animation: fadeUp .6s ease both;
-    }
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.4rem, 5vw, 4rem);
-      font-weight: 800; color: #fff;
-      line-height: 1.1; margin-bottom: 1rem;
-      animation: fadeUp .7s .1s ease both;
-    }
-    .hero-sub {
-      font-size: 1.05rem; color: rgba(255,255,255,.82);
-      max-width: 520px; line-height: 1.65;
-      animation: fadeUp .7s .2s ease both;
-    }
-    /* Decorative paw prints */
-    .paw {
-      position: absolute; opacity: .08;
-      font-size: 5rem; pointer-events: none;
-    }
-    .paw1 { right: 12%; top: 15%; transform: rotate(20deg); }
-    .paw2 { right: 22%; bottom: 10%; transform: rotate(-15deg); font-size: 3rem; }
-    .paw3 { right: 6%;  bottom: 30%; transform: rotate(35deg); font-size: 2.5rem; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
     }
 
     /* ── MAIN LAYOUT ── */
@@ -580,20 +525,19 @@ $currentPage = 'visit'; ?>
 <?php include 'nav.php'; 
 $currentPage = 'visit';?>
 
-<!-- ── HERO ── -->
+<!-- HERO -->
 <section class="hero">
   <img class="hero-img" src="https://images.unsplash.com/photo-1605092676920-8ac5ae40c7c8?q=80&w=1600&auto=format&fit=crop" alt="Wildlife"/>
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <p class="hero-eyebrow">AI-Powered Feature</p>
-    <h1 class="hero-title">Animal<br/>Recognition</h1>
+    <p class="hero-eyebrow">WildTrack Malaysia</p>
+    <h1 class="hero-title">Animal<br/><em>Recognition</em></h1>
     <p class="hero-sub">Spotted an animal in the park? Upload a photo and our AI will identify the species instantly — and tell you everything about it.</p>
   </div>
   <div class="paw1 paw">🐾</div>
   <div class="paw2 paw">🐾</div>
   <div class="paw3 paw">🐾</div>
 </section>
-
 <!-- ── PAGE BODY ── -->
 <div class="page-body">
 
@@ -813,6 +757,7 @@ $currentPage = 'visit';?>
   </div>
   <div class="footer-bottom">© 2026 WildTrack Malaysia · All rights reserved</div>
 </footer>
+
 
 <!-- TensorFlow.js + Teachable Machine -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -1146,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', function() {
     trail.innerHTML =
       '<a href="mainPage.php">Home</a>' +
       '<span class="sep">›</span>' +
-      '<a href="visitMain.php">Visit</a>' +
+      '<a href="animalMain.php">Animal</a>' +
       '<span class="sep">›</span>' +
       '<span>Animal Recognition</span>';
   }
@@ -1171,6 +1116,7 @@ document.addEventListener('click', (e) => {
 
 // ── Init ──
 loadModel();
+
 </script>
 </body>
 </html>
