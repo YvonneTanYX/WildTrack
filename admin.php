@@ -2195,6 +2195,12 @@ textarea.form-input {
       </span>
       <span class="nav-label">Events</span>
     </a>
+    <a href="#" class="nav-item" data-page="mapeditor">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      </span>
+      <span class="nav-label">Zoo Map Editor</span>
+    </a>
 
     <div class="nav-section-label" style="margin-top:16px;">Management</div>
     <a href="#" class="nav-item" data-page="staff">
@@ -3033,6 +3039,109 @@ textarea.form-input {
     </div>
   </section>
 
+  <!-- PAGE: ZOO MAP EDITOR -->
+  <section class="page" id="page-mapeditor">
+    <div class="page-header">
+      <div>
+        <h1>Zoo Map Editor</h1>
+        <p>Drag pins to reposition, click to edit details, then save to database.</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;
+          border-radius:var(--radius-sm);border:1px solid var(--border);
+          background:var(--white);font-size:13px;font-weight:600;
+          color:var(--text-mid);cursor:pointer;transition:all var(--transition);"
+          onmouseover="this.style.background='var(--green-pale)'"
+          onmouseout="this.style.background='var(--white)'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Change Map Image
+          <input type="file" accept="image/*" onchange="mapEditorChangeMap(event)" style="display:none;" />
+        </label>
+        <button class="btn btn-outline" onclick="mapEditorAddPin()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Pin
+        </button>
+        <button class="btn btn-primary" id="mapEditorSaveBtn" onclick="mapEditorSave()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+          Save to Database
+        </button>
+      </div>
+    </div>
+
+    <!-- Map + drawer layout -->
+    <div style="display:flex;gap:16px;align-items:flex-start;">
+
+      <!-- Map card -->
+      <div class="card" style="flex:1;padding:0;overflow:hidden;line-height:0;">
+        <div id="mapEditorContainer" style="position:relative;width:100%;cursor:default;border-radius:var(--radius);">
+          <img id="mapEditorImg" alt="Zoo Map" draggable="false"
+            style="width:100%;display:block;border-radius:var(--radius);pointer-events:none;" />
+          <!-- pins injected by JS -->
+        </div>
+      </div>
+
+      <!-- Edit drawer -->
+      <div id="mapEditorDrawer" style="
+        width:300px;flex-shrink:0;background:var(--white);border-radius:var(--radius);
+        border:1px solid var(--border);box-shadow:var(--shadow);
+        display:none;flex-direction:column;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);
+          display:flex;align-items:center;justify-content:space-between;">
+          <span id="mapDrawerTitle" style="font-size:14px;font-weight:700;color:var(--text-dark);"></span>
+          <button onclick="mapEditorCloseDrawer()"
+            style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-light);
+            border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;"
+            onmouseover="this.style.background='var(--green-bg)'" onmouseout="this.style.background='none'">✕</button>
+        </div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;max-height:70vh;">
+          <div class="form-group" style="margin:0;">
+            <label>Name</label>
+            <input class="form-input" id="meInputName" oninput="mapEditorSetField('name',this.value)" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:10px;">
+            <div class="form-group" style="margin:0;">
+              <label>Emoji</label>
+              <input class="form-input" id="meInputEmoji" style="text-align:center;font-size:20px;"
+                oninput="mapEditorSetField('emoji',this.value)" />
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Color</label>
+              <input type="color" id="meInputColor"
+                style="width:52px;height:38px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;padding:2px;display:block;"
+                oninput="mapEditorSetField('color',this.value)" />
+            </div>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Zone</label>
+            <select class="form-input" id="meInputZone" onchange="mapEditorSetField('zone',this.value)"></select>
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Description</label>
+            <textarea class="form-input" id="meInputDesc" rows="3"
+              style="resize:vertical;line-height:1.5;"
+              oninput="mapEditorSetField('desc',this.value)"></textarea>
+          </div>
+          <div style="background:var(--green-bg);border-radius:var(--radius-sm);padding:8px 12px;
+            font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="10" r="3"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+            Position: x=<span id="mePosX">0</span>%  y=<span id="mePosY">0</span>%
+          </div>
+          <button onclick="mapEditorDeletePin()" style="
+            width:100%;padding:9px;border-radius:var(--radius-sm);
+            border:1px solid #fca5a5;background:#fff5f5;color:var(--red);
+            font-size:13px;font-weight:600;cursor:pointer;transition:all var(--transition);"
+            onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fff5f5'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle;margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Delete Pin
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pin chips -->
+    <div id="mapEditorChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;"></div>
+  </section>
+
   <!-- Announcement Modal (create / edit) -->
 <div class="modal-overlay" id="announcementModal">
   <div class="modal" style="max-width:520px;">
@@ -3379,14 +3488,16 @@ function showPage(pageId) {
   const titles = {
     overview: 'Overview', ticketing: 'Ticketing', feedback: 'Feedback & Reviews',
     media: 'Media Gallery', events: 'Events Management', staff: 'Staff',
-    reports: 'Reports', announcements: 'Announcements', settings: 'Settings', profile: 'Profile'
+    reports: 'Reports', announcements: 'Announcements', settings: 'Settings',
+    profile: 'Profile', mapeditor: 'Zoo Map Editor'
   };
   document.getElementById('pageTitle').textContent = titles[pageId] || pageId;
 
   // Lazy-init charts
-  if (pageId === 'overview') initOverviewCharts();
-  if (pageId === 'reports')  initReportsChart();
-  if (pageId === 'settings') loadNotifPrefs();   // load dynamic notification prefs
+  if (pageId === 'overview')   initOverviewCharts();
+  if (pageId === 'reports')    initReportsChart();
+  if (pageId === 'settings')   loadNotifPrefs();
+  if (pageId === 'mapeditor')  initMapEditor();
 
   // Close notif panel
   document.getElementById('notifPanel').classList.remove('open');
@@ -6058,6 +6169,250 @@ document.addEventListener('DOMContentLoaded', () => {
   const active = document.querySelector('.page.active');
   if (active && active.id === 'page-settings') loadNotifPrefs();
 });
+
+/* ════════════════════════════════════════════════════════
+   ZOO MAP EDITOR
+════════════════════════════════════════════════════════ */
+let _meMapData   = '';
+let _mePins      = [];
+let _meEditId    = null;
+let _meZones     = [];
+let _meDragId    = null;
+let _meIsDragging= false;
+let _meInited    = false;
+
+async function initMapEditor() {
+  if (_meInited) return;
+  _meInited = true;
+
+  try {
+    const [mapRes, zoneRes] = await Promise.all([
+      fetch('api/MapData.php', { credentials: 'include' }).then(r => r.json()),
+      fetch('api/MapData.php?zones', { credentials: 'include' }).then(r => r.json()),
+    ]);
+
+    _meMapData = mapRes.Map ?? '';
+    _mePins    = (Array.isArray(mapRes.Pins) ? mapRes.Pins : Object.values(mapRes.Pins || []))
+      .map(p => ({ ...p, pos: p.pos ?? { x: parseFloat(p.pos_x ?? 0), y: parseFloat(p.pos_y ?? 0) } }));
+    _meZones   = zoneRes.zones ?? [];
+
+    const img = document.getElementById('mapEditorImg');
+    if (img && _meMapData) img.src = _meMapData;
+
+    _meRenderPins();
+    _meRenderChips();
+    _meBindDrag();
+  } catch(e) {
+    showToast('Failed to load map data.', 'error');
+  }
+}
+
+function _meMakePinSVG(color, emoji, active) {
+  const shadow = active
+    ? `drop-shadow(0 0 8px ${color})`
+    : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))';
+  return `<svg width="32" height="43" viewBox="0 0 40 54" style="filter:${shadow};display:block;">
+    <path d="M20 2C11.16 2 4 9.16 4 18c0 12 16 34 16 34s16-22 16-34C36 9.16 28.84 2 20 2z"
+      fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+    <circle cx="20" cy="18" r="10" fill="white" opacity="0.92"/>
+    <text x="20" y="23" text-anchor="middle" font-size="11">${emoji}</text>
+  </svg>`;
+}
+
+function _meRenderPins() {
+  const container = document.getElementById('mapEditorContainer');
+  if (!container) return;
+  container.querySelectorAll('.me-pin-btn').forEach(el => el.remove());
+
+  _mePins.forEach(pin => {
+    const btn = document.createElement('button');
+    btn.className  = 'me-pin-btn';
+    btn.id         = 'mepin-' + pin.id;
+    btn.title      = pin.name;
+    btn.style.cssText = `position:absolute;background:none;border:none;cursor:grab;padding:0;
+      transform:translate(-50%,-100%);left:${pin.pos.x}%;top:${pin.pos.y}%;
+      z-index:${_meEditId === pin.id ? 10 : 1};`;
+    btn.innerHTML  = _meMakePinSVG(pin.color, pin.emoji, _meEditId === pin.id);
+
+    btn.addEventListener('click', () => { if (!_meIsDragging) _meSetEditId(_meEditId === pin.id ? null : pin.id); });
+    btn.addEventListener('mousedown', e => _meStartDrag(e, pin.id));
+    container.appendChild(btn);
+  });
+}
+
+function _meRenderChips() {
+  const wrap = document.getElementById('mapEditorChips');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  _mePins.forEach(pin => {
+    const chip = document.createElement('button');
+    const isActive = _meEditId === pin.id;
+    chip.style.cssText = `display:inline-flex;align-items:center;gap:6px;padding:5px 14px 5px 6px;
+      border-radius:20px;cursor:pointer;font-size:13px;font-weight:${isActive?700:500};
+      border:1.5px solid ${isActive ? pin.color : 'var(--border)'};
+      background:${isActive ? (pin.light || pin.color + '22') : 'var(--white)'};
+      color:${isActive ? pin.color : 'var(--text-mid)'};
+      font-family:inherit;transition:all 0.15s;`;
+    chip.innerHTML = _meMakePinSVG(pin.color, pin.emoji, false) + ' ' + pin.name;
+    chip.addEventListener('click', () => _meSetEditId(_meEditId === pin.id ? null : pin.id));
+    wrap.appendChild(chip);
+  });
+}
+
+function _meSetEditId(id) {
+  _meEditId = id;
+  _meRenderPins();
+  _meRenderChips();
+
+  const drawer = document.getElementById('mapEditorDrawer');
+  if (!drawer) return;
+
+  if (!id) { drawer.style.display = 'none'; return; }
+
+  const pin = _mePins.find(p => p.id === id);
+  if (!pin) return;
+
+  drawer.style.display = 'flex';
+  const titleEl = document.getElementById('mapDrawerTitle');
+  if (titleEl) { titleEl.textContent = pin.emoji + ' Edit Pin'; titleEl.style.color = pin.color; }
+
+  document.getElementById('meInputName').value  = pin.name;
+  document.getElementById('meInputEmoji').value = pin.emoji;
+  document.getElementById('meInputColor').value = pin.color;
+  document.getElementById('meInputDesc').value  = pin.desc ?? '';
+  document.getElementById('mePosX').textContent = pin.pos.x.toFixed(1);
+  document.getElementById('mePosY').textContent = pin.pos.y.toFixed(1);
+
+  // Populate zone select
+  const sel = document.getElementById('meInputZone');
+  sel.innerHTML = '<option value="">— Select zone —</option>';
+  _meZones.forEach(z => {
+    const opt = document.createElement('option');
+    opt.value = z.location_name;
+    opt.textContent = z.location_name;
+    opt.selected = pin.zone === z.location_name;
+    sel.appendChild(opt);
+  });
+}
+
+function mapEditorCloseDrawer() { _meSetEditId(null); }
+
+function mapEditorSetField(key, value) {
+  if (!_meEditId) return;
+  _mePins = _mePins.map(p => p.id !== _meEditId ? p : { ...p, [key]: value });
+  _meRenderPins();
+  _meRenderChips();
+  const pin = _mePins.find(p => p.id === _meEditId);
+  if (pin) {
+    const titleEl = document.getElementById('mapDrawerTitle');
+    if (titleEl) { titleEl.textContent = pin.emoji + ' Edit Pin'; titleEl.style.color = pin.color; }
+  }
+}
+
+function mapEditorDeletePin() {
+  _mePins = _mePins.filter(p => p.id !== _meEditId);
+  _meEditId = null;
+  const drawer = document.getElementById('mapEditorDrawer');
+  if (drawer) drawer.style.display = 'none';
+  _meRenderPins();
+  _meRenderChips();
+  showToast('Pin deleted.');
+}
+
+function mapEditorAddPin() {
+  const id = 'pin-' + Date.now();
+  _mePins.push({
+    id, name: 'New Location', emoji: '📍', color: '#2D5A27', light: '#EAF1E8',
+    zone: '', desc: 'Describe this location.', animals: [],
+    pos: { x: 50, y: 50 },
+  });
+  _meRenderPins();
+  _meRenderChips();
+  _meSetEditId(id);
+  showToast('New pin added. Drag it into position.');
+}
+
+async function mapEditorSave() {
+  const btn = document.getElementById('mapEditorSaveBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Saving…'; }
+  try {
+    const res  = await fetch('api/MapData.php', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ Map: _meMapData, Pins: _mePins }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Map saved successfully ✓');
+      if (btn) btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg> Saved!';
+      setTimeout(() => {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg> Save to Database'; }
+      }, 2500);
+    } else { throw new Error('API returned failure'); }
+  } catch(e) {
+    showToast('Save failed. Please try again.', 'error');
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Save to Database'; }
+  }
+}
+
+function mapEditorChangeMap(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _meMapData = ev.target.result;
+    const img = document.getElementById('mapEditorImg');
+    if (img) img.src = _meMapData;
+    showToast('Map image updated. Remember to save!');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+// ── Drag logic ─────────────────────────────────────────────────────────────
+function _meToPercent(e) {
+  const img = document.getElementById('mapEditorImg');
+  if (!img) return null;
+  const r = img.getBoundingClientRect();
+  return {
+    x: Math.max(0, Math.min(100, ((e.clientX - r.left) / r.width)  * 100)),
+    y: Math.max(0, Math.min(100, ((e.clientY - r.top)  / r.height) * 100)),
+  };
+}
+
+function _meStartDrag(e, pinId) {
+  e.preventDefault(); e.stopPropagation();
+  _meDragId    = pinId;
+  _meIsDragging = false;
+}
+
+function _meBindDrag() {
+  const container = document.getElementById('mapEditorContainer');
+  if (!container) return;
+
+  container.addEventListener('mousemove', e => {
+    if (!_meDragId) return;
+    _meIsDragging = true;
+    const pos = _meToPercent(e);
+    if (!pos) return;
+    _mePins = _mePins.map(p => p.id !== _meDragId ? p : { ...p, pos });
+    const btn = document.getElementById('mepin-' + _meDragId);
+    if (btn) { btn.style.left = pos.x + '%'; btn.style.top = pos.y + '%'; }
+    if (_meDragId === _meEditId) {
+      const px = document.getElementById('mePosX');
+      const py = document.getElementById('mePosY');
+      if (px) px.textContent = pos.x.toFixed(1);
+      if (py) py.textContent = pos.y.toFixed(1);
+    }
+  });
+
+  const stopDrag = () => {
+    _meDragId = null;
+    setTimeout(() => { _meIsDragging = false; }, 10);
+  };
+  container.addEventListener('mouseup',    stopDrag);
+  container.addEventListener('mouseleave', stopDrag);
+}
 
 </script>
 </body>
