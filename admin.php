@@ -3115,6 +3115,12 @@ textarea.form-input {
             <label>Zone</label>
             <select class="form-input" id="meInputZone" onchange="mapEditorSetField('zone',this.value)"></select>
           </div>
+          <div class="form-group">
+            <label>Animal (auto‑fill species)</label>
+            <select class="form-input" id="meInputAnimal" onchange="setPinNameFromAnimal()">
+              <option value="">— Select animal in this zone —</option>
+            </select>
+          </div>
           <div class="form-group" style="margin:0;">
             <label>Description</label>
             <textarea class="form-input" id="meInputDesc" rows="3"
@@ -6240,6 +6246,57 @@ function _meRenderPins() {
   });
 }
 
+// ── Load animals for a zone and populate the dropdown ──
+async function loadAnimalsForZone(zone) {
+  const sel = document.getElementById('meInputAnimal');
+  if (!zone) {
+    sel.innerHTML = '<option value="">— Select animal —</option>';
+    return;
+  }
+  try {
+    const res = await fetch(`api/MapData.php?animals_by_zone=${encodeURIComponent(zone)}`);
+    const data = await res.json();
+    if (data.animals && Array.isArray(data.animals)) {
+      let options = '<option value="">— Select animal —</option>';
+      data.animals.forEach(animal => {
+        options += `<option value="${escapeHtml(animal)}">${escapeHtml(animal)}</option>`;
+      });
+      sel.innerHTML = options;
+    } else {
+      sel.innerHTML = '<option value="">— No animals in this zone —</option>';
+    }
+  } catch(e) {
+    console.error('loadAnimalsForZone error', e);
+    sel.innerHTML = '<option value="">— Error loading animals —</option>';
+  }
+}
+
+// ── When an animal is selected, fetch its species and update pin name ──
+async function setPinNameFromAnimal() {
+  const animalName = document.getElementById('meInputAnimal').value;
+  if (!animalName) return;
+  try {
+    const res = await fetch(`api/MapData.php?animal_species=${encodeURIComponent(animalName)}`);
+    const data = await res.json();
+    if (data.species && data.species.trim() !== '') {
+      const nameInput = document.getElementById('meInputName');
+      nameInput.value = data.species;
+      mapEditorSetField('name', data.species);
+      showToast(`Name set to species: ${data.species}`);
+    } else {
+      showToast('No species found for that animal.', 'error');
+    }
+  } catch(e) {
+    console.error('setPinNameFromAnimal error', e);
+    showToast('Failed to fetch species.', 'error');
+  }
+}
+
+// Helper to escape HTML for dropdown options
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function _meRenderChips() {
   const wrap = document.getElementById('mapEditorChips');
   if (!wrap) return;
@@ -6283,7 +6340,7 @@ function _meSetEditId(id) {
   document.getElementById('mePosX').textContent = pin.pos.x.toFixed(1);
   document.getElementById('mePosY').textContent = pin.pos.y.toFixed(1);
 
-  // Populate zone select
+  // Populate zone select and attach change event
   const sel = document.getElementById('meInputZone');
   sel.innerHTML = '<option value="">— Select zone —</option>';
   _meZones.forEach(z => {
@@ -6293,9 +6350,27 @@ function _meSetEditId(id) {
     opt.selected = pin.zone === z.location_name;
     sel.appendChild(opt);
   });
+
+  // Remove any previous listener and add new one
+  sel.onchange = () => {
+    mapEditorSetField('zone', sel.value);
+    loadAnimalsForZone(sel.value);
+    // Clear animal selection when zone changes
+    document.getElementById('meInputAnimal').value = '';
+  };
+
+  // Load animals for the current zone (if any)
+  if (pin.zone) {
+    loadAnimalsForZone(pin.zone);
+  } else {
+    document.getElementById('meInputAnimal').innerHTML = '<option value="">— Select animal —</option>';
+  }
 }
 
-function mapEditorCloseDrawer() { _meSetEditId(null); }
+function mapEditorCloseDrawer() {
+  _meSetEditId(null);
+  document.getElementById('meInputAnimal').innerHTML = '<option value="">— Select animal —</option>';
+}
 
 function mapEditorSetField(key, value) {
   if (!_meEditId) return;
