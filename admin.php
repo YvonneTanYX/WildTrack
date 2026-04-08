@@ -2426,6 +2426,7 @@ textarea.form-input {
       <button class="tab active" onclick="switchTab(this,'tab-approvals')">Payment Approvals <span class="tab-count" id="tabPendingCount">…</span></button>
       <button class="tab" onclick="switchTab(this,'tab-pricing')">Pricing</button>
       <button class="tab" onclick="switchTab(this,'tab-promotions')">Promotions</button>
+      <button class="tab" onclick="switchTab(this,'tab-payment-settings')">Payment Settings</button>
     </div>
 
     <!-- Tab: Approvals -->
@@ -2532,6 +2533,62 @@ textarea.form-input {
         </table>
       </div>
     </div>
+
+    <!-- New tab: Payment Settings -->
+
+<div class="tab-content" id="tab-payment-settings">
+    <div class="card">
+        <div class="card-header">
+            <h3>Touch 'n Go eWallet Settings</h3>
+            <p style="font-size:13px;color:var(--text-muted);">Changes affect the QR code shown to visitors during checkout.</p>
+        </div>
+
+        <div style="padding:0 24px 24px;">
+            <!-- Current QR preview -->
+            <div style="margin-bottom:24px;text-align:center;">
+                <label class="form-label">Current QR Code</label>
+                <div style="display:inline-block;border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff;">
+                    <img id="currentTngQr" src="" alt="TNG QR" style="width:180px;height:180px;object-fit:contain;">
+                </div>
+                <p id="currentReceiverName" style="margin-top:8px;font-size:13px;color:var(--text-muted);">Loading…</p>
+            </div>
+
+            <!-- Update form -->
+            <div class="form-group">
+                <label>Receiver Name (shown on payment page)</label>
+                <input type="text" id="newReceiverName" class="form-input" placeholder="WildTrack Safari Park">
+            </div>
+
+            <div class="form-group">
+                <label>Upload New QR Code Image</label>
+                <div class="upload-drop-zone" id="qrUploadZone" style="cursor:pointer;padding:24px;text-align:center;"
+                     onclick="document.getElementById('qrFileInput').click()">
+                    <span style="font-size:28px;">📁</span>
+                    <p>Click to choose a new QR image</p>
+                    <small>PNG, JPG, WebP · Max 2MB</small>
+                </div>
+                <input type="file" id="qrFileInput" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                <div id="qrPreviewNew" style="display:none;margin-top:12px;text-align:center;">
+                    <img id="newQrPreview" style="max-height:120px;border-radius:8px;">
+                    <button class="btn-edit" style="margin-left:8px;" onclick="clearNewQr()">Remove</button>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="openPasswordModalForTng()" style="margin-top:8px;">Save Payment Settings</button>
+            <!-- QR Change History -->
+          <div style="margin-top:32px;">
+              <hr style="border-top:1px solid var(--border); margin:16px 0;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                 <h3 style="font-size:14px; font-weight:700;">📜 QR Change History</h3>
+                  <button class="btn-edit" onclick="refreshTngHistory()" style="padding:4px 12px;">⟳ Refresh</button>
+              </div>
+              <div id="tngHistoryList" style="margin-top:12px; font-size:13px;">
+                  <div style="color:var(--text-muted); text-align:center; padding:20px;">Loading history…</div>
+              </div>
+          </div>
+        </div>
+    </div>
+</div>
   </section>
 
   <!-- PAGE: FEEDBACK -->
@@ -3476,7 +3533,7 @@ async function doLogout() {
     } catch (error) {
         console.error("Logout request failed:", error);
     } finally {
-        window.location.href = 'login.html';
+        window.location.href = 'staff-login.php';
     }
 }
 
@@ -6488,6 +6545,163 @@ function _meBindDrag() {
   container.addEventListener('mouseup',    stopDrag);
   container.addEventListener('mouseleave', stopDrag);
 }
+
+// ─── TNG SETTINGS ─────────────────────────────────────────────
+let _newQrFile = null;
+
+async function loadTngSettings() {
+    try {
+        const res = await fetch('api/tickets.php?action=tng_settings', { credentials: 'include' });
+        const data = await res.json();
+        if (data.success) {
+            const qrImg = document.getElementById('currentTngQr');
+            if (data.tng_qr_url) qrImg.src = data.tng_qr_url;
+            else qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TNG-PLACEHOLDER';
+            document.getElementById('currentReceiverName').innerText = data.receiver_name || 'WildTrack Safari Park';
+            document.getElementById('newReceiverName').value = data.receiver_name || '';
+        }
+    } catch(e) {}
+}
+
+function clearNewQr() {
+    _newQrFile = null;
+    document.getElementById('qrFileInput').value = '';
+    document.getElementById('qrPreviewNew').style.display = 'none';
+}
+
+document.getElementById('qrFileInput').addEventListener('change', function(e) {
+    if (!e.target.files.length) return;
+    const file = e.target.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('File too large. Max 2MB.', 'error');
+        clearNewQr();
+        return;
+    }
+    _newQrFile = file;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        document.getElementById('newQrPreview').src = ev.target.result;
+        document.getElementById('qrPreviewNew').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+});
+
+function openPasswordModalForTng() {
+    // Simple password prompt – you can replace with a nicer modal if needed
+    const pwd = prompt('Enter your admin password to update TNG QR settings:');
+    if (!pwd) return;
+    updateTngSettings(pwd);
+}
+
+async function updateTngSettings(password) {
+    const receiver = document.getElementById('newReceiverName').value.trim();
+    if (!receiver) {
+        showToast('Receiver name is required.', 'error');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('receiver_name', receiver);
+    formData.append('password', password);
+    if (_newQrFile) {
+        formData.append('qr_image', _newQrFile);
+    }
+
+    const btn = document.querySelector('#tab-payment-settings .btn-primary');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+        const res = await fetch('api/update_tng_settings.php', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('TNG settings updated ✓');
+            loadTngSettings();      // refresh current preview
+            clearNewQr();           // clear uploaded file
+            // also update the visitor-facing data if needed – the next fetch will pick new data
+        } else {
+            showToast(data.message || 'Update failed.', 'error');
+        }
+    } catch (err) {
+        showToast('Network error. Please try again.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+// Call loadTngSettings when the Payment Settings tab is opened
+(function() {
+    const _origSwitchTab = window.switchTab;
+    window.switchTab = function(btn, tabId) {
+        _origSwitchTab(btn, tabId);
+        if (tabId === 'tab-payment-settings') {
+            loadTngSettings();
+        }
+    };
+})();
+
+async function refreshTngHistory() {
+    const container = document.getElementById('tngHistoryList');
+    if (!container) return;
+    container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">Loading history…</div>';
+
+    try {
+        const res = await fetch('api/get_tng_history.php', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success || !data.history.length) {
+            container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">No QR changes recorded yet.</div>';
+            return;
+        }
+
+        let html = '<div style="background:var(--green-bg); border-radius:12px; overflow-x:auto;">';
+        html += '<table style="width:100%; border-collapse:collapse; min-width:600px;">';
+        html += '<thead><tr style="border-bottom:1px solid var(--border);">' +
+                '<th style="padding:10px 12px; text-align:left;">Admin</th>' +
+                '<th style="padding:10px 12px; text-align:left;">QR Image Changed</th>' +
+                '<th style="padding:10px 12px; text-align:left;">Old Receiver</th>' +
+                '<th style="padding:10px 12px; text-align:left;">New Receiver</th>' +
+                '<th style="padding:10px 12px; text-align:left;">Changed At</th>' +
+                '</tr></thead><tbody>';
+
+        data.history.forEach(row => {
+            const qrChanged = (row.old_qr_path !== row.new_qr_path);
+            const qrBadge = qrChanged 
+                ? '<span style="background:var(--green-pale); color:var(--green-dark); padding:2px 10px; border-radius:20px; font-size:12px; font-weight:600;">✓ Yes</span>'
+                : '<span style="color:var(--text-muted);">—</span>';
+
+            html += `<tr style="border-bottom:1px solid var(--border);">
+                        <td style="padding:10px 12px;">${escapeHtml(row.admin_name)}</td>
+                        <td style="padding:10px 12px;">${qrBadge}</td>
+                        <td style="padding:10px 12px; color:var(--text-muted);">${escapeHtml(row.old_receiver_name)}</td>
+                        <td style="padding:10px 12px; font-weight:600;">${escapeHtml(row.new_receiver_name)}</td>
+                        <td style="padding:10px 12px;">${new Date(row.changed_at).toLocaleString()}</td>
+                      </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    } catch(e) {
+        container.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">Failed to load history.</div>';
+    }
+}
+
+// Also call refreshTngHistory when the Payment Settings tab is opened
+(function() {
+    const _origSwitchTab = window.switchTab;
+    window.switchTab = function(btn, tabId) {
+        _origSwitchTab(btn, tabId);
+        if (tabId === 'tab-payment-settings') {
+            loadTngSettings();
+            refreshTngHistory();
+        }
+    };
+})();
 
 </script>
 </body>
