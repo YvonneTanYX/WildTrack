@@ -9,6 +9,8 @@
  *  3. animals uses 'zone' column (not 'location_name')
  *  4. pins table auto-created if missing
  *  5. Raises MySQL max_allowed_packet for this session so large base64 saves work
+ *  6. Added GET endpoints: ?animals_by_zone and ?animal_species for map editor
+ *  7. Strip HTML tags from pin description on save to prevent clickable links
  */
 
 header("Content-Type: application/json");
@@ -53,6 +55,42 @@ $pdo->exec("INSERT IGNORE INTO `map_settings` (`map_id`, `map_image`) VALUES (1,
 $method = $_SERVER['REQUEST_METHOD'];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// GET ?animals_by_zone=Zone+A  — list of animal names in that zone
+// ═══════════════════════════════════════════════════════════════════════════════
+if ($method === 'GET' && isset($_GET['animals_by_zone'])) {
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT name FROM animals WHERE zone = ? ORDER BY name ASC"
+        );
+        $stmt->execute([$_GET['animals_by_zone']]);
+        $animals = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        echo json_encode(['animals' => $animals]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GET ?animal_species=AnimalName  — returns species
+// ═══════════════════════════════════════════════════════════════════════════════
+if ($method === 'GET' && isset($_GET['animal_species'])) {
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT species FROM animals WHERE name = ?"
+        );
+        $stmt->execute([$_GET['animal_species']]);
+        $species = $stmt->fetchColumn();
+        echo json_encode(['species' => $species ?: '']);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // GET ?zones  — distinct zone values from animals.zone
 // ═══════════════════════════════════════════════════════════════════════════════
 if ($method === 'GET' && isset($_GET['zones'])) {
@@ -72,7 +110,7 @@ if ($method === 'GET' && isset($_GET['zones'])) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GET ?zone=Zone+A  — animals in that zone
+// GET ?zone=Zone+A  — animals in that zone (used by other parts)
 // ═══════════════════════════════════════════════════════════════════════════════
 if ($method === 'GET' && isset($_GET['zone'])) {
     try {
@@ -151,6 +189,8 @@ if ($method === 'POST') {
             if (!$light && !empty($p['color'])) {
                 $light = $p['color'] . '22';
             }
+            // Strip HTML tags from description to prevent clickable links
+            $cleanDesc = strip_tags($p['desc'] ?? '');
             $stmt->execute([
                 $p['id']    ?? uniqid('pin-'),
                 $p['name']  ?? '',
@@ -158,7 +198,7 @@ if ($method === 'POST') {
                 $p['color'] ?? '#2D5A27',
                 $light,
                 $p['zone']  ?? '',
-                $p['desc']  ?? '',
+                $cleanDesc,
                 is_array($p['animals'] ?? null) ? implode(',', $p['animals']) : ($p['animals'] ?? ''),
                 (float)($p['pos']['x'] ?? $p['pos_x'] ?? 50),
                 (float)($p['pos']['y'] ?? $p['pos_y'] ?? 50),
