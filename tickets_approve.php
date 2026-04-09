@@ -10,11 +10,11 @@
  */
 
 require_once __DIR__ . '/../config/helpers.php';
-session_start();
-
+if (session_status() === PHP_SESSION_NONE) session_start();
 header('Content-Type: application/json');
 
 $action = $_GET['action'] ?? '';
+$currentAdminId = $_SESSION['user']['user_id'] ?? null;
 
 // ── Route ───────────────────────────────────────────────────────────────
 switch ($action) {
@@ -43,7 +43,7 @@ function getPending(): void {
                 ELSE NULL
             END AS approved_by_name,
             t.booking_ref,
-            u.username,
+            u.username AS admin_name,
             u.email,
             u.user_id,
             t.visit_date,
@@ -56,7 +56,7 @@ function getPending(): void {
             MIN(t.ticket_id)                                                            AS first_ticket_id,
             JSON_ARRAYAGG(t.ticket_id)                                                  AS ticket_ids
         FROM tickets t
-        JOIN users u ON t.user_id = u.user_id
+        JOIN users u ON t.approved_by_id = u.user_id
         WHERE t.booking_ref IS NOT NULL
         GROUP BY t.booking_ref, u.username, u.email, u.user_id,
                  t.visit_date, t.purchase_date, t.payment_proof, t.status
@@ -116,16 +116,36 @@ function checkNotifications(): void {
 //   username      (optional override — updates users.username)
 //   email         (optional override — updates users.email)
 // ════════════════════════════════════════════════════════════════════════
-function approvePayment(): void {
-    $admin     = requireRole('admin');
-    $adminUser = $admin['username'] ?? 'Admin';
-    $adminId   = (int)($admin['user_id'] ?? 0);
-    $body  = jsonBody();
 
-    $bookingRef = clean($body['booking_ref'] ?? '');
+   function approvePayment(): void {
+    requireRole('admin');
+    $currentAdminId = $_SESSION['user']['user_id'];
+    $data = json_decode(file_get_contents('php://input'), true);
+    $bookingRef = $data['booking_ref'] ?? '';
+
     if (!$bookingRef) respond(false, 'booking_ref is required.');
-
     $pdo = getDB();
+
+    try {
+        $pdo->beginTransaction();
+
+        // BUG FIX: Store the ID of the admin who approved it
+        $stmt = $pdo->prepare("
+         UPDATE tickets 
+         SET status = 'approved', 
+         approved_by_id = ? 
+         WHERE booking_ref = ? AND status = 'pending'
+        ");
+        $stmt->execute([$currentAdminId, $bookingRef]);
+        $pdo->prepare("UPDATE notifications SET admin_read_at = NOW() WHERE booking_ref = ? AND type = 'new_payment_proof'")->execute([$bookingRef]);
+        
+        $pdo->commit();
+        respond(true, 'Payment approved and records updated.');
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        respond(false, $e->getMessage());
+    }
+}
 
     // Resolve the best display name: prefer full_name from workers table
     $adminName = $adminUser;

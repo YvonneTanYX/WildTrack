@@ -245,30 +245,33 @@ $currentPage = 'visit'; ?>
   }
 
   // ── Activate pin & show detail panel ──────────────────────────────────────
-  function setActive(id) {
-    // Deselect previous
-    if (activeId) {
-      const prev = document.getElementById("pin-" + activeId);
-      if (prev) { prev.classList.remove("active"); prev.style.filter = ''; }
-    }
-    activeId = id;
-    const pin = pins.find(p => p.id === id);
-    if (!pin) return;
-
-    const btn = document.getElementById("pin-" + id);
-    if (btn) {
-      btn.classList.add("active");
-      btn.style.filter = `drop-shadow(0 0 6px ${pin.color})`;
-    }
-
-    showPanelLoading(pin);
-
-    // Fetch live animals for this zone
-    fetch(`/WildTrack/api/MapData.php?zone=${encodeURIComponent(pin.zone)}`)
-      .then(res => res.json())
-      .then(data => updatePanel(pin, data.animals ?? []));
+ function setActive(id) {
+  if (activeId) {
+    const prev = document.getElementById("pin-" + activeId);
+    if (prev) { prev.classList.remove("active"); prev.style.filter = ''; }
   }
-
+  activeId = id;
+  const pin = pins.find(p => p.id === id);
+  if (!pin) return;
+  const btn = document.getElementById("pin-" + id);
+  if (btn) {
+    btn.classList.add("active");
+    btn.style.filter = `drop-shadow(0 0 6px ${pin.color})`;
+  }
+  showPanelLoading(pin);
+  
+  // Fetch animals and update panel, then scroll to it
+  // AFTER (matches MapData.php's ?animals_by_zone= handler)
+fetch(`/WildTrack/api/MapData.php?animals_by_zone=${encodeURIComponent(pin.zone)}`)    .then(res => res.json())
+    .then(data => {
+      updatePanel(pin, data.animals ?? []);
+      // Scroll to detail panel after content is loaded
+      const panel = document.getElementById("detail-panel");
+      if (panel) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+}
   function showPanelLoading(pin) {
     const panel = document.getElementById("detail-panel");
     panel.style.background  = pin.light ?? '#fafafa';
@@ -280,29 +283,34 @@ $currentPage = 'visit'; ?>
       <div style="color:#bbb;font-size:13px;">Loading animals…</div>`;
   }
 
-  function updatePanel(pin, animals) {
-    const panel = document.getElementById("detail-panel");
-    panel.style.background  = pin.light ?? '#fafafa';
-    panel.style.borderColor = pin.color;
+ function updatePanel(pin, animals) {
+  const panel = document.getElementById("detail-panel");
+  panel.style.background  = pin.light ?? '#fafafa';
+  panel.style.borderColor = pin.color;
+  
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+  const chipsHTML = animals.length > 0
+    ? `<div class="animals-row">
+        ${animals.map(a => {
+          // a can be a string (animal name) or an object with name property
+          const animalName = typeof a === 'string' ? a : (a.emoji ? a.emoji + ' ' + a.name : a.name);
+          return `<span class="animal-chip"
+            style="color:${pin.color};border:1px solid ${pin.color}44; cursor:default;">
+            ${escapeHtml(animalName)}
+          </span>`;
+        }).join('')}
+      </div>`
+    : `<div style="font-size:13px;color:#bbb;margin-top:8px;">No animals listed for this zone.</div>`;
 
-    const chipsHTML = animals.length > 0
-      ? `<div class="animals-row">
-          ${animals.map(a => `
-            <a href="animals.php" style="text-decoration:none;">
-              <span class="animal-chip"
-                style="color:${pin.color};border:1px solid ${pin.color}44;">
-                ${a.name}
-              </span>
-            </a>`).join('')}
-        </div>`
-      : `<div style="font-size:13px;color:#bbb;margin-top:8px;">No animals listed for this zone.</div>`;
-
-    panel.innerHTML = `
-      <div class="pin-name" style="color:${pin.color}">${pin.emoji} ${pin.name}</div>
-      <div style="font-size:12px;color:#999;margin-bottom:6px;">Zone: ${pin.zone}</div>
-      <div class="pin-desc">${pin.desc ?? ''}</div>
-      ${chipsHTML}`;
-  }
+  panel.innerHTML = `
+    <div class="pin-name" style="color:${pin.color}">${pin.emoji} ${escapeHtml(pin.name)}</div>
+    <div style="font-size:12px;color:#999;margin-bottom:6px;">Zone: ${escapeHtml(pin.zone)}</div>
+    <div class="pin-desc">${escapeHtml(pin.desc ?? '')}</div>
+    ${chipsHTML}`;
+}
 </script>
 </body>
 </html>

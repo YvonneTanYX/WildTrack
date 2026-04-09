@@ -1,13 +1,13 @@
 <?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/check_session.php';
-requireVisitorLogin();
+requireWorkerLogin();
 
 // ── Fetch worker notifications from DB (uses existing notifications table) ──
 $workerNotifs = [];
 try {
     $pdo    = getDB();
-    $userId = $_SESSION['user']['id'] ?? 0;
+    $userId = $_SESSION['user']['user_id'] ?? 0;
 
     // Map existing notification types to worker-friendly icons
     $iconMap = [
@@ -899,7 +899,7 @@ function navTo(pageId,navEl){
 async function logout(){
   if(!confirm('Are you sure you want to logout?'))return;
   try{await fetch('http://localhost/WildTrack/api/auth.php?action=logout',{method:'POST',credentials:'include'});}catch(e){}
-  window.location.href='login.html';
+  window.location.href='staff-login.php';
 }
 
 // ─── SESSION ───
@@ -908,16 +908,13 @@ async function initSession(){
   try{
     const res=await fetch('http://localhost/WildTrack/api/auth.php?action=me',{credentials:'include'});
     const data=await res.json();
-    if(!data.success||(data.user.role!=='worker'&&data.user.role!=='admin')){window.location.href='login.html';return;}
+    if(!data.success||(data.user.role!=='worker'&&data.user.role!=='admin')){window.location.href='staff-login.php';return;}
     currentWorker=data.user;
     document.getElementById('sidebarName').textContent=data.user.username;
     document.getElementById('sidebarRole').textContent=data.user.role==='admin'?'Administrator':'Caretaker';
     updateGreeting();loadAnimals();
   }catch(e){
-    currentWorker={username:'John Doe',role:'worker'};
-    document.getElementById('sidebarName').textContent='John Doe';
-    document.getElementById('sidebarRole').textContent='Caretaker';
-    updateGreeting();loadAnimals();
+    window.location.href='staff-login.php';
   }
 }
 
@@ -1526,6 +1523,12 @@ async function logHealth(){
   syncDashboard();showToast('🩺 Health record saved!');
 }
 
+(async function initAsync() {
+  await loadIncidentsFromAPI();
+  await loadVaccinationsFromAPI();
+  await loadTasksFromAPI();
+})();
+
 // ─── VACCINATION ───
 let vaxLog=LS.get('vaxLog',[]);
 function renderVaxList(){
@@ -1533,22 +1536,73 @@ function renderVaxList(){
   if(!vaxLog.length){container.innerHTML='<p class="placeholder-msg">No vaccination records yet. Save a record above to see it here.</p>';return;}
   container.innerHTML=vaxLog.map((r,i)=>`<div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="17"></span></div><div><div class="vax-name">${r.animal} — ${r.name}</div><div class="vax-detail">${r.detail}</div></div></div><div style="display:flex;align-items:center;gap:8px;"><span class="vax-status vs-done">✓ Done</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editVax(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteVax(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`).join('');
 }
-function logVaccination(){
-  const animal=document.getElementById('vaxAnimal').value;
-  const name=document.getElementById('vaxName').value;
-  const date=document.getElementById('vaxDate').value;
-  const next=document.getElementById('vaxNext').value;
-  const vet=document.getElementById('vaxVet').value.trim();
-  if(!animal||!date){showToast('Animal and date given are required.','error');return;}
-  const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'';
-  const detail=`Given: ${fmtDate(date)}${next?' · Next: '+fmtDate(next):''}${vet?' · '+vet:''}`;
-  const entry={animal:animal.split(' ')[0],name,detail,rawDate:date,rawNext:next,vet};
-  vaxLog.unshift(entry);LS.set('vaxLog',vaxLog);
-  vaxCount++;LS.set('vaxCount',vaxCount);
-  pushNotif('💉','ni-orange','Vaccination recorded',`${name} administered to ${entry.animal}${vet?' by '+vet:''}`);
-  renderVaxList();
-  document.getElementById('vaxAnimal').value='';document.getElementById('vaxDate').value='';document.getElementById('vaxNext').value='';document.getElementById('vaxVet').value='';
-  syncDashboard();showToast('💉 Vaccination recorded!');
+// Load vaccinations from API
+async function loadVaccinationsFromAPI() {
+  try {
+    const res = await fetch('api/vaccinations_worker.php', { credentials: 'include' });
+    const data = await res.json();
+    if (data.success) {
+      vaxLog = data.vaccinations.map(v => ({
+        animal: v.animal_name,
+        name: v.vaccine_name,
+        detail: `Given: ${new Date(v.date_given).toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' })}${v.next_due_date ? ' · Next: ' + new Date(v.next_due_date).toLocaleDateString('en-MY', { day:'numeric', month:'short', year:'numeric' }) : ''}${v.vet_name ? ' · ' + v.vet_name : ''}`,
+        rawDate: v.date_given,
+        rawNext: v.next_due_date,
+        vet: v.vet_name,
+        id: v.id
+      }));
+      LS.set('vaxLog', vaxLog);
+      vaxCount = vaxLog.length;
+      LS.set('vaxCount', vaxCount);
+      renderVaxList();
+      syncDashboard();
+    }
+  } catch(e) { console.warn(e); }
+}
+
+// Log vaccination via API
+async function logVaccination() {
+  const animalVal = document.getElementById('vaxAnimal').value;
+  const name = document.getElementById('vaxName').value;
+  const date = document.getElementById('vaxDate').value;
+  const next = document.getElementById('vaxNext').value || null;
+  const vet = document.getElementById('vaxVet').value.trim() || null;
+
+  if (!animalVal || !date) { showToast('Animal and date given are required.', 'error'); return; }
+
+  const animal = animals.find(a => animalVal.startsWith(a.name));
+  if (!animal) { showToast('Invalid animal', 'error'); return; }
+
+  const payload = {
+    animal_id: animal.id,
+    vaccine_name: name,
+    date_given: date,
+    next_due_date: next,
+    vet_name: vet
+  };
+
+  try {
+    const res = await fetch('api/vaccinations_worker.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('💉 Vaccination recorded!');
+      await loadVaccinationsFromAPI();
+      document.getElementById('vaxAnimal').value = '';
+      document.getElementById('vaxDate').value = '';
+      document.getElementById('vaxNext').value = '';
+      document.getElementById('vaxVet').value = '';
+      syncDashboard();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch(e) {
+    showToast('Network error', 'error');
+  }
 }
 
 // ─── TASKS ───
@@ -1610,27 +1664,47 @@ function renderTasks(){
   updateTaskProgress();
 }
 
-function toggleTask(id){
-  const t=tasks.find(t=>t.id===id);
-  if(t){
-    t.done=!t.done;
-    LS.set('tasks',tasks);
-    if(t.done) pushNotif('✅','ni-green','Task completed',`"${t.name}" marked as done.`);
-    renderTasks();syncDashboard();
-  }
+async function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  try {
+    const res = await fetch('api/dailytask_worker.php', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, done: !t.done })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (!t.done) pushNotif('✅','ni-green','Task completed',`"${t.name}" marked as done.`);
+      await loadTasksFromAPI();
+      syncDashboard();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch(e) { showToast('Network error', 'error'); }
 }
 
-function toggleTaskActive(id){
-  const t=tasks.find(t=>t.id===id);
-  if(!t)return;
-  t.active=!t.active;
-  if(!t.active) t.done=false;
-  LS.set('tasks',tasks);
-  showToast(t.active?'✅ Task activated!':'⏸️ Task deactivated.');
-  pushNotif(t.active?'✅':'⏸️',t.active?'ni-green':'ni-orange',
-    t.active?'Task activated':'Task deactivated',
-    `"${t.name}" is now ${t.active?'active':'inactive'}.`);
-  renderTasks();syncDashboard();
+async function toggleTaskActive(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  const newActive = !t.active;
+  try {
+    const res = await fetch('api/dailytask_worker.php', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, active: newActive, done: newActive ? false : false }) // deactivate also sets done=0
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(newActive ? '✅ Task activated!' : '⏸️ Task deactivated.');
+      await loadTasksFromAPI();
+      syncDashboard();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch(e) { showToast('Network error', 'error'); }
 }
 
 function openTaskModal(id=null){
@@ -1656,42 +1730,77 @@ function openTaskModal(id=null){
   document.getElementById('taskModal').classList.add('open');
 }
 
-function saveTask(){
-  const name=document.getElementById('tm_name').value.trim();
-  if(!name){showToast('Please enter a task description.','error');return;}
-  const meta=document.getElementById('tm_meta').value.trim();
-  const priority=document.getElementById('tm_priority').value;
-  const zone=document.getElementById('tm_zone').value;
-  const active=document.getElementById('tm_active').value==='true';
-  if(editingTaskId){
-    const t=tasks.find(t=>t.id===editingTaskId);
-    if(t) Object.assign(t,{name,meta:meta||'No details',priority,zone,active});
-    showToast('✏️ Task updated!');
-    pushNotif('✏️','ni-orange','Task updated',`"${name}" has been edited.`);
-  }else{
-    tasks.push({id:taskNextId++,name,meta:meta||'Added manually',zone,priority,done:false,active});
-    showToast('📋 Task added!');
-    pushNotif('📋','ni-green','New task added',`"${name}" added to ${zone}.`);
+async function saveTask() {
+  const name = document.getElementById('tm_name').value.trim();
+  if (!name) { showToast('Please enter a task description.', 'error'); return; }
+  const meta = document.getElementById('tm_meta').value.trim();
+  const priority = document.getElementById('tm_priority').value;
+  const zone = document.getElementById('tm_zone').value;
+  const active = document.getElementById('tm_active').value === 'true';
+
+  const payload = {
+    name,
+    meta: meta || 'No details',
+    zone,
+    priority,
+    active
+  };
+
+  let method = 'POST';
+  let url = 'api/dailytask_worker.php';
+  if (editingTaskId) {
+    method = 'PUT';
+    payload.id = editingTaskId;
   }
-  LS.set('tasks',tasks);
-  closeModal('taskModal');
-  renderTasks();syncDashboard();
+
+  try {
+    const res = await fetch(url, {
+      method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(editingTaskId ? '✏️ Task updated!' : '📋 Task added!');
+      await loadTasksFromAPI();
+      closeModal('taskModal');
+      syncDashboard();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch(e) {
+    showToast('Network error', 'error');
+  }
 }
 
-function deleteTask(id){
-  const t=tasks.find(t=>t.id===id);
-  if(!t||!confirm(`Delete task "${t.name}"?`))return;
-  tasks=tasks.filter(x=>x.id!==id);
-  LS.set('tasks',tasks);
-  showToast('🗑️ Task deleted.');
-  renderTasks();syncDashboard();
+async function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  try {
+    const res = await fetch('api/dailytask_worker.php', {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🗑️ Task deleted.');
+      await loadTasksFromAPI();
+      syncDashboard();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch(e) {
+    showToast('Network error', 'error');
+  }
 }
 
-function filterTasks(f,btn){
-  taskFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+function filterTasks(f, btn) {
+  taskFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  renderTasks();
+  loadTasksFromAPI();   // reload with new filter
 }
 
 function updateTaskProgress(){
@@ -1718,22 +1827,68 @@ function renderIncidents(){
   container.innerHTML=incidentLog.map((r,i)=>`<div class="inc-row"><div class="inc-dot-col"><div class="inc-dot" style="background:${r.dotC};"></div><div class="inc-line"></div></div><div style="flex:1;"><div class="inc-title">${r.title}</div><div class="inc-desc">${r.desc}</div><div class="inc-meta">📅 ${r.meta}</div></div><div class="card-actions" style="flex-shrink:0;padding-top:2px;"><button class="icon-btn" title="Edit" onclick="editIncident(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteIncident(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div>`).join('');
 }
 function pickSev(el,s){document.querySelectorAll('.sev-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');selSev=s;}
-function submitIncident(){
-  const type=document.getElementById('incType').value;
-  const desc=document.getElementById('incDesc').value.trim();
-  const animal=document.getElementById('incAnimal').value;
-  if(!desc){showToast('Please describe the incident.','error');return;}
-  const dotC=selSev==='high'?'var(--red)':selSev==='medium'?'var(--orange)':'#2e8b77';
-  const sev=selSev.charAt(0).toUpperCase()+selSev.slice(1);
-  const time=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
-  const workerName=currentWorker?currentWorker.username:'Worker';
-  const entry={dotC,title:`${type}${animal?' — '+animal.split(' ')[0]:''} (${sev})`,desc,meta:`Today ${time} · Reported by ${workerName}`};
-  incidentLog.unshift(entry);LS.set('incidentLog',incidentLog);
-  incidentCount++;LS.set('incidentCount',incidentCount);
-  pushNotif('🚨','ni-red','Incident reported',`${type}${animal?' — '+animal.split(' ')[0]:''} · ${sev} severity`);
-  renderIncidents();
-  document.getElementById('incAnimal').value='';document.getElementById('incDesc').value='';
-  syncDashboard();showToast('🚨 Incident report submitted!');
+// Load incidents from API on page load
+async function loadIncidentsFromAPI() {
+  try {
+    const res = await fetch('api/incident_worker.php', { credentials: 'include' });
+    const data = await res.json();
+    if (data.success) {
+      incidentLog = data.incidents.map(inc => ({
+        dotC: inc.severity === 'high' ? 'var(--red)' : (inc.severity === 'medium' ? 'var(--orange)' : '#2e8b77'),
+        title: `${inc.incident_type}${inc.animal_name ? ' — ' + inc.animal_name : ''} (${inc.severity})`,
+        desc: inc.description,
+        meta: new Date(inc.reported_at).toLocaleString('en-MY', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', year:'numeric' }) + ' · Reported by ' + inc.reported_by_name,
+        id: inc.id
+      }));
+      LS.set('incidentLog', incidentLog);
+      incidentCount = incidentLog.length;
+      LS.set('incidentCount', incidentCount);
+      renderIncidents();
+      syncDashboard();
+    }
+  } catch(e) { console.warn(e); }
+}
+
+// Submit incident to API
+async function submitIncident() {
+  const type = document.getElementById('incType').value;
+  const desc = document.getElementById('incDesc').value.trim();
+  const animalVal = document.getElementById('incAnimal').value;
+  if (!desc) { showToast('Please describe the incident.', 'error'); return; }
+
+  let animalId = null;
+  if (animalVal && animalVal !== 'N/A — Worker Only') {
+    const animal = animals.find(a => animalVal.startsWith(a.name));
+    if (animal) animalId = animal.id;
+  }
+
+  const payload = {
+    incident_type: type,
+    description: desc,
+    animal_id: animalId,
+    severity: selSev
+  };
+
+  try {
+    const res = await fetch('api/incident_worker.php', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🚨 Incident report submitted!');
+      await loadIncidentsFromAPI();   // refresh list
+      document.getElementById('incAnimal').value = '';
+      document.getElementById('incDesc').value = '';
+      syncDashboard();
+    } else {
+      showToast(data.message, 'error');
+    }
+  } catch (e) {
+    showToast('Network error', 'error');
+  }
 }
 
 // ─── MODAL HELPER ───
@@ -1762,6 +1917,27 @@ let editIncIdx=null;
 function editIncident(i){editIncIdx=i;document.getElementById('ei_desc').value=incidentLog[i].desc;document.getElementById('editIncModal').classList.add('open');}
 function saveEditIncident(){incidentLog[editIncIdx].desc=document.getElementById('ei_desc').value.trim();LS.set('incidentLog',incidentLog);closeModal('editIncModal');renderIncidents();showToast('✏️ Incident report updated!');}
 function deleteIncident(i){if(!confirm('Delete this incident report?'))return;incidentLog.splice(i,1);incidentCount=incidentLog.length;LS.set('incidentLog',incidentLog);LS.set('incidentCount',incidentCount);renderIncidents();syncDashboard();showToast('🗑️ Incident report deleted.');}
+
+async function loadTasksFromAPI() {
+  try {
+    const res = await fetch(`api/dailytask_worker.php?filter=${taskFilter === 'all' ? 'all' : taskFilter}`, { credentials: 'include' });
+    const data = await res.json();
+    if (data.success) {
+      tasks = data.tasks.map(t => ({
+        id: t.id,
+        name: t.name,
+        meta: t.meta,
+        zone: t.zone,
+        priority: t.priority,
+        done: t.done,
+        active: t.active
+      }));
+      LS.set('tasks', tasks);
+      renderTasks();
+      syncDashboard();
+    }
+  } catch(e) { console.warn(e); }
+}
 
 // ─── BOOT ───
 // loadAnimals() also calls loadFeedingLog, loadHealthLog after animals are ready

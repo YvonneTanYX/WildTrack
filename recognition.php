@@ -469,7 +469,7 @@ $currentPage = 'animal'; ?>
     .adc-conservation.en .cons-body h5, .adc-conservation.en .cons-body p { color: #92400e; }
     .adc-conservation.vu .cons-body h5, .adc-conservation.vu .cons-body p { color: #b45309; }
     .adc-conservation.lc .cons-body h5, .adc-conservation.lc .cons-body p { color: #065f46; }
-
+    .btn-profile{flex:1;min-width:160px;background:var(--nav);color:#fff;border:none;border-radius:30px;padding:.75rem 1.5rem;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;transition:all .2s;box-shadow:0 4px 14px rgba(46,90,48,.25)}
     .btn-profile:hover { background: var(--green); transform: translateY(-1px); }
     .btn-share {
       background: #f4faf4; color: var(--green);
@@ -689,9 +689,11 @@ $currentPage = 'visit';?>
       <div class="tip-item"><div class="tip-dot" style="background:#d94f3d;"></div><p class="tip-text">Animals outside WildTrack's collection won't be matched</p></div>
     </div>
   </div>
-</div> </div> </div>
-  <?php include 'footer.php'; ?>
+</div>
+</div> 
+</div>
 
+<?php include 'footer.php'; ?>
 
 <!-- TensorFlow.js + Teachable Machine -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -714,7 +716,7 @@ const ZOO_ANIMALS = {
     weight: '100–200 kg', lifespan: 'Up to 40 years',
     fact: 'Gorillas share <strong>98.3% of their DNA</strong> with humans, making them our closest relatives after chimpanzees. They can learn sign language and use simple tools.',
     consDesc: 'Critically endangered due to habitat destruction, poaching, and disease. Fewer than 300,000 western gorillas remain in the wild.',
-    profile: 'gorilla.html'
+    profile: 'gorilla.php'
   },
   'Elephant': {
     emoji: '🐘', species: 'Elephas maximus',
@@ -724,7 +726,7 @@ const ZOO_ANIMALS = {
     weight: '2,700–5,000 kg', lifespan: 'Up to 70 years',
     fact: 'Elephants have the <strong>largest brain of any land animal</strong> and are one of the few species that can recognise themselves in a mirror. They mourn their dead.',
     consDesc: 'Asian elephants are endangered; African forest elephants are critically endangered. Habitat loss and ivory poaching are the primary threats.',
-    profile: 'elephant.html'
+    profile: 'elephant.php'
   },
   'Lion': {
     emoji: '🦁', species: 'Panthera leo',
@@ -734,7 +736,7 @@ const ZOO_ANIMALS = {
     weight: '120–190 kg', lifespan: '10–14 years (wild)',
     fact: 'Lions are the only truly social wild cats — they live in groups called <strong>prides</strong> of up to 30 individuals. The male\'s roar can be heard up to 8 km away.',
     consDesc: 'Lion populations have declined by over 40% in the last three generations due to habitat loss and conflict with humans.',
-    profile: 'lion.html'
+    profile: 'lion.php'
   },
   'Penguin': {
     emoji: '🐧', species: 'Spheniscidae (family)',
@@ -744,7 +746,7 @@ const ZOO_ANIMALS = {
     weight: '1–40 kg', lifespan: '15–20 years',
     fact: 'Penguins are <strong>flightless birds</strong> that are exceptional swimmers — they can reach speeds of 25 km/h underwater. They use their wings as flippers.',
     consDesc: 'Several penguin species are threatened by climate change reducing sea ice, overfishing depleting food sources, and oil spills.',
-    profile: 'penguin.html'
+    profile: 'penguin.php'
   },
   'Panda': {
     emoji: '🐼', species: 'Ailuropoda melanoleuca',
@@ -754,7 +756,7 @@ const ZOO_ANIMALS = {
     weight: '70–125 kg', lifespan: 'Up to 20 years (wild)',
     fact: 'Giant pandas eat up to <strong>14 kg of bamboo per day</strong> and spend 10–16 hours eating. Despite being carnivores by classification, 99% of their diet is bamboo.',
     consDesc: 'Once critically endangered, conservation efforts have helped recover wild populations to around 1,800. Still listed as Vulnerable due to habitat fragmentation.',
-    profile: 'panda.html'
+    profile: 'panda.php'
   },
   // 'other' is intentionally NOT in ZOO_ANIMALS — triggers the unknown banner
 };
@@ -943,7 +945,7 @@ function buildAnimalDetailCard(name, a) {
   document.getElementById('adc-emoji').textContent   = a.emoji;
   document.getElementById('adc-name').textContent    = name;
   document.getElementById('adc-species').textContent = a.species;
-  document.getElementById('adc-profile-link').href   = a.profile || 'animalMain.html';
+  document.getElementById('adc-profile-link').href   = a.profile || 'animalMain.php';
 
   document.getElementById('adc-grid').innerHTML = `
     <div class="adc-chip"><div class="adc-chip-label">Habitat</div><div class="adc-chip-val">${a.habitat}</div></div>

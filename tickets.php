@@ -5,10 +5,6 @@ session_start();
 $action = $_GET['action'] ?? '';
 
 switch ($action) {
-
-    // ─────────────────────────────────────────────────────
-    //  EXISTING: buy (kept for reference / direct purchase)
-    // ─────────────────────────────────────────────────────
     case 'buy': {
         $user       = requireLogin();
         $body       = jsonBody();
@@ -436,93 +432,124 @@ switch ($action) {
     //  NEW: approve_payment — admin approves a booking ref
     //       Saves any admin edits, generates QR, notifies visitor
     // ─────────────────────────────────────────────────────
-    case 'approve_payment': {
-        $admin = requireRole('admin');
-        $body  = jsonBody();
-        $ref   = clean($body['booking_ref'] ?? '');
+case 'approve_payment': {
+    $admin = requireRole('admin');
+    $body  = jsonBody();
+    $ref   = clean($body['booking_ref'] ?? '');
 
-        if (!$ref) respond(false, 'booking_ref required.');
+    if (!$ref) respond(false, 'booking_ref required.');
 
-        // Optional admin overrides
-        $newType      = isset($body['ticket_type'])  && $body['ticket_type']  !== '' ? clean($body['ticket_type'])       : null;
-        $newPrice     = isset($body['price'])         && $body['price']         !== '' ? floatval($body['price'])          : null;
-        $newVisitDate = isset($body['visit_date'])    && $body['visit_date']    !== '' ? clean($body['visit_date'])        : null;
+    // Optional admin overrides
+    $newType      = isset($body['ticket_type'])  && $body['ticket_type']  !== '' ? clean($body['ticket_type'])       : null;
+    $newPrice     = isset($body['price'])         && $body['price']         !== '' ? floatval($body['price'])          : null;
+    $newVisitDate = isset($body['visit_date'])    && $body['visit_date']    !== '' ? clean($body['visit_date'])        : null;
+    $newUsername  = isset($body['username'])      && $body['username']      !== '' ? clean($body['username'])          : null;
+    $newEmail     = isset($body['email'])         && $body['email']         !== '' ? clean($body['email'])             : null;
 
-        $pdo = getDB();
+    $pdo = getDB();
 
-        try {
-            $pdo->beginTransaction();
-
-            // Fetch all pending tickets for this booking ref
-            $stmt = $pdo->prepare(
-                "SELECT ticket_id, user_id, ticket_type, price, visit_date
-                 FROM tickets WHERE booking_ref = ? AND status = 'pending'"
-            );
-            $stmt->execute([$ref]);
-            $tickets = $stmt->fetchAll();
-
-            if (empty($tickets)) {
-                $pdo->rollBack();
-                respond(false, 'No pending tickets found for this booking ref.');
-            }
-
-            $userId    = $tickets[0]['user_id'];
-            $ticketIds = [];
-
-            // Build the UPDATE — apply admin edits where provided, generate QR
-            $updateStmt = $pdo->prepare(
-                "UPDATE tickets
-                 SET status     = 'approved',
-                     qr_code    = ?,
-                     ticket_type = COALESCE(?, ticket_type),
-                     price       = COALESCE(?, price),
-                     visit_date  = COALESCE(?, visit_date)
-                 WHERE ticket_id = ?"
-            );
-
-            foreach ($tickets as $t) {
-                $qr = 'http://localhost/WildTrack/verify.php?code=QR-' . strtoupper(uniqid()) . '-' . $t['user_id'];
-                $updateStmt->execute([$qr, $newType, $newPrice, $newVisitDate, $t['ticket_id']]);
-                $ticketIds[] = $t['ticket_id'];
-            }
-
-            // Increment voucher if applicable
-            $vStmt = $pdo->prepare(
-                "SELECT voucher_id FROM ticket_vouchers WHERE booking_ref = ? LIMIT 1"
-            );
-            $vStmt->execute([$ref]);
-            $vRow = $vStmt->fetch();
-            if ($vRow && $vRow['voucher_id']) {
-                $pdo->prepare("UPDATE vouchers SET used_count = used_count + 1 WHERE id = ? AND used_count < max_uses")
-                    ->execute([$vRow['voucher_id']]);
-            }
-
-            // Create notification for the visitor
-            $visitDate = $tickets[0]['visit_date'];
-            $notifStmt = $pdo->prepare(
-                "INSERT INTO notifications (user_id, type, title, body, ticket_ids, booking_ref)
-                 VALUES (?, 'booking_approved', ?, ?, ?, ?)"
-            );
-            $notifStmt->execute([
-                $userId,
-                'Booking Confirmed! 🎉',
-                'Your booking ' . $ref . ' for ' . $visitDate . ' has been approved. Your QR tickets are ready!',
-                json_encode($ticketIds),
-                $ref,
-            ]);
-
-            $pdo->commit();
-            respond(true, 'Booking approved and visitor notified.', [
-                'booking_ref' => $ref,
-                'ticket_ids'  => $ticketIds,
-            ]);
-
-        } catch (PDOException $e) {
-            $pdo->rollBack();
-            respond(false, 'Approval failed: ' . $e->getMessage());
-        }
-        break;
+    // Get admin display name (full_name from workers, fallback to username)
+    $adminId   = $admin['user_id'];
+    $adminName = $admin['username'];
+    $workerStmt = $pdo->prepare("SELECT full_name FROM workers WHERE user_id = ?");
+    $workerStmt->execute([$adminId]);
+    $worker = $workerStmt->fetch();
+    if ($worker && !empty($worker['full_name'])) {
+        $adminName = $worker['full_name'];
     }
+
+    try {
+        $pdo->beginTransaction();
+
+        // Fetch all pending tickets for this booking ref
+        $stmt = $pdo->prepare(
+            "SELECT ticket_id, user_id, ticket_type, price, visit_date
+             FROM tickets WHERE booking_ref = ? AND status = 'pending'"
+        );
+        $stmt->execute([$ref]);
+        $tickets = $stmt->fetchAll();
+
+        if (empty($tickets)) {
+            $pdo->rollBack();
+            respond(false, 'No pending tickets found for this booking ref.');
+        }
+
+        $userId    = $tickets[0]['user_id'];
+        $ticketIds = [];
+
+        // Update user details if provided
+        if ($newUsername || $newEmail) {
+            $updates = [];
+            $params = [];
+            if ($newUsername) {
+                $updates[] = "username = ?";
+                $params[] = $newUsername;
+            }
+            if ($newEmail) {
+                $updates[] = "email = ?";
+                $params[] = $newEmail;
+            }
+            $params[] = $userId;
+            $pdo->prepare("UPDATE users SET " . implode(', ', $updates) . " WHERE user_id = ?")
+                ->execute($params);
+        }
+
+        // Build the UPDATE — apply admin edits where provided, generate QR, save admin name
+        $updateStmt = $pdo->prepare(
+            "UPDATE tickets
+             SET status = 'approved',
+                 qr_code = ?,
+                 ticket_type = COALESCE(?, ticket_type),
+                 price = COALESCE(?, price),
+                 visit_date = COALESCE(?, visit_date),
+                 approved_by_name = ?,
+                 approved_by_id = ?
+             WHERE ticket_id = ?"
+        );
+
+        foreach ($tickets as $t) {
+            $qr = 'http://localhost/WildTrack/verify.php?code=QR-' . strtoupper(uniqid()) . '-' . $t['user_id'];
+            $updateStmt->execute([$qr, $newType, $newPrice, $newVisitDate, $adminName, $adminId, $t['ticket_id']]);
+            $ticketIds[] = $t['ticket_id'];
+        }
+
+        // Increment voucher if applicable
+        $vStmt = $pdo->prepare(
+            "SELECT voucher_id FROM ticket_vouchers WHERE booking_ref = ? LIMIT 1"
+        );
+        $vStmt->execute([$ref]);
+        $vRow = $vStmt->fetch();
+        if ($vRow && $vRow['voucher_id']) {
+            $pdo->prepare("UPDATE vouchers SET used_count = used_count + 1 WHERE id = ? AND used_count < max_uses")
+                ->execute([$vRow['voucher_id']]);
+        }
+
+        // Create notification for the visitor
+        $visitDate = $tickets[0]['visit_date'];
+        $notifStmt = $pdo->prepare(
+            "INSERT INTO notifications (user_id, type, title, body, ticket_ids, booking_ref)
+             VALUES (?, 'booking_approved', ?, ?, ?, ?)"
+        );
+        $notifStmt->execute([
+            $userId,
+            'Booking Confirmed! 🎉',
+            'Your booking ' . $ref . ' for ' . $visitDate . ' has been approved. Your QR tickets are ready!',
+            json_encode($ticketIds),
+            $ref,
+        ]);
+
+        $pdo->commit();
+        respond(true, 'Booking approved and visitor notified.', [
+            'booking_ref' => $ref,
+            'ticket_ids'  => $ticketIds,
+        ]);
+
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        respond(false, 'Approval failed: ' . $e->getMessage());
+    }
+    break;
+}
 
     // ─────────────────────────────────────────────────────
     //  NEW: reject_payment — admin rejects a booking ref

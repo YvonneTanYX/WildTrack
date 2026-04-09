@@ -223,7 +223,7 @@ function renderSchedule(events) {
 
   if (!active.length) {
     document.getElementById('scheduleWrap').innerHTML =
-      '<div class="schedule-empty">No talks scheduled today. Please check back later.</div>';
+      '<div class="schedule-empty">No events scheduled today. Please check back later.</div>';
     return;
   }
 

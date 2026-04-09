@@ -36,9 +36,10 @@ try {
         // ── GET: all health records ────────────────────────────────────────
         case 'GET':
             $stmt = $pdo->prepare(
-                "SELECT ah.*, a.name AS animal_name
+                "SELECT ah.*, a.name AS animal_name, w.full_name AS vet_name
                  FROM animal_health ah
                  LEFT JOIN animals a ON a.animal_id = ah.animal_id
+                 LEFT JOIN workers w ON w.worker_id = ah.vet_in_charge
                  ORDER BY ah.checkup_date DESC, ah.health_id DESC
                  LIMIT 100"
             );
@@ -50,6 +51,7 @@ try {
                 'type'    => $r['health_status'] ?? 'Routine Check',
                 'notes'   => $r['diagnosis'] ? $r['diagnosis'] . ($r['treatment'] ? ' · Treatment: '.$r['treatment'] : '') : '',
                 'dateStr' => $r['checkup_date'] ? date('d M Y', strtotime($r['checkup_date'])) : 'Today',
+                'vet'     => $r['vet_name'] ?? '',
             ], $rows);
             echo json_encode(['success' => true, 'records' => $records]);
             break;

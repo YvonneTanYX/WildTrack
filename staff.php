@@ -92,6 +92,16 @@ switch ($action) {
             }
 
             $pdo->commit();
+            $adminList = $pdo->query("SELECT user_id FROM users WHERE role = 'admin'")->fetchAll();
+                foreach ($adminList as $adminUser) {
+                    $pdo->prepare(
+                        "INSERT INTO notifications (user_id, type, title, body, created_at)
+                        VALUES (?, 'new_staff', 'New Staff Account Created', ?, NOW())"
+                    )->execute([
+                        $adminUser['user_id'],
+                        "Staff account for {$name} has been created. Role: {$role}."
+                    ]);
+                }
             respond(true, 'Staff account created successfully.', ['user_id' => $userId]);
         } catch (PDOException $e) {
             $pdo->rollBack();

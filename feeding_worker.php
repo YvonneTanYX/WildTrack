@@ -49,18 +49,20 @@ try {
             if (!$workerId) {
                 // Admin or no worker record — return all today's feedings
                 $stmt = $pdo->prepare(
-                    "SELECT fs.*, a.name AS animal_name
+                    "SELECT fs.*, a.name AS animal_name, w.full_name AS worker_name
                      FROM feeding_schedule fs
                      LEFT JOIN animals a ON a.animal_id = fs.animal_id
+                     LEFT JOIN workers w ON w.worker_id = fs.fed_by
                      WHERE fs.feeding_date = CURDATE()
                      ORDER BY fs.feeding_time DESC"
                 );
                 $stmt->execute();
             } else {
                 $stmt = $pdo->prepare(
-                    "SELECT fs.*, a.name AS animal_name
+                    "SELECT fs.*, a.name AS animal_name, w.full_name AS worker_name
                      FROM feeding_schedule fs
                      LEFT JOIN animals a ON a.animal_id = fs.animal_id
+                     LEFT JOIN workers w ON w.worker_id = fs.fed_by
                      WHERE fs.fed_by = ? AND fs.feeding_date = CURDATE()
                      ORDER BY fs.feeding_time DESC"
                 );
@@ -75,7 +77,7 @@ try {
                 'qty'      => $r['quantity']     ?? '0',
                 'consumed' => $r['consumed']     ?? 'All Eaten',
                 'notes'    => $r['notes']        ?? '',
-                'worker'   => '', // filled client-side
+                'worker'   => $r['worker_name']  ?? '',
                 'status'   => $r['status']       ?? 'Completed',
             ], $rows);
             echo json_encode(['success' => true, 'records' => $records]);
