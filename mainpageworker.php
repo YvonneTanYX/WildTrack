@@ -647,7 +647,9 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
         <div class="form-group"><label class="form-label">Event Type</label>
           <select class="form-select" id="healthType"><option>Routine Check</option><option>Illness Observation</option><option>Vet Visit</option><option>Medication Given</option><option>Post-Surgery Observation</option><option>Injury Report</option></select>
         </div>
-        <div class="form-group full"><label class="form-label">Observations / Notes</label><textarea class="form-textarea" id="healthNotes" placeholder="Symptoms, behaviour, treatment details..."></textarea></div>
+        <div class="form-group full"><label class="form-label">Observations / Diagnosis</label><textarea class="form-textarea" id="healthNotes" placeholder="Symptoms, behaviour observations..."></textarea></div>
+        <div class="form-group"><label class="form-label">Treatment (if any)</label><input class="form-input" type="text" id="healthTreatment" placeholder="e.g. Antibiotics 5ml, Wound dressing..."></div>
+        <div class="form-group"><label class="form-label">Next Checkup Date</label><input class="form-input" type="date" id="healthNextCheckup"></div>
       </div>
       <div style="margin-top:16px;"><button class="btn-primary" onclick="logHealth()"><span class="iconify" data-icon="lucide:stethoscope" data-width="15"></span> Save Record</button></div>
     </div>
@@ -814,7 +816,9 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
     <div class="modal-header"><div class="modal-title">Edit Health Record</div><button class="modal-close" onclick="closeModal('editHealthModal')">✕</button></div>
     <div class="form-grid">
       <div class="form-group full"><label class="form-label">Event Type</label><select class="form-select" id="eh_type"><option>Routine Check</option><option>Illness Observation</option><option>Vet Visit</option><option>Medication Given</option><option>Post-Surgery Observation</option><option>Injury Report</option></select></div>
-      <div class="form-group full"><label class="form-label">Observations / Notes</label><textarea class="form-textarea" id="eh_notes" placeholder="Symptoms, behaviour, treatment details..."></textarea></div>
+      <div class="form-group full"><label class="form-label">Observations / Diagnosis</label><textarea class="form-textarea" id="eh_notes" placeholder="Symptoms, behaviour observations..."></textarea></div>
+      <div class="form-group"><label class="form-label">Treatment (if any)</label><input class="form-input" type="text" id="eh_treatment" placeholder="e.g. Antibiotics 5ml..."></div>
+      <div class="form-group"><label class="form-label">Next Checkup Date</label><input class="form-input" type="date" id="eh_next_checkup"></div>
     </div>
     <div class="modal-footer"><button class="btn-outline" onclick="closeModal('editHealthModal')">Cancel</button><button class="btn-primary" onclick="saveEditHealth()"><span class="iconify" data-icon="lucide:save" data-width="14"></span> Save Changes</button></div>
   </div>
@@ -871,9 +875,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
       </div>
       <div class="form-group">
         <label class="form-label">Assigned Zone</label>
-        <select class="form-select" id="tm_zone">
-          <option>Zone A</option><option>Zone B</option><option>Zone C</option><option>All Zones</option>
-        </select>
+        <input class="form-input" type="text" id="tm_zone" placeholder="e.g. Zone A, North Wing, Reptile House...">
       </div>
       <div class="form-group full">
         <label class="form-label">Status</label>
@@ -930,7 +932,11 @@ async function initSession(){
     currentWorker=data.user;
     document.getElementById('sidebarName').textContent=data.user.username;
     document.getElementById('sidebarRole').textContent=data.user.role==='admin'?'Administrator':'Caretaker';
-    updateGreeting();loadAnimals();
+    updateGreeting();
+    await loadAnimals();           // loads animals → feeding log → health log
+    await loadIncidentsFromAPI();
+    await loadVaccinationsFromAPI();
+    await loadTasksFromAPI();
   }catch(e){
     window.location.href='staff-login.php';
   }
@@ -1511,7 +1517,10 @@ async function loadHealthLog(){
   try{
     const res=await fetch('api/health_worker.php',{credentials:'include'});
     const data=await res.json();
-    if(data.success){ healthLog=data.records; LS.set('healthLog',healthLog); }
+    if(data.success){
+      healthLog=data.records.map(r=>({...r, rawNextCheckup: r.rawNextCheckup||''}));
+      LS.set('healthLog',healthLog);
+    }
   }catch(e){ healthLog=LS.get('healthLog',[]); }
   healthCount=healthLog.length; LS.set('healthCount',healthCount);
   renderHealthRecords(); syncDashboard();
@@ -1520,40 +1529,48 @@ function renderHealthRecords(){
   const container=document.getElementById('healthRecords');
   if(!healthLog.length){container.innerHTML='<p class="placeholder-msg">No health records yet. Save a record above to see it here.</p>';return;}
   const iMap={'Routine Check':'ri-g lucide:check-circle','Illness Observation':'ri-o lucide:eye','Vet Visit':'ri-g lucide:stethoscope','Medication Given':'ri-r lucide:pill','Post-Surgery Observation':'ri-o lucide:eye','Injury Report':'ri-r lucide:alert-triangle'};
-  container.innerHTML=healthLog.map((r,i)=>{const ic=(iMap[r.type]||'ri-g lucide:check-circle').split(' ');return`<div class="record-row"><div class="record-left"><div class="rec-icon ${ic[0]}"><span class="iconify" data-icon="${ic[1]}" data-width="17"></span></div><div><div class="rec-name">${r.type} — ${r.animal}</div><div class="rec-sub">${r.notes||'No additional notes'}</div></div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;"><span class="rec-date">${r.dateStr}</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editHealth(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteHealth(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`;}).join('');
+  container.innerHTML=healthLog.map((r,i)=>{
+    const ic=(iMap[r.type]||'ri-g lucide:check-circle').split(' ');
+    const extras=[];
+    if(r.notes) extras.push(r.notes);
+    if(r.treatment) extras.push(`<span style="color:var(--orange);font-weight:600;">Treatment:</span> ${r.treatment}`);
+    if(r.next_checkup) extras.push(`<span style="color:var(--header);font-weight:600;">Next checkup:</span> ${r.next_checkup}`);
+    if(r.vet) extras.push(`<span style="color:var(--sub);">Vet:</span> ${r.vet}`);
+    return`<div class="record-row"><div class="record-left"><div class="rec-icon ${ic[0]}"><span class="iconify" data-icon="${ic[1]}" data-width="17"></span></div><div><div class="rec-name">${r.type} — ${r.animal}</div><div class="rec-sub">${extras.join(' &nbsp;·&nbsp; ')||'No additional notes'}</div></div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;"><span class="rec-date">${r.dateStr}</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editHealth(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteHealth(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`;
+  }).join('');
 }
 async function logHealth(){
   const animalVal=document.getElementById('healthAnimal').value;
   const type=document.getElementById('healthType').value;
   const notes=document.getElementById('healthNotes').value.trim();
+  const treatment=document.getElementById('healthTreatment').value.trim();
+  const nextCheckup=document.getElementById('healthNextCheckup').value||null;
   if(!animalVal){showToast('Please select an animal.','error');return;}
   const timeStr=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
   const animal=animals.find(a=>animalVal.startsWith(a.name));
-  const entry={animal:animalVal.split(' ')[0],type,notes,dateStr:'Today, '+timeStr};
+  const entry={animal:animalVal.split(' ')[0],type,notes,treatment,next_checkup:nextCheckup,dateStr:'Today, '+timeStr};
   try{
     const res=await fetch('api/health_worker.php',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({animal_id:animal?animal.id:null,health_status:type,diagnosis:notes})});
+      body:JSON.stringify({animal_id:animal?animal.id:null,health_status:type,diagnosis:notes,treatment,next_checkup:nextCheckup})});
     const data=await res.json();
     if(data.success){ await loadHealthLog(); }
     else { healthLog.unshift(entry); LS.set('healthLog',healthLog); renderHealthRecords(); }
   }catch(e){ healthLog.unshift(entry); LS.set('healthLog',healthLog); healthCount=healthLog.length; LS.set('healthCount',healthCount); renderHealthRecords(); }
   pushNotif('🩺','ni-orange','Health event recorded',`${type} logged for ${entry.animal}`);
-  document.getElementById('healthAnimal').value='';document.getElementById('healthNotes').value='';
+  document.getElementById('healthAnimal').value='';
+  document.getElementById('healthNotes').value='';
+  document.getElementById('healthTreatment').value='';
+  document.getElementById('healthNextCheckup').value='';
   syncDashboard();showToast('🩺 Health record saved!');
 }
 
-(async function initAsync() {
-  await loadIncidentsFromAPI();
-  await loadVaccinationsFromAPI();
-  await loadTasksFromAPI();
-})();
 
 // ─── VACCINATION ───
 let vaxLog=LS.get('vaxLog',[]);
 function renderVaxList(){
   const container=document.getElementById('vaxList');
   if(!vaxLog.length){container.innerHTML='<p class="placeholder-msg">No vaccination records yet. Save a record above to see it here.</p>';return;}
-  container.innerHTML=vaxLog.map((r,i)=>`<div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="17"></span></div><div><div class="vax-name">${r.animal} — ${r.name}</div><div class="vax-detail">${r.detail}</div></div></div><div style="display:flex;align-items:center;gap:8px;"><span class="vax-status vs-done">✓ Done</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editVax(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteVax(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`).join('');
+  container.innerHTML=vaxLog.map((r,i)=>`<div class="vax-item"><div class="vax-left"><div class="vax-icon"><span class="iconify" data-icon="lucide:syringe" data-width="17"></span></div><div><div class="vax-name">${r.animal} — ${r.name}</div><div class="vax-detail">${r.detail}</div>${r.loggedBy?`<div class="vax-detail" style="margin-top:2px;">Logged by: <strong>${r.loggedBy}</strong></div>`:''}</div></div><div style="display:flex;align-items:center;gap:8px;"><span class="vax-status vs-done">✓ Done</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editVax(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteVax(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`).join('');
 }
 // Load vaccinations from API
 async function loadVaccinationsFromAPI() {
@@ -1568,6 +1585,7 @@ async function loadVaccinationsFromAPI() {
         rawDate: v.date_given,
         rawNext: v.next_due_date,
         vet: v.vet_name,
+        loggedBy: v.worker_name || '',
         id: v.id
       }));
       LS.set('vaxLog', vaxLog);
@@ -1635,7 +1653,7 @@ const defaultTasks=[
   {id:7,name:'End-of-day feeding log submission',meta:'Submit before shift ends',zone:'All Zones',priority:'low',done:false,active:true},
   {id:8,name:'Luna medication dose',meta:'Anti-parasite · 2nd dose',zone:'Zone A',priority:'high',done:false,active:true},
 ];
-let tasks=LS.get('tasks',defaultTasks).map(t=>({active:true,...t}));
+let tasks=LS.get('tasks',[]).map(t=>({active:true,...t}));  // empty until API loads
 let taskNextId=tasks.length?Math.max(...tasks.map(t=>t.id))+1:9;
 let taskFilter='all';
 let editingTaskId=null;
@@ -1665,7 +1683,7 @@ function renderTasks(){
            onclick="${t.active&&!t.done?`toggleTask(${t.id})`:t.active&&t.done?`toggleTask(${t.id})`:''}"></div>
       <div class="task-text">
         <div class="task-name ${t.done?'done':''} ${!t.active?'inactive-name':''}">${t.name}</div>
-        <div class="task-meta">${t.meta||''} · ${t.zone}${!t.active?' · <em>Inactive</em>':''}</div>
+        <div class="task-meta">${t.meta||''} · ${t.zone}${t.createdBy?' · Added by '+t.createdBy:''}${!t.active?' · <em>Inactive</em>':''}</div>
       </div>
       <span class="task-pri ${pc[t.priority]}">${pl[t.priority]}</span>
       <div class="task-actions">
@@ -1835,7 +1853,6 @@ function updateTaskProgress(){
   document.getElementById('dashTaskBadge').textContent=(total-done)+' Remaining';
   document.getElementById('sideTaskBadge').textContent=(total-done);
 }
-renderTasks();
 
 // ─── INCIDENTS ───
 let incidentLog=LS.get('incidentLog',[]);
@@ -1856,7 +1873,8 @@ async function loadIncidentsFromAPI() {
         dotC: inc.severity === 'high' ? 'var(--red)' : (inc.severity === 'medium' ? 'var(--orange)' : '#2e8b77'),
         title: `${inc.incident_type}${inc.animal_name ? ' — ' + inc.animal_name : ''} (${inc.severity})`,
         desc: inc.description,
-        meta: new Date(inc.reported_at).toLocaleString('en-MY', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', year:'numeric' }) + ' · Reported by ' + inc.reported_by_name,
+        meta: new Date(inc.reported_at).toLocaleString('en-MY', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short', year:'numeric' })
+              + (inc.reported_by_name ? ' · Reported by ' + inc.reported_by_name : ''),
         id: inc.id
       }));
       LS.set('incidentLog', incidentLog);
@@ -1962,12 +1980,25 @@ function renderFeedingHistory(){
 
 // ─── HEALTH EDIT / DELETE ───
 let editHealthIdx=null;
-function editHealth(i){editHealthIdx=i;const r=healthLog[i];document.getElementById('eh_type').value=r.type;document.getElementById('eh_notes').value=r.notes||'';document.getElementById('editHealthModal').classList.add('open');}
+function editHealth(i){
+  editHealthIdx=i;
+  const r=healthLog[i];
+  document.getElementById('eh_type').value=r.type;
+  document.getElementById('eh_notes').value=r.notes||'';
+  document.getElementById('eh_treatment').value=r.treatment||'';
+  // next_checkup from API is formatted like "12 Apr 2025", need raw date for input
+  document.getElementById('eh_next_checkup').value=r.rawNextCheckup||'';
+  document.getElementById('editHealthModal').classList.add('open');
+}
 async function saveEditHealth(){
   const r=healthLog[editHealthIdx];
   r.type=document.getElementById('eh_type').value;
   r.notes=document.getElementById('eh_notes').value.trim();
-  try{ await fetch('api/health_worker.php',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,health_status:r.type,diagnosis:r.notes})}); }catch(e){}
+  r.treatment=document.getElementById('eh_treatment').value.trim();
+  const rawNext=document.getElementById('eh_next_checkup').value;
+  r.rawNextCheckup=rawNext;
+  r.next_checkup=rawNext?new Date(rawNext+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'';
+  try{ await fetch('api/health_worker.php',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,health_status:r.type,diagnosis:r.notes,treatment:r.treatment,next_checkup:rawNext||null})}); }catch(e){}
   LS.set('healthLog',healthLog); closeModal('editHealthModal');
   await loadHealthLog(); showToast('✏️ Health record updated!');
 }
@@ -2018,8 +2049,10 @@ async function deleteIncident(i){
 }
 
 async function loadTasksFromAPI() {
+  // 'pending' is a UI-only alias for active+not-done; API uses 'active'
+  const apiFilter = taskFilter === 'pending' ? 'active' : taskFilter;
   try {
-    const res = await fetch(`api/dailytask_worker.php?filter=${taskFilter === 'all' ? 'all' : taskFilter}`, { credentials: 'include' });
+    const res = await fetch(`api/dailytask_worker.php?filter=${apiFilter}`, { credentials: 'include' });
     const data = await res.json();
     if (data.success) {
       tasks = data.tasks.map(t => ({
@@ -2029,7 +2062,8 @@ async function loadTasksFromAPI() {
         zone: t.zone,
         priority: t.priority,
         done: t.done,
-        active: t.active
+        active: t.active,
+        createdBy: t.created_by_name || ''
       }));
       LS.set('tasks', tasks);
       renderTasks();
@@ -2039,9 +2073,9 @@ async function loadTasksFromAPI() {
 }
 
 // ─── BOOT ───
-// loadAnimals() also calls loadFeedingLog, loadHealthLog after animals are ready
-renderVaxList();
-renderIncidents();
+// All data loading happens inside initSession() after auth is confirmed.
+// initSession → loadAnimals → loadFeedingLog + loadHealthLog
+//             → loadIncidentsFromAPI → loadVaccinationsFromAPI → loadTasksFromAPI
 _updateNotifBadge();
 loadFeedingHistory();
 initSession();
