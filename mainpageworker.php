@@ -610,6 +610,24 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
         </table>
       </div>
     </div>
+    <div class="block">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div class="block-title" style="margin-bottom:0;">Feeding History</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:12px;color:var(--sub);font-weight:600;">Filter by date:</label>
+          <input type="date" id="historyDateFilter" class="form-input" style="padding:5px 10px;font-size:12px;width:150px;" onchange="loadFeedingHistory()">
+          <button class="btn-secondary" style="padding:5px 14px;font-size:12px;" onclick="clearHistoryFilter()">All</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Time</th><th>Animal</th><th>Food Type</th><th>Qty (kg)</th><th>Consumed</th><th>Notes</th><th>Logged By</th></tr></thead>
+          <tbody id="feedingHistoryBody">
+            <tr class="table-empty-row"><td colspan="8">Loading history...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
   </div>
 
@@ -1272,7 +1290,7 @@ document.addEventListener('click', e=>{
 
 // ─── ANIMALS ───
 const EMOJIS=['🦁','🐯','🐘','🦍','🐺','🦊','🐆','🐬','🦓','🦏','🐊','🦅','🦜','🦒','🐻','🦌','🐍','🦈','🐧','🦩'];
-const API='http://localhost/WildTrack/api/animals_worker.php';
+const API='api/animals_worker.php';
 let animals=[],editingId=null,deletingId=null,selEmoji='🦁';
 
 async function loadAnimals(){
@@ -1469,14 +1487,15 @@ async function logFeeding(){
   const type=document.getElementById('feedType').value;
   const consumed=document.getElementById('feedConsumed').value;
   const notes=document.getElementById('feedNotes').value.trim();
-  const time=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const time=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const timeMySQL=new Date().toTimeString().slice(0,8);
   const workerName=currentWorker?currentWorker.username:'Worker';
   // Find animal_id from name
   const animal=animals.find(a=>animalVal.startsWith(a.name));
   const entry={time,animal:animalVal.split(' ')[0],type,qty:parseFloat(qty).toFixed(1),consumed,notes,worker:workerName};
   try{
     const res=await fetch('api/feeding_worker.php',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({animal_id:animal?animal.id:null,animal_name:entry.animal,food_type:type,quantity:qty,consumed,notes,feeding_time:time})});
+      body:JSON.stringify({animal_id:animal?animal.id:null,animal_name:entry.animal,food_type:type,quantity:qty,consumed,notes,feeding_time:timeMySQL})});
     const data=await res.json();
     if(data.success){ await loadFeedingLog(); }
     else { feedingLog.unshift(entry); LS.set('feedingLog',feedingLog); renderFeedingTable(); }
@@ -1897,26 +1916,106 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 // ─── FEEDING EDIT / DELETE ───
 let editFeedIdx=null;
 function editFeeding(i){editFeedIdx=i;const r=feedingLog[i];document.getElementById('ef_type').value=r.type;document.getElementById('ef_qty').value=r.qty;document.getElementById('ef_consumed').value=r.consumed;document.getElementById('ef_notes').value=r.notes||'';document.getElementById('editFeedModal').classList.add('open');}
-function saveEditFeeding(){const r=feedingLog[editFeedIdx];r.type=document.getElementById('ef_type').value;r.qty=parseFloat(document.getElementById('ef_qty').value).toFixed(1);r.consumed=document.getElementById('ef_consumed').value;r.notes=document.getElementById('ef_notes').value.trim();LS.set('feedingLog',feedingLog);closeModal('editFeedModal');renderFeedingTable();showToast('✏️ Feeding record updated!');}
-function deleteFeeding(i){if(!confirm('Delete this feeding record?'))return;feedingLog.splice(i,1);feedingCount=feedingLog.length;LS.set('feedingLog',feedingLog);LS.set('feedingCount',feedingCount);renderFeedingTable();syncDashboard();showToast('🗑️ Feeding record deleted.');}
+async function saveEditFeeding(){
+  const r=feedingLog[editFeedIdx];
+  r.type=document.getElementById('ef_type').value;
+  r.qty=parseFloat(document.getElementById('ef_qty').value).toFixed(1);
+  r.consumed=document.getElementById('ef_consumed').value;
+  r.notes=document.getElementById('ef_notes').value.trim();
+  try{ await fetch('api/feeding_worker.php',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,food_type:r.type,quantity:r.qty,consumed:r.consumed,notes:r.notes})}); }catch(e){}
+  LS.set('feedingLog',feedingLog); closeModal('editFeedModal');
+  await loadFeedingLog(); showToast('✏️ Feeding record updated!');
+}
+async function deleteFeeding(i){
+  if(!confirm('Delete this feeding record?'))return;
+  const r=feedingLog[i];
+  try{ await fetch('api/feeding_worker.php',{method:'DELETE',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id})}); }catch(e){}
+  await loadFeedingLog(); syncDashboard(); showToast('🗑️ Feeding record deleted.');
+}
+
+// ─── FEEDING HISTORY ───
+let feedingHistory=[];
+async function loadFeedingHistory(){
+  const dateFilter=document.getElementById('historyDateFilter')?document.getElementById('historyDateFilter').value:'';
+  const url='api/feeding_worker.php?mode=history'+(dateFilter?'&date='+encodeURIComponent(dateFilter):'');
+  try{
+    const res=await fetch(url,{credentials:'include'});
+    const data=await res.json();
+    feedingHistory=data.success?data.records:[];
+  }catch(e){feedingHistory=[];}
+  renderFeedingHistory();
+}
+function clearHistoryFilter(){document.getElementById('historyDateFilter').value='';loadFeedingHistory();}
+function renderFeedingHistory(){
+  const tbody=document.getElementById('feedingHistoryBody');
+  if(!tbody)return;
+  if(!feedingHistory.length){tbody.innerHTML='<tr class="table-empty-row"><td colspan="8">No past feeding records found.</td></tr>';return;}
+  const bc={'All Eaten':'b-green','Refused Food':'b-red','75% Eaten':'b-orange','50% Eaten':'b-orange','25% Eaten':'b-red'};
+  tbody.innerHTML=feedingHistory.map(r=>`<tr>
+    <td style="white-space:nowrap;font-weight:500;">${r.date}</td>
+    <td>${r.time}</td><td>${r.animal}</td><td>${r.type}</td><td>${r.qty}</td>
+    <td><span class="badge ${bc[r.consumed]||'b-orange'}">${r.consumed}</span></td>
+    <td style="color:var(--sub);font-size:12px;">${r.notes||'—'}</td>
+    <td>${r.worker||'—'}</td>
+  </tr>`).join('');
+}
 
 // ─── HEALTH EDIT / DELETE ───
 let editHealthIdx=null;
 function editHealth(i){editHealthIdx=i;const r=healthLog[i];document.getElementById('eh_type').value=r.type;document.getElementById('eh_notes').value=r.notes||'';document.getElementById('editHealthModal').classList.add('open');}
-function saveEditHealth(){const r=healthLog[editHealthIdx];r.type=document.getElementById('eh_type').value;r.notes=document.getElementById('eh_notes').value.trim();LS.set('healthLog',healthLog);closeModal('editHealthModal');renderHealthRecords();showToast('✏️ Health record updated!');}
-function deleteHealth(i){if(!confirm('Delete this health record?'))return;healthLog.splice(i,1);healthCount=healthLog.length;LS.set('healthLog',healthLog);LS.set('healthCount',healthCount);renderHealthRecords();syncDashboard();showToast('🗑️ Health record deleted.');}
+async function saveEditHealth(){
+  const r=healthLog[editHealthIdx];
+  r.type=document.getElementById('eh_type').value;
+  r.notes=document.getElementById('eh_notes').value.trim();
+  try{ await fetch('api/health_worker.php',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,health_status:r.type,diagnosis:r.notes})}); }catch(e){}
+  LS.set('healthLog',healthLog); closeModal('editHealthModal');
+  await loadHealthLog(); showToast('✏️ Health record updated!');
+}
+async function deleteHealth(i){
+  if(!confirm('Delete this health record?'))return;
+  const r=healthLog[i];
+  try{ await fetch('api/health_worker.php',{method:'DELETE',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id})}); }catch(e){}
+  await loadHealthLog(); syncDashboard(); showToast('🗑️ Health record deleted.');
+}
 
 // ─── VAX EDIT / DELETE ───
 let editVaxIdx=null;
 function editVax(i){editVaxIdx=i;const r=vaxLog[i];document.getElementById('ev_name').value=r.name;document.getElementById('ev_date').value=r.rawDate||'';document.getElementById('ev_next').value=r.rawNext||'';document.getElementById('ev_vet').value=r.vet||'';document.getElementById('editVaxModal').classList.add('open');}
-function saveEditVax(){const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'';const r=vaxLog[editVaxIdx];r.name=document.getElementById('ev_name').value;r.rawDate=document.getElementById('ev_date').value;r.rawNext=document.getElementById('ev_next').value;r.vet=document.getElementById('ev_vet').value.trim();r.detail=`Given: ${fmtDate(r.rawDate)}${r.rawNext?' · Next: '+fmtDate(r.rawNext):''}${r.vet?' · '+r.vet:''}`;LS.set('vaxLog',vaxLog);closeModal('editVaxModal');renderVaxList();showToast('✏️ Vaccination record updated!');}
-function deleteVax(i){if(!confirm('Delete this vaccination record?'))return;vaxLog.splice(i,1);vaxCount=vaxLog.length;LS.set('vaxLog',vaxLog);LS.set('vaxCount',vaxCount);renderVaxList();syncDashboard();showToast('🗑️ Vaccination record deleted.');}
+async function saveEditVax(){
+  const fmtDate=d=>d?new Date(d+'T00:00:00').toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'}):'';
+  const r=vaxLog[editVaxIdx];
+  r.name=document.getElementById('ev_name').value;
+  r.rawDate=document.getElementById('ev_date').value;
+  r.rawNext=document.getElementById('ev_next').value;
+  r.vet=document.getElementById('ev_vet').value.trim();
+  r.detail=`Given: ${fmtDate(r.rawDate)}${r.rawNext?' · Next: '+fmtDate(r.rawNext):''}${r.vet?' · '+r.vet:''}`;
+  try{ await fetch('api/vaccinations_worker.php',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,vaccine_name:r.name,date_given:r.rawDate,next_due_date:r.rawNext||null,vet_name:r.vet||null})}); }catch(e){}
+  LS.set('vaxLog',vaxLog); closeModal('editVaxModal');
+  await loadVaccinationsFromAPI(); showToast('✏️ Vaccination record updated!');
+}
+async function deleteVax(i){
+  if(!confirm('Delete this vaccination record?'))return;
+  const r=vaxLog[i];
+  try{ await fetch('api/vaccinations_worker.php',{method:'DELETE',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id})}); }catch(e){}
+  await loadVaccinationsFromAPI(); syncDashboard(); showToast('🗑️ Vaccination record deleted.');
+}
 
 // ─── INCIDENT EDIT / DELETE ───
 let editIncIdx=null;
 function editIncident(i){editIncIdx=i;document.getElementById('ei_desc').value=incidentLog[i].desc;document.getElementById('editIncModal').classList.add('open');}
-function saveEditIncident(){incidentLog[editIncIdx].desc=document.getElementById('ei_desc').value.trim();LS.set('incidentLog',incidentLog);closeModal('editIncModal');renderIncidents();showToast('✏️ Incident report updated!');}
-function deleteIncident(i){if(!confirm('Delete this incident report?'))return;incidentLog.splice(i,1);incidentCount=incidentLog.length;LS.set('incidentLog',incidentLog);LS.set('incidentCount',incidentCount);renderIncidents();syncDashboard();showToast('🗑️ Incident report deleted.');}
+async function saveEditIncident(){
+  const r=incidentLog[editIncIdx];
+  r.desc=document.getElementById('ei_desc').value.trim();
+  try{ await fetch('api/incident_worker.php',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,description:r.desc})}); }catch(e){}
+  LS.set('incidentLog',incidentLog); closeModal('editIncModal');
+  await loadIncidentsFromAPI(); showToast('✏️ Incident report updated!');
+}
+async function deleteIncident(i){
+  if(!confirm('Delete this incident report?'))return;
+  const r=incidentLog[i];
+  try{ await fetch('api/incident_worker.php',{method:'DELETE',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id})}); }catch(e){}
+  await loadIncidentsFromAPI(); syncDashboard(); showToast('🗑️ Incident report deleted.');
+}
 
 async function loadTasksFromAPI() {
   try {
@@ -1944,6 +2043,7 @@ async function loadTasksFromAPI() {
 renderVaxList();
 renderIncidents();
 _updateNotifBadge();
+loadFeedingHistory();
 initSession();
 </script>
 </body>
