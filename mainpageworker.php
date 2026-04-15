@@ -431,7 +431,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
     <div class="nav-item" onclick="navTo('pg-tasks',this)">
       <span class="nav-item-icon"><span class="iconify" data-icon="lucide:list-checks" data-width="16"></span></span>
       <span>Daily Tasks</span>
-      <span class="nav-badge" id="sideTaskBadge">5</span>
+      <span class="nav-badge" id="sideTaskBadge">0</span>
     </div>
     <div class="nav-item" onclick="navTo('pg-incidents',this)">
       <span class="nav-item-icon"><span class="iconify" data-icon="lucide:alert-triangle" data-width="16"></span></span>
@@ -507,7 +507,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
       </div>
       <div class="stat-card">
         <div class="stat-card-top"><div class="stat-icon si-teal"><span class="iconify" data-icon="lucide:list-checks" data-width="20"></span></div><div class="stat-change sc-up" id="dashTaskChange">0 done</div></div>
-        <div class="stat-val" id="dashTaskCount">8</div>
+        <div class="stat-val" id="dashTaskCount">0</div>
         <div class="stat-lbl">Tasks Today</div>
         <div class="stat-underline su-teal"></div>
       </div>
@@ -546,7 +546,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg
         <div class="dc-desc">Manage vaccination history and get reminders for upcoming due schedules.</div>
       </div>
       <div class="dash-card" onclick="navTo('pg-tasks',document.querySelectorAll('.nav-item')[5])">
-        <div class="dc-top"><div class="dc-icon"><span class="iconify" data-icon="lucide:list-checks"></span></div><div class="dc-badge" id="dashTaskBadge">5 Remaining</div></div>
+        <div class="dc-top"><div class="dc-icon"><span class="iconify" data-icon="lucide:list-checks"></span></div><div class="dc-badge" id="dashTaskBadge">0 Remaining</div></div>
         <div class="dc-title">Daily Tasks</div>
         <div class="dc-desc">View, complete and add feeding, cleaning and health check assignments for your shift.</div>
       </div>
@@ -1295,7 +1295,7 @@ document.addEventListener('click', e=>{
 });
 
 // ─── ANIMALS ───
-const EMOJIS=['🦁','🐯','🐘','🦍','🐺','🦊','🐆','🐬','🦓','🦏','🐊','🦅','🦜','🦒','🐻','🦌','🐍','🦈','🐧','🦩'];
+const EMOJIS=['🦁','🐯','🐘','🦍','🐼','🐺','🦊','🐆','🐬','🦓','🦏','🐊','🦅','🦜','🦒','🐻','🦌','🐍','🦈','🐧','🦩'];
 const API='api/animals_worker.php';
 let animals=[],editingId=null,deletingId=null,selEmoji='🦁';
 
@@ -1448,10 +1448,10 @@ function updateHealthCounts(){
 }
 
 // ─── COUNTERS ───
-let feedingCount=LS.get('feedingCount',0);
-let healthCount=LS.get('healthCount',0);
-let vaxCount=LS.get('vaxCount',0);
-let incidentCount=LS.get('incidentCount',0);
+let feedingCount=0;
+let healthCount=0;
+let vaxCount=0;
+let incidentCount=0;
 
 function syncDashboard(){
   document.getElementById('dashAnimalCount').textContent=animals.length;
@@ -1535,7 +1535,7 @@ function renderHealthRecords(){
     if(r.notes) extras.push(r.notes);
     if(r.treatment) extras.push(`<span style="color:var(--orange);font-weight:600;">Treatment:</span> ${r.treatment}`);
     if(r.next_checkup) extras.push(`<span style="color:var(--header);font-weight:600;">Next checkup:</span> ${r.next_checkup}`);
-    if(r.vet) extras.push(`<span style="color:var(--sub);">Vet:</span> ${r.vet}`);
+    if(r.worker_name) extras.push(`<span style="color:var(--sub);">Logged by:</span> ${r.worker_name}`);
     return`<div class="record-row"><div class="record-left"><div class="rec-icon ${ic[0]}"><span class="iconify" data-icon="${ic[1]}" data-width="17"></span></div><div><div class="rec-name">${r.type} — ${r.animal}</div><div class="rec-sub">${extras.join(' &nbsp;·&nbsp; ')||'No additional notes'}</div></div></div><div style="display:flex;align-items:center;gap:8px;flex-shrink:0;"><span class="rec-date">${r.dateStr}</span><div class="card-actions"><button class="icon-btn" title="Edit" onclick="editHealth(${i})"><span class="iconify" data-icon="lucide:pencil" data-width="13"></span></button><button class="icon-btn del" title="Delete" onclick="deleteHealth(${i})"><span class="iconify" data-icon="lucide:trash-2" data-width="13"></span></button></div></div></div>`;
   }).join('');
 }
@@ -1643,18 +1643,14 @@ async function logVaccination() {
 }
 
 // ─── TASKS ───
-const defaultTasks=[
-  {id:1,name:'Morning feeding — Simba & Rex',meta:'Enclosure 1 & 2 · 07:00 AM',zone:'Zone A',priority:'high',done:false,active:true},
-  {id:2,name:'Clean Gorilla enclosure',meta:'Enclosure 3 · Est. 45 min',zone:'Zone B',priority:'med',done:false,active:true},
-  {id:3,name:'Health check — Koko',meta:'Follow-up from yesterday',zone:'Zone B',priority:'high',done:false,active:true},
-  {id:4,name:'Afternoon feeding — Nila',meta:'Enclosure 5 · 12:00 PM',zone:'Zone C',priority:'med',done:false,active:true},
-  {id:5,name:'Refill water tanks — Zone A',meta:'All Zone A enclosures',zone:'Zone A',priority:'low',done:false,active:true},
-  {id:6,name:'Fence integrity check — Zone B',meta:'Weekly routine',zone:'Zone B',priority:'med',done:false,active:true},
-  {id:7,name:'End-of-day feeding log submission',meta:'Submit before shift ends',zone:'All Zones',priority:'low',done:false,active:true},
-  {id:8,name:'Luna medication dose',meta:'Anti-parasite · 2nd dose',zone:'Zone A',priority:'high',done:false,active:true},
-];
-let tasks=LS.get('tasks',[]).map(t=>({active:true,...t}));  // empty until API loads
-let taskNextId=tasks.length?Math.max(...tasks.map(t=>t.id))+1:9;
+// Clear any stale localStorage task data (removes old hardcoded defaults)
+localStorage.removeItem('wt_tasks');
+localStorage.removeItem('wt_feedingCount');
+localStorage.removeItem('wt_healthCount');
+localStorage.removeItem('wt_vaxCount');
+localStorage.removeItem('wt_incidentCount');
+let tasks=[];
+let taskNextId=1;
 let taskFilter='all';
 let editingTaskId=null;
 
